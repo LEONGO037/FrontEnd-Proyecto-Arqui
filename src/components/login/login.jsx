@@ -26,12 +26,52 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulación de login/registro
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsLoading(false);
-    onLoginSuccess?.();
+    try {
+      if (isLogin) {
+        // login real
+        const { login } = await import('../../services/loginApi');
+        const res = await login(formData.email, formData.password);
+        onLoginSuccess?.(res);
+        onClose?.();
+      } else {
+        // registro real
+        if (formData.password !== formData.confirmPassword) {
+          alert('Las contraseñas no coinciden');
+          setIsLoading(false);
+          return;
+        }
+
+        const { register, login } = await import('../../services/loginApi');
+
+        // Intentar dividir nombre completo en nombre y apellidos
+        const parts = (formData.name || '').trim().split(/\s+/);
+        const nombre = parts.shift() || '';
+        const apellido_paterno = parts.shift() || '';
+        const apellido_materno = parts.join(' ') || '';
+
+        await register({
+          nombre,
+          apellido_paterno,
+          apellido_materno,
+          ci_nit: '',
+          telefono: '',
+          direccion: '',
+          email: formData.email,
+          password: formData.password
+        });
+
+        // Auto-login después de registrar
+        const res = await login(formData.email, formData.password);
+        onLoginSuccess?.(res);
+        onClose?.();
+      }
+    } catch (err) {
+      console.error(err);
+      const msg = err?.message || 'Error en autenticación';
+      alert(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const toggleMode = () => {
