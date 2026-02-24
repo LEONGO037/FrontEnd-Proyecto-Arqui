@@ -50,7 +50,6 @@ const CursoCard = ({ curso, visual, inscrito, onInscribir, onVerDetalle }) => {
           <IconEye /><span>Ver detalle</span>
         </button>
 
-        {/* Botón inscribirse */}
         <button
           className={`btn-inscribir ${inscrito ? 'inscrito' : 'disponible'}`}
           onClick={() => !inscrito && onInscribir(curso)}
@@ -70,12 +69,15 @@ const CursoCard = ({ curso, visual, inscrito, onInscribir, onVerDetalle }) => {
 
 const CatalogoCursos = () => {
   const navigate = useNavigate();
+  // ✅ CORRECCIÓN: se eliminó inscribirCurso del destructuring ya que el backend
+  // lo ejecuta automáticamente al capturar el pago de PayPal. Llamarlo de nuevo
+  // causaría el error "Ya estás inscrito en este curso".
   const { usuario, estaInscrito, cursosInscritos, marcarInscrito } = useAuth();
 
   const [cursos, setCursos]               = useState([]);
   const [cargandoCursos, setCargandoCursos] = useState(true);
-  const [cursoDetalle, setCursoDetalle]   = useState(null); // para modal detalle
-  const [cursoPago, setCursoPago]         = useState(null); // para modal pago
+  const [cursoDetalle, setCursoDetalle]   = useState(null);
+  const [cursoPago, setCursoPago]         = useState(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/cursos`)
@@ -85,13 +87,11 @@ const CatalogoCursos = () => {
       .finally(() => setCargandoCursos(false));
   }, []);
 
-  // Cuando el pago es exitoso → actualizar estado local de inscripciones
+  // ✅ CORRECCIÓN: se eliminó la llamada redundante a inscribirCurso().
+  // marcarInscrito() actualiza el estado local en memoria; el backend ya
+  // registró la inscripción dentro de postCapturarOrden (pagos.controller.js).
   const handlePagoExitoso = (cursoId) => {
     marcarInscrito(cursoId);
-    // Actualiza el AuthContext directamente en memoria
-    inscribirCurso(cursoId).catch(() => {
-      // Si ya está inscrito (captura ya lo hizo en el backend), ignorar
-    });
     setCursoPago(null);
   };
 

@@ -25,7 +25,17 @@ const ModalPago = ({ curso, onClose, onPagoExitoso }) => {
   const [exito, setExito]           = useState(null); // { transaccion }
 
   const visual = VISUAL_MAP[curso?.id] || { icono: '📚' };
-  const token  = localStorage.getItem('token');
+
+  // ✅ CORRECCIÓN: función helper que lee el token fresco en cada llamada,
+  // evitando que un token leído al montar el componente quede desactualizado
+  // o sea null si el componente se cargó antes de que localStorage se poblara.
+  const getToken = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No hay sesión activa. Por favor, inicia sesión nuevamente.');
+    }
+    return token;
+  };
 
   // Cargar clientId desde el backend (sin .env en el frontend)
   useEffect(() => {
@@ -36,8 +46,10 @@ const ModalPago = ({ curso, onClose, onPagoExitoso }) => {
       .finally(() => setCargando(false));
   }, []);
 
-  // Crear la orden en PayPal cuando el usuario abre el modal
+  // ✅ CORRECCIÓN: token leído dentro del handler, no al montar el componente
   const handleCrearOrden = async () => {
+    const token = getToken();
+
     const res = await fetch(`${API_BASE}/api/pagos/crear-orden`, {
       method: 'POST',
       headers: {
@@ -52,11 +64,13 @@ const ModalPago = ({ curso, onClose, onPagoExitoso }) => {
     return data.orderID;
   };
 
-  // Capturar el pago aprobado por el usuario
+  // ✅ CORRECCIÓN: token leído dentro del handler, no al montar el componente
   const handleAprobar = async (data) => {
     setError('');
     setCargando(true);
     try {
+      const token = getToken();
+
       const res = await fetch(`${API_BASE}/api/pagos/capturar-orden`, {
         method: 'POST',
         headers: {
@@ -68,7 +82,7 @@ const ModalPago = ({ curso, onClose, onPagoExitoso }) => {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error);
       setExito({ transaccion: result.transaccion });
-      onPagoExitoso(curso.id); // Actualizar estado global de inscripciones
+      onPagoExitoso(curso.id);
     } catch (err) {
       setError(err.message || 'Error al procesar el pago');
     } finally {
