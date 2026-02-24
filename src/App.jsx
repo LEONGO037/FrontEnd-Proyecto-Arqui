@@ -1,36 +1,40 @@
+// App.jsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-// Importamos los componentes de layout
-import Header from './components/layout/headerPrincipal';
-import Footer from './components/layout/footerPrincipal';
-// Importamos nuestra vista/página
-import Home from './features/home/homePrincipal';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+
+import Header     from './components/layout/headerPrincipal';
+import Footer     from './components/layout/footerPrincipal';
+import Home       from './features/home/homePrincipal';
+import Catalogo   from './features/catalogo/catalogoCursos';
+import Perfil     from './features/perfil/perfilEstudiante';
 
 import './App.css';
 
 function App() {
   return (
-    <Router>
-      {/* Contenedor principal que abarca toda la pantalla */}
-      <div className="app-wrapper">
-        
-        {/* El Header siempre se renderiza arriba */}
-        <Header />
+    <AuthProvider>
+      <Router>
+        <div className="app-wrapper">
+          <Header />
+          <main style={{ minHeight: '80vh' }}>
+            <Routes>
+              {/* Ruta pública */}
+              <Route path="/" element={<Home />} />
 
-        {/* El 'main' contiene las vistas dinámicas. El min-height asegura que el footer baje si hay poco contenido */}
-        <main style={{ minHeight: '80vh', padding: '2rem' }}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            {/* Aquí irán tus futuras rutas: */}
-            {/* <Route path="/registro" element={<Registro />} /> */}
-            {/* <Route path="/pago" element={<Pago />} /> */}
-          </Routes>
-        </main>
-
-        {/* El Footer siempre se renderiza abajo */}
-        <Footer />
-
-      </div>
-    </Router>
+              {/* Rutas protegidas — requieren sesión iniciada */}
+              <Route path="/cursos" element={
+                <ProtectedRoute><Catalogo /></ProtectedRoute>
+              } />
+              <Route path="/perfil" element={
+                <ProtectedRoute><Perfil /></ProtectedRoute>
+              } />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
