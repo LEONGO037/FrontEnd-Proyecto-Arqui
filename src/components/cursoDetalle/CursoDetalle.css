@@ -150,7 +150,7 @@
   justify-content: space-between; gap: 1rem;
   flex-wrap: wrap;
 }
-.detalle-precio-bloque {}
+/* .detalle-precio-bloque {} */
 .detalle-precio-label { font-size: 0.72rem; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem; }
 .detalle-precio-valor { font-size: 2rem; font-weight: 800; color: #003366; letter-spacing: -0.03em; }
 .detalle-precio-usd { font-size: 0.8rem; color: #aaa; font-weight: 500; }
