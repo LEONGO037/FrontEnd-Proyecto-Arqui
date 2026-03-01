@@ -23,14 +23,107 @@ const IconPlus  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 const IconArrow = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>;
 const IconInfo  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
 const IconEye   = () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+const IconCart  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>;
+const IconTrash = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>;
+const IconClock = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+const IconClose = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
 
-const CursoCard = ({ curso, visual, inscrito, onInscribir, onVerDetalle }) => {
+// Componente del Carrito Modal
+const CarritoModal = ({ carrito, onClose, onEliminar, onPagar, mostrarPago }) => {
+  const total = carrito.reduce((sum, curso) => sum + Number(curso.costo), 0);
+
+  if (mostrarPago) {
+    return (
+      <div className="carrito-overlay" onClick={onClose}>
+        <div className="carrito-modal carrito-pago" onClick={e => e.stopPropagation()}>
+          <div className="carrito-header">
+            <h3><IconMoney /> Pago con PayPal</h3>
+            <button className="btn-cerrar" onClick={onClose}><IconClose /></button>
+          </div>
+          <div className="carrito-body carrito-body-pago">
+            <ModalPago
+              cursos={carrito}
+              total={total}
+              onClose={onClose}
+              onPagoExitoso={onPagar}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="carrito-overlay" onClick={onClose}>
+      <div className="carrito-modal" onClick={e => e.stopPropagation()}>
+        <div className="carrito-header">
+          <h3><IconCart /> Mi Carrito</h3>
+          <button className="btn-cerrar" onClick={onClose}><IconClose /></button>
+        </div>
+        
+        <div className="carrito-body">
+          {carrito.length === 0 ? (
+            <div className="carrito-vacio">
+              <IconCart />
+              <p>Tu carrito está vacío</p>
+              <span>Agrega cursos para comenzar</span>
+            </div>
+          ) : (
+            <>
+              <div className="carrito-lista">
+                {carrito.map((curso, index) => (
+                  <div key={curso.id} className="carrito-item">
+                    <div className="carrito-item-info">
+                      <span className="carrito-item-num">{index + 1}</span>
+                      <div className="carrito-item-detalles">
+                        <span className="carrito-item-nombre">{curso.nombre}</span>
+                        <span className="carrito-item-codigo">ID-{String(curso.id).padStart(3,'0')}</span>
+                      </div>
+                    </div>
+                    <div className="carrito-item-precio">
+                      <span>Bs. {curso.costo}</span>
+                      <button 
+                        className="btn-eliminar"
+                        onClick={() => onEliminar(curso.id)}
+                        title="Eliminar del carrito"
+                      >
+                        <IconTrash />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="carrito-resumen">
+                <div className="carrito-total">
+                  <span>Total a pagar:</span>
+                  <strong>Bs. {total}</strong>
+                </div>
+                <button className="btn-pagar" onClick={() => onPagar()}>
+                  <IconMoney /> Proceder al pago con PayPal
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CursoCard = ({ curso, visual, inscrito, preinscrito, onPreinscribir, onVerDetalle, onEliminarPreinscripcion }) => {
   const [hover, setHover] = useState(false);
+  
   return (
     <div className="curso-catalogo-card">
       <div className="card-banner" style={{ background: visual.color }}>
         <span style={{ position:'relative', zIndex:2 }}>{visual.icono}</span>
         <span className="card-chip">{visual.categoria}</span>
+        {preinscrito && (
+          <span className="card-chip-preinscrito">
+            <IconClock /> Preinscrito
+          </span>
+        )}
       </div>
       <div className="card-body">
         <div className="card-titulo">{curso.nombre}</div>
@@ -50,18 +143,33 @@ const CursoCard = ({ curso, visual, inscrito, onInscribir, onVerDetalle }) => {
           <IconEye /><span>Ver detalle</span>
         </button>
 
-        <button
-          className={`btn-inscribir ${inscrito ? 'inscrito' : 'disponible'}`}
-          onClick={() => !inscrito && onInscribir(curso)}
-          onMouseEnter={() => setHover(true)}
-          onMouseLeave={() => setHover(false)}
-          disabled={inscrito}
-        >
-          {inscrito
-            ? <><IconCheck /><span>¡Ya estás inscrito!</span></>
-            : <><IconPlus /><span>Inscribirme al curso</span></>
-          }
-        </button>
+        {inscrito ? (
+          <button
+            className="btn-inscribir inscrito"
+            disabled={true}
+          >
+            <IconCheck /><span>¡Ya estás inscrito!</span>
+          </button>
+        ) : preinscrito ? (
+          <button
+            className="btn-inscribir preinscrito"
+            onClick={() => onEliminarPreinscripcion(curso.id)}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+          >
+            <IconCart />
+            <span>{hover ? 'Quitar del carrito' : 'En el carrito'}</span>
+          </button>
+        ) : (
+          <button
+            className="btn-inscribir disponible"
+            onClick={() => onPreinscribir(curso)}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+          >
+            <IconPlus /><span>Preinscribirme</span>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -69,15 +177,17 @@ const CursoCard = ({ curso, visual, inscrito, onInscribir, onVerDetalle }) => {
 
 const CatalogoCursos = () => {
   const navigate = useNavigate();
-  // ✅ CORRECCIÓN: se eliminó inscribirCurso del destructuring ya que el backend
-  // lo ejecuta automáticamente al capturar el pago de PayPal. Llamarlo de nuevo
-  // causaría el error "Ya estás inscrito en este curso".
   const { usuario, estaInscrito, cursosInscritos, marcarInscrito } = useAuth();
 
   const [cursos, setCursos]               = useState([]);
   const [cargandoCursos, setCargandoCursos] = useState(true);
   const [cursoDetalle, setCursoDetalle]   = useState(null);
-  const [cursoPago, setCursoPago]         = useState(null);
+  
+  // Estado para el carrito de preinscripciones
+  const [carrito, setCarrito]             = useState([]);
+  const [mostrarCarrito, setMostrarCarrito] = useState(false);
+  const [mostrarPago, setMostrarPago]     = useState(false);
+  const [toast, setToast]                 = useState(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/cursos`)
@@ -87,13 +197,59 @@ const CatalogoCursos = () => {
       .finally(() => setCargandoCursos(false));
   }, []);
 
-  // ✅ CORRECCIÓN: se eliminó la llamada redundante a inscribirCurso().
-  // marcarInscrito() actualiza el estado local en memoria; el backend ya
-  // registró la inscripción dentro de postCapturarOrden (pagos.controller.js).
-  const handlePagoExitoso = (cursoId) => {
-    marcarInscrito(cursoId);
-    setCursoPago(null);
+  // Cargar carrito del localStorage al iniciar
+  useEffect(() => {
+    const carritoGuardado = localStorage.getItem('carritoPreinscripciones');
+    if (carritoGuardado) {
+      try {
+        setCarrito(JSON.parse(carritoGuardado));
+      } catch (e) {
+        console.error('Error al cargar carrito:', e);
+      }
+    }
+  }, []);
+
+  // Guardar carrito en localStorage cuando cambie
+  useEffect(() => {
+    localStorage.setItem('carritoPreinscripciones', JSON.stringify(carrito));
+  }, [carrito]);
+
+  const mostrarToast = (mensaje, tipo = 'info') => {
+    setToast({ mensaje, tipo });
+    setTimeout(() => setToast(null), 3000);
   };
+
+  const agregarAlCarrito = (curso) => {
+    if (carrito.some(c => c.id === curso.id)) {
+      mostrarToast('Este curso ya está en tu carrito', 'info');
+      return;
+    }
+    setCarrito([...carrito, curso]);
+    mostrarToast(`"${curso.nombre}" agregado al carrito`, 'exito');
+  };
+
+  const eliminarDelCarrito = (cursoId) => {
+    setCarrito(carrito.filter(c => c.id !== cursoId));
+    mostrarToast('Curso eliminado del carrito', 'info');
+  };
+
+  const estaPreinscrito = (cursoId) => {
+    return carrito.some(c => c.id === cursoId);
+  };
+
+  const handlePagoExitoso = (cursoIds) => {
+    // Marcar todos los cursos del carrito como inscritos
+    cursoIds.forEach(id => marcarInscrito(id));
+    
+    // Vaciar el carrito
+    setCarrito([]);
+    setMostrarCarrito(false);
+    setMostrarPago(false);
+    
+    mostrarToast('¡Pago exitoso! Ya estás inscrito en los cursos', 'exito');
+  };
+
+  const totalCarrito = carrito.reduce((sum, curso) => sum + Number(curso.costo), 0);
 
   return (
     <div className="catalogo-page">
@@ -122,12 +278,27 @@ const CatalogoCursos = () => {
             {cursosInscritos.length > 0 && (
               <> · <strong style={{ color:'#8cc63f' }}>{cursosInscritos.length} inscrito{cursosInscritos.length > 1 ? 's' : ''}</strong></>
             )}
+            {carrito.length > 0 && (
+              <> · <strong style={{ color:'#f59e0b' }}>{carrito.length} preinscrito{carrito.length > 1 ? 's' : ''}</strong></>
+            )}
           </p>
-          {cursosInscritos.length > 0 && (
-            <button className="btn-ver-perfil" onClick={() => navigate('/perfil')}>
-              <IconArrow />Ver mi perfil y cursos inscritos
+          <div className="catalogo-acciones">
+            {cursosInscritos.length > 0 && (
+              <button className="btn-ver-perfil" onClick={() => navigate('/perfil')}>
+                <IconArrow />Ver mi perfil
+              </button>
+            )}
+            <button 
+              className={`btn-carrito ${carrito.length > 0 ? 'tiene-items' : ''}`} 
+              onClick={() => setMostrarCarrito(true)}
+            >
+              <IconCart />
+              <span>Carrito</span>
+              {carrito.length > 0 && (
+                <span className="carrito-badge">{carrito.length}</span>
+              )}
             </button>
-          )}
+          </div>
         </div>
 
         {cargandoCursos ? (
@@ -142,7 +313,9 @@ const CatalogoCursos = () => {
                 curso={curso}
                 visual={VISUAL[i % VISUAL.length]}
                 inscrito={estaInscrito(curso.id)}
-                onInscribir={(c) => setCursoPago(c)}
+                preinscrito={estaPreinscrito(curso.id)}
+                onPreinscribir={agregarAlCarrito}
+                onEliminarPreinscripcion={eliminarDelCarrito}
                 onVerDetalle={(c) => setCursoDetalle(c)}
               />
             ))}
@@ -150,23 +323,44 @@ const CatalogoCursos = () => {
         )}
       </div>
 
+      {/* Modal: Carrito de Preinscripciones */}
+      {mostrarCarrito && (
+        <CarritoModal
+          carrito={carrito}
+          onClose={() => {
+            setMostrarCarrito(false);
+            setMostrarPago(false);
+          }}
+          onEliminar={eliminarDelCarrito}
+          onPagar={() => setMostrarPago(true)}
+          mostrarPago={mostrarPago}
+        />
+      )}
+
       {/* Modal: Vista detalle del curso */}
       {cursoDetalle && (
         <CursoDetalle
           curso={cursoDetalle}
           inscrito={estaInscrito(cursoDetalle.id)}
+          preinscrito={estaPreinscrito(cursoDetalle.id)}
           onClose={() => setCursoDetalle(null)}
-          onInscribirse={(c) => { setCursoDetalle(null); setCursoPago(c); }}
+          onInscribirse={(c) => { 
+            agregarAlCarrito(c);
+            setCursoDetalle(null); 
+          }}
+          onEliminarPreinscripcion={(id) => {
+            eliminarDelCarrito(id);
+            setCursoDetalle(null);
+          }}
         />
       )}
 
-      {/* Modal: Pago con PayPal */}
-      {cursoPago && (
-        <ModalPago
-          curso={cursoPago}
-          onClose={() => setCursoPago(null)}
-          onPagoExitoso={handlePagoExitoso}
-        />
+      {/* Toast de notificaciones */}
+      {toast && (
+        <div className={`toast ${toast.tipo}`}>
+          {toast.tipo === 'exito' ? <IconCheck /> : <IconInfo />}
+          <span>{toast.mensaje}</span>
+        </div>
       )}
     </div>
   );

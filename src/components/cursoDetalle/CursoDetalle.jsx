@@ -1,4 +1,4 @@
-// CursoDetalle.jsx — Vista ampliada del curso
+// CursoDetalle.jsx — Vista ampliada del curso (actualizado con carrito)
 import React from 'react';
 import './CursoDetalle.css';
 
@@ -18,9 +18,29 @@ const IconCal    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentCol
 const IconGroup  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
 const IconPlus   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
 const IconCheck  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>;
+const IconCart   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>;
+const IconTrash  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>;
 
-const CursoDetalle = ({ curso, inscrito, onClose, onInscribirse }) => {
+/**
+ * CursoDetalle - Vista ampliada del curso
+ * @param {Object} curso - Datos del curso
+ * @param {boolean} inscrito - Si el usuario ya está inscrito
+ * @param {boolean} preinscrito - Si el curso está en el carrito
+ * @param {Function} onClose - Callback al cerrar
+ * @param {Function} onInscribirse - Callback al agregar al carrito (preinscribirse)
+ * @param {Function} onEliminarPreinscripcion - Callback al eliminar del carrito
+ */
+const CursoDetalle = ({ curso, inscrito, preinscrito, onClose, onInscribirse, onEliminarPreinscripcion }) => {
   const v = VISUAL_MAP[curso?.id] || { icono: '📚', color: '#003366', categoria: 'Curso', tags: [], docente: '-', horario: '-', duracion: '-' };
+
+  const handleAction = () => {
+    if (inscrito) return;
+    if (preinscrito) {
+      onEliminarPreinscripcion(curso.id);
+    } else {
+      onInscribirse(curso);
+    }
+  };
 
   return (
     <div className="detalle-overlay" onClick={onClose}>
@@ -29,6 +49,19 @@ const CursoDetalle = ({ curso, inscrito, onClose, onInscribirse }) => {
         {/* Banner */}
         <div className="detalle-banner" style={{ background: v.color }}>
           <span className="detalle-banner-emoji">{v.icono}</span>
+          
+          {/* Badge de estado */}
+          {inscrito && (
+            <span className="detalle-badge inscrito">
+              <IconCheck /> Inscrito
+            </span>
+          )}
+          {preinscrito && !inscrito && (
+            <span className="detalle-badge preinscrito">
+              <IconClock /> En el carrito
+            </span>
+          )}
+          
           <button className="detalle-close" onClick={onClose}><IconClose /></button>
         </div>
 
@@ -86,9 +119,13 @@ const CursoDetalle = ({ curso, inscrito, onClose, onInscribirse }) => {
               <button className="btn-detalle-inscrito">
                 <IconCheck /><span>Ya estás inscrito</span>
               </button>
+            ) : preinscrito ? (
+              <button className="btn-detalle-preinscrito" onClick={handleAction}>
+                <IconTrash /><span>Quitar del carrito</span>
+              </button>
             ) : (
-              <button className="btn-detalle-inscribir" onClick={() => { onClose(); onInscribirse(curso); }}>
-                <IconPlus /><span>Inscribirme ahora</span>
+              <button className="btn-detalle-inscribir" onClick={handleAction}>
+                <IconCart /><span>Agregar al carrito</span>
               </button>
             )}
           </div>
