@@ -56,12 +56,6 @@ const Home = () => {
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </button>
-            <button
-              className="btn-cta btn-cta--secondary"
-              onClick={() => openLogin('register')}
-            >
-              Crear Cuenta Gratis
-            </button>
           </div>
         </div>
 
