@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { obtenerMisCursos, obtenerEstudiantesCurso, guardarNotasEstudiantes, obtenerMetricasCurso, cambiarEstadoCurso } from '../../services/docenteApi';
 import './docenteMenu.css';
 
 // --- Iconos en línea ---
@@ -266,7 +267,7 @@ const HomeDocente = () => {
                 <p>Esta acción es irreversible. Ya no podrás modificar notas ni interactuar con el curso.</p>
                 <div className="confirmacion-acciones">
                   <button onClick={() => setMostrarConfirmacion(false)} className="btn-outline">Cancelar</button>
-                  <button onClick={() => cambiarEstadoCurso('FINALIZADO')} className="btn-modal-action danger">
+                  <button onClick={() => cambiarEstadoCursoHandler('FINALIZADO')} className="btn-modal-action danger">
                     Sí, Finalizar Curso
                   </button>
                 </div>
@@ -276,7 +277,7 @@ const HomeDocente = () => {
                 {cursoActual.estado_curso === 'NO ACTIVO' && (
                   <>
                     <p>Este curso aún no ha comenzado. ¿Deseas dar inicio a las clases?</p>
-                    <button className="btn-modal-action success" onClick={() => cambiarEstadoCurso('ACTIVO')}>
+                    <button className="btn-modal-action success" onClick={() => cambiarEstadoCursoHandler('ACTIVO')}>
                       <IconPlay /> Iniciar Curso Ahora
                     </button>
                   </>
