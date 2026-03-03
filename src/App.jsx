@@ -11,6 +11,7 @@ import Catalogo from './features/catalogo/catalogoCursos';
 import Perfil from './features/perfil/perfilEstudiante';
 import AdminMenu from './components/admin/adminMenu';
 import AdministrarCursos from './components/admin/administrarCursos';
+import AdminAsignarCursosDocente from './components/admin/adminAsignarCursosDocente';
 import DocenteMenu from './components/docente/docenteMenu';
 
 import './App.css';
@@ -59,6 +60,12 @@ function App() {
           <Route path="/admin/cursos" element={
             <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
               <AdministrarCursos />
+            </RoleProtectedRoute>
+          } />
+
+          <Route path="/admin/asignar-docente/:cursoId" element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <AdminAsignarCursosDocente />
             </RoleProtectedRoute>
           } />
 
