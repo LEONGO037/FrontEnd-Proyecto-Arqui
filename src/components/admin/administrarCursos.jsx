@@ -26,8 +26,11 @@ const AdministrarCursos = () => {
 
     const fetchCursos = async () => {
         setCargando(true);
+        const token = localStorage.getItem('token');
         try {
-            const res = await fetch(`${API_BASE}/api/cursos`);
+            const res = await fetch(`${API_BASE}/api/cursos/sin-docente`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             if (!res.ok) throw new Error('Error al cargar cursos');
             const data = await res.json();
             setCursos(data);
@@ -69,10 +72,14 @@ const AdministrarCursos = () => {
             cupo_maximo: parseInt(formData.cupo_maximo)
         };
 
+        const token = localStorage.getItem('token');
         try {
             const res = await fetch(`${API_BASE}/api/cursos/crear`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(payload)
             });
 
@@ -102,17 +109,18 @@ const AdministrarCursos = () => {
 
             <main className="admin-cursos-main">
                 <div className="admin-cursos-header">
-                    <div>
-                        <h1 className="admin-cursos-title">Gestión de Cursos</h1>
-                        <p className="admin-cursos-subtitle">Administra el catálogo de cursos extraacadémicos</p>
+                    <div className="header-title-section">
+                        <button className="btn-back-circle" onClick={() => navigate('/admin')} title="Regresar al Menú">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M15 18l-6-6 6-6" />
+                            </svg>
+                        </button>
+                        <div>
+                            <h1 className="admin-cursos-title">Gestión de Cursos</h1>
+                            <p className="admin-cursos-subtitle">Administra el catálogo de cursos extraacadémicos</p>
+                        </div>
                     </div>
                     <div className="header-actions">
-                        <button className="btn-back" onClick={() => navigate('/admin')}>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M19 12H5M12 19l-7-7 7-7" />
-                            </svg>
-                            <span>Atrás</span>
-                        </button>
                         <button className="btn-add-curso" onClick={() => setMostrarModal(true)}>
                             <span>+ Nuevo Curso</span>
                         </button>
@@ -144,7 +152,14 @@ const AdministrarCursos = () => {
                                     <td className="curso-table-desc">{curso.descripcion}</td>
                                     <td>Bs. {curso.costo}</td>
                                     <td>{curso.cupo_maximo}</td>
-                                    <td>
+                                    <td className="table-actions-cell">
+                                        <button
+                                            className="btn-assign-teacher"
+                                            onClick={() => navigate(`/admin/asignar-docente/${curso.id}`)}
+                                            title="Asignar Docente"
+                                        >
+                                            Asignar
+                                        </button>
                                         <button className="btn-edit">Editar</button>
                                     </td>
                                 </tr>
