@@ -1,194 +1,176 @@
-// homePrincipal.jsx
+// homePrincipal.jsx — Refactorizado completamente
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './homePrincipal.css';
-import Login from '../../components/login/login'; 
+import Login from '../../components/login/login';
 
 const Home = () => {
-  const [isVisible, setIsVisible] = useState(false);
+  const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
-  const [loginMode, setLoginMode] = useState('login'); // 'login' o 'register'
+  const [loginMode, setLoginMode] = useState('login');
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    setIsVisible(true);
+    const t = setTimeout(() => setVisible(true), 100);
+    return () => clearTimeout(t);
   }, []);
 
-  // Función para abrir login en modo específico
-  const openLogin = (mode) => {
-    setLoginMode(mode);
-    setShowLogin(true);
-  };
-
-  // Función para cerrar login
-  const closeLogin = () => {
-    setShowLogin(false);
-  };
-
-  // Función cuando el login es exitoso
-  const handleLoginSuccess = () => {
-    setShowLogin(false);
-    console.log('Autenticación exitosa');
-  };
-
-  const features = [
-    {
-      icon: '🔒',
-      title: 'Registro Seguro',
-      desc: 'Inscripciones mediante protocolos HTTPS para garantizar la seguridad de tus datos personales.',
-      color: '#8cc63f'
-    },
-    {
-      icon: '💳',
-      title: 'Pagos Electrónicos',
-      desc: 'Aceptamos pagos vía QR, transferencia bancaria y tarjetas de débito/crédito.',
-      color: '#003366'
-    },
-    {
-      icon: '⚡',
-      title: 'Gestión Automática',
-      desc: 'Tu registro se sincroniza con la base central institucional inmediatamente después de un pago exitoso.',
-      color: '#8cc63f'
-    }
-  ];
-
-  const stats = [
-    { number: '50+', label: 'Cursos Disponibles' },
-    { number: '10k+', label: 'Estudiantes' },
-    { number: '99%', label: 'Satisfacción' }
-  ];
+  const openLogin = (mode) => { setLoginMode(mode); setShowLogin(true); };
 
   return (
-    <div className="home-container">
-      {/* Hero Section con Partículas Animadas */}
-      <header className="hero">
-        <div className="hero-particles">
-          {[...Array(20)].map((_, i) => (
-            <div key={i} className="particle" style={{
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 20}s`,
-              animationDuration: `${15 + Math.random() * 10}s`
-            }} />
-          ))}
+    <div className="home-wrap">
+
+      {/* ══════════════════════════════════════════
+          HERO
+      ══════════════════════════════════════════ */}
+      <section className="home-hero">
+        {/* Fondo decorativo */}
+        <div className="hero-bg">
+          <div className="hero-orb hero-orb--1" />
+          <div className="hero-orb hero-orb--2" />
+          <div className="hero-orb hero-orb--3" />
+          <div className="hero-grid" />
         </div>
-        
-        <div className={`hero-content ${isVisible ? 'visible' : ''}`}>
-          <div className="hero-badge">🏛️ Plataforma Oficial College Nexus</div>
-          <h1>X-College Nexus</h1>
-          <p className="hero-subtitle">Sistema de Registro y Pago de Cursos Extraacadémicos</p>
-          <p className="university-name">College Nexus</p>
-          <p className="faculty-name">Facultad Experimental</p>
-          
-          <div className="hero-cta">
-            <button className="btn-primary">
-              <span>Ver Cursos Disponibles</span>
-              <svg className="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
+
+        {/* Contenido centrado */}
+        <div className={`hero-center ${visible ? 'hero-center--in' : ''}`}>
+          <span className="hero-pill">🏛️ Plataforma Oficial College Nexus</span>
+
+          <h1 className="hero-title">
+            X-College<br />
+            <span className="hero-title--accent">Nexus</span>
+          </h1>
+
+          <p className="hero-sub">
+            Sistema de Registro y Pago de Cursos Extraacadémicos
+          </p>
+          <p className="hero-inst">College Nexus · Facultad Experimental</p>
+
+          <div className="hero-btns">
+            <button
+              className="btn-cta btn-cta--primary"
+              onClick={() => navigate('/cursos')}
+            >
+              Ver Cursos Disponibles
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </button>
-            {/*<button className="btn-secondary">Ver Demo</button>*/}
+            <button
+              className="btn-cta btn-cta--secondary"
+              onClick={() => openLogin('register')}
+            >
+              Crear Cuenta Gratis
+            </button>
           </div>
         </div>
 
-        {/* Stats flotantes */}
-        <div className="floating-stats">
-          {stats.map((stat, index) => (
-            <div key={index} className="stat-card" style={{ animationDelay: `${index * 0.2}s` }}>
-              <span className="stat-number">{stat.number}</span>
-              <span className="stat-label">{stat.label}</span>
+        {/* Stats — dentro del hero, debajo del contenido */}
+        <div className={`hero-stats ${visible ? 'hero-stats--in' : ''}`}>
+          {[
+            { n: '50+',  l: 'Cursos' },
+            { n: '10k+', l: 'Estudiantes' },
+            { n: '99%',  l: 'Satisfacción' },
+          ].map(({ n, l }, i) => (
+            <div key={i} className="hero-stat" style={{ animationDelay: `${0.4 + i * 0.15}s` }}>
+              <span className="hero-stat__num">{n}</span>
+              <span className="hero-stat__lbl">{l}</span>
             </div>
           ))}
         </div>
-      </header>
 
-      {/* Sección de Features con Glassmorphism */}
-      <section className="features-section">
-        <div className="section-header">
-          <span className="section-tag">Características</span>
-          <h2>¿Por qué elegir nuestra plataforma?</h2>
-          <p className="section-desc">Diseñada específicamente para la comunidad College Nexus</p>
+        {/* Separador wave */}
+        <div className="hero-wave">
+          <svg viewBox="0 0 1440 80" preserveAspectRatio="none" fill="none">
+            <path d="M0 40C240 80 480 0 720 40C960 80 1200 0 1440 40V80H0Z" fill="#f5f7fa" />
+          </svg>
         </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          FEATURES
+      ══════════════════════════════════════════ */}
+      <section className="home-features">
+        <div className="section-label">Características</div>
+        <h2 className="section-title">¿Por qué elegir nuestra plataforma?</h2>
+        <p className="section-sub">Diseñada específicamente para la comunidad College Nexus</p>
 
         <div className="features-grid">
-          {features.map((feature, index) => (
-            <div 
-              key={index} 
-              className="feature-card"
-              style={{ '--accent-color': feature.color }}
-            >
-              <div className="feature-icon">{feature.icon}</div>
-              <h3>{feature.title}</h3>
-              <p>{feature.desc}</p>
-              <div className="feature-hover-effect"></div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Sección de Proceso */}
-      <section className="process-section">
-        <h2>Proceso de Inscripción</h2>
-        <div className="process-steps">
           {[
-            { step: '01', title: 'Explora', desc: 'Navega entre los cursos disponibles' },
-            { step: '02', title: 'Selecciona', desc: 'Elige los cursos de tu interés' },
-            { step: '03', title: 'Paga', desc: 'Realiza el pago de forma segura' },
-            { step: '04', title: 'Confirma', desc: 'Recibe tu constancia inmediata' }
-          ].map((item, index) => (
-            <div key={index} className="process-step">
-              <div className="step-number">{item.step}</div>
-              <h4>{item.title}</h4>
-              <p>{item.desc}</p>
-              {index < 3 && <div className="step-connector" />}
+            { emoji: '🔒', title: 'Registro Seguro',       desc: 'Inscripciones mediante protocolos HTTPS para garantizar la seguridad de tus datos personales.', color: '#8cc63f' },
+            { emoji: '💳', title: 'Pagos Electrónicos',    desc: 'Aceptamos pagos vía QR, transferencia bancaria y tarjetas de débito/crédito con PayPal.', color: '#003366' },
+            { emoji: '⚡', title: 'Gestión Automática',    desc: 'Tu registro se sincroniza con la base central institucional inmediatamente después del pago.', color: '#0066cc' },
+          ].map(({ emoji, title, desc, color }, i) => (
+            <div key={i} className="feat-card" style={{ '--c': color }}>
+              <div className="feat-card__icon">{emoji}</div>
+              <h3 className="feat-card__title">{title}</h3>
+              <p className="feat-card__desc">{desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Requisitos con diseño moderno */}
-      <section className="info-banner">
-        <div className="banner-content">
-          <div className="banner-icon">📋</div>
-          <div className="banner-text">
+      {/* ══════════════════════════════════════════
+          PROCESO
+      ══════════════════════════════════════════ */}
+      <section className="home-process">
+        <h2 className="section-title section-title--light">Proceso de Inscripción</h2>
+
+        <div className="process-grid">
+          {[
+            { n: '01', t: 'Explora',   d: 'Navega entre los cursos disponibles' },
+            { n: '02', t: 'Selecciona',d: 'Elige los cursos de tu interés' },
+            { n: '03', t: 'Paga',      d: 'Realiza el pago de forma segura' },
+            { n: '04', t: 'Confirma',  d: 'Recibe tu constancia inmediata' },
+          ].map(({ n, t, d }, i) => (
+            <div key={i} className="proc-step">
+              <div className="proc-step__num">{n}</div>
+              <h4 className="proc-step__title">{t}</h4>
+              <p className="proc-step__desc">{d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          INFO BANNER
+      ══════════════════════════════════════════ */}
+      <section className="home-info">
+        <div className="info-card">
+          <div className="info-card__emoji">📋</div>
+          <div className="info-card__body">
             <h3>Información Importante</h3>
-            <ul className="modern-list">
-              <li>
-                <span className="check-icon">✓</span>
-                <span>Validación de prerrequisitos académicos en línea</span>
-              </li>
-              <li>
-                <span className="check-icon">✓</span>
-                <span>Envío automático de facturas y certificados a tu correo</span>
-              </li>
-              <li>
-                <span className="check-icon">✓</span>
-                <span>Soporte para múltiples inscripciones en una sola transacción</span>
-              </li>
+            <ul>
+              <li><span className="check">✓</span>Validación de prerrequisitos académicos en línea</li>
+              <li><span className="check">✓</span>Envío automático de facturas y certificados a tu correo</li>
+              <li><span className="check">✓</span>Soporte para múltiples inscripciones en una sola transacción</li>
             </ul>
           </div>
         </div>
       </section>
 
-      {/* CTA Final */}
-      <section className="cta-section">
-        <div className="cta-content">
-          <h2>¿Listo para comenzar?</h2>
-          <p>Únete a miles de estudiantes que ya confían en X-College Nexus</p>
-          {/* BOTÓN MODIFICADO: Abre directamente en modo registro */}
-          <button 
-            className="btn-primary btn-large"
-            onClick={() => openLogin('register')}
-          >
-            Crear Cuenta Gratis
-            <span className="btn-shine"></span>
-          </button>
-        </div>
+      {/* ══════════════════════════════════════════
+          CTA FINAL
+      ══════════════════════════════════════════ */}
+      <section className="home-cta">
+        <h2>¿Listo para comenzar?</h2>
+        <p>Únete a miles de estudiantes que ya confían en X-College Nexus</p>
+        <button
+          className="btn-cta btn-cta--primary btn-cta--lg"
+          onClick={() => openLogin('register')}
+        >
+          Crear Cuenta Gratis
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </button>
       </section>
 
-      {/* Modal de Login - Se renderiza condicionalmente */}
       {showLogin && (
-        <Login 
+        <Login
           initialMode={loginMode}
-          onClose={closeLogin}
-          onLoginSuccess={handleLoginSuccess}
+          onClose={() => setShowLogin(false)}
+          onLoginSuccess={() => setShowLogin(false)}
         />
       )}
     </div>
