@@ -286,7 +286,7 @@
 
 .input-icon {
   position: absolute;
-  left: 1rem;
+  left: 1.25rem;
   width: 20px;
   height: 20px;
   color: #8cc63f;
@@ -295,13 +295,15 @@
 
 .input-wrapper input {
   width: 100%;
-  padding: 0.875rem 3.5rem 0.875rem 3.5rem;
-  /* Aumentado para dejar espacio a los iconos y botones */
+  padding: 0.875rem 3.5rem 0.875rem 4.5rem;
+  /* Espacio extra a la izquierda para el icono */
   border: 2px solid #e0e0e0;
   border-radius: 12px;
   font-size: 1rem;
   transition: all 0.3s ease;
   font-family: inherit;
+  box-sizing: border-box;
+  /* Asegura que el padding no rompa el ancho del 100% */
 }
 
 .input-wrapper input:focus {
