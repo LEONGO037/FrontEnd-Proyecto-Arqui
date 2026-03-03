@@ -24,14 +24,6 @@ const cards = [
         path: '/admin/cursos',
     },
     {
-        id: 'docentes',
-        icon: '🎓',
-        title: 'Docentes',
-        desc: 'Asigna docentes a cursos y gestiona sus perfiles.',
-        color: '#10b981',
-        path: '/admin/docentes',
-    },
-    {
         id: 'inscripciones',
         icon: '📋',
         title: 'Inscripciones',
