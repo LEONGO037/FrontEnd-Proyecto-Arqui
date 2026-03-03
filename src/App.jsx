@@ -10,6 +10,7 @@ import Home from './features/home/homePrincipal';
 import Catalogo from './features/catalogo/catalogoCursos';
 import Perfil from './features/perfil/perfilEstudiante';
 import AdminMenu from './components/admin/adminMenu';
+import AdministrarCursos from './components/admin/administrarCursos';
 
 import './App.css';
 
@@ -48,9 +49,15 @@ function App() {
           } />
 
           {/* Rutas protegidas por rol — ADMINISTRADOR */}
-          <Route path="/admin/*" element={
+          <Route path="/admin" element={
             <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
               <AdminMenu />
+            </RoleProtectedRoute>
+          } />
+
+          <Route path="/admin/cursos" element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <AdministrarCursos />
             </RoleProtectedRoute>
           } />
 
