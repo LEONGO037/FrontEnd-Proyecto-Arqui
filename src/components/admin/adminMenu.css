@@ -1,0 +1,207 @@
+/* adminMenu.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+.admin-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+  background: #f0f4f8;
+}
+
+/* ── Main ─────────────────────────────────────────── */
+.admin-main {
+  flex: 1;
+  padding: 6rem 1.5rem 4rem;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── Hero ─────────────────────────────────────────── */
+.admin-hero {
+  position: relative;
+  background: linear-gradient(135deg, #003366 0%, #004d99 50%, #0066cc 100%);
+  border-radius: 24px;
+  padding: 2.5rem 3rem;
+  margin-bottom: 3rem;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 51, 102, 0.35);
+}
+
+.admin-hero-content {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+.admin-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8cc63f, #7ab332);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #003366;
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(140, 198, 63, 0.4);
+}
+
+.admin-date {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: capitalize;
+  margin: 0 0 0.3rem;
+}
+
+.admin-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 0.6rem;
+  line-height: 1.2;
+}
+
+.admin-name {
+  color: #8cc63f;
+}
+
+.admin-badge {
+  display: inline-block;
+  background: rgba(140, 198, 63, 0.2);
+  border: 1px solid rgba(140, 198, 63, 0.4);
+  color: #8cc63f;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.9rem;
+  border-radius: 100px;
+}
+
+.admin-hero-glow {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(140, 198, 63, 0.15) 0%, transparent 70%);
+  right: -80px;
+  top: -120px;
+  pointer-events: none;
+}
+
+/* ── Section title ────────────────────────────────── */
+.admin-section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #003366;
+  margin: 0 0 1.5rem;
+  padding-left: 0.25rem;
+}
+
+/* ── Card Grid ────────────────────────────────────── */
+.admin-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.admin-card {
+  position: relative;
+  background: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 2rem 1.75rem;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+}
+
+.admin-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--card-color);
+  border-radius: 20px 20px 0 0;
+  transition: height 0.25s ease;
+}
+
+.admin-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.13);
+}
+
+.admin-card:hover::before {
+  height: 100%;
+  opacity: 0.06;
+}
+
+.admin-card-icon {
+  font-size: 2.25rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.admin-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.5rem;
+}
+
+.admin-card-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.admin-card-arrow {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.75rem;
+  font-size: 1.1rem;
+  color: var(--card-color);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.admin-card:hover .admin-card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 768px) {
+  .admin-main {
+    padding: 5rem 1rem 3rem;
+  }
+
+  .admin-hero {
+    padding: 2rem 1.5rem;
+  }
+
+  .admin-hero-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .admin-title {
+    font-size: 1.4rem;
+  }
+
+  .admin-card-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -40,6 +40,7 @@ export const register = async (payload) => {
 export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
+  sessionStorage.removeItem('role');
 };
 
 export const getAuthHeaders = () => {
