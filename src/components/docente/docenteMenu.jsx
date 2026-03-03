@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { obtenerMisCursos, obtenerEstudiantesCurso, guardarNotasEstudiantes, obtenerMetricasCurso, cambiarEstadoCurso } from '../../services/docenteApi';
 import './docenteMenu.css';
 
 // --- Iconos en línea ---
@@ -52,53 +53,33 @@ const HomeDocente = () => {
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
 
-  // Helper para headers de autenticación (Asegúrate que el AuthContext o localStorage gestione el token JWT)
-  const getAuthHeaders = () => ({
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('token') || ''}` 
-  });
-
-  const cargarDashboard = async () => {
-    setCargando(true);
-    try {
-      // Peticiones concurrentes para el Dashboard (Cursos + Métricas)
-      const [resCursos, resCursosActivos, resEstudiantesActivos] = await Promise.all([
-        fetch(`${API_BASE_URL}/docente/cursos`, { headers: getAuthHeaders() }),
-        fetch(`${API_BASE_URL}/docente/cursos-activos/cantidad`, { headers: getAuthHeaders() }),
-        fetch(`${API_BASE_URL}/docente/estudiantes-activos/cantidad`, { headers: getAuthHeaders() })
-      ]);
-
-      if (resCursos.ok) {
-        const dataCursos = await resCursos.json();
-        // Mapeo adaptando la respuesta del backend
-        setMisCursos(dataCursos.map(c => ({
-          ...c,
-          estado_curso: c.estado || (c.activo ? 'ACTIVO' : 'NO ACTIVO'),
-          alumnos: c.alumnos || 0, // Fallback si aún no viene en el query
-          calificacion: c.calificacion || 0 // Fallback
-        })));
-      }
-
-      let actCursos = 0, actEstudiantes = 0;
-      if (resCursosActivos.ok) actCursos = (await resCursosActivos.json()).cantidad;
-      if (resEstudiantesActivos.ok) actEstudiantes = (await resEstudiantesActivos.json()).cantidad_estudiantes;
-
-      setMetricas(prev => ({
-        ...prev,
-        cursosActivos: actCursos,
-        totalAlumnos: actEstudiantes
-      }));
-
-    } catch (error) {
-      console.error("Error al cargar dashboard:", error);
-      mostrarToast("Error conectando con el servidor", "error");
-    } finally {
-      setCargando(false);
-    }
-  };
-
   useEffect(() => {
-    cargarDashboard();
+    const cargarDatos = async () => {
+      try {
+        setCargando(true);
+        const cursos = await obtenerMisCursos();
+        setMisCursos(cursos);
+        
+        // Calcular métricas globales
+        const totalAlumnos = cursos.reduce((sum, curso) => sum + parseInt(curso.alumnos || 0), 0);
+        const cursosActivos = cursos.filter(c => c.estado_curso === 'ACTIVO').length;
+        const calificacionPromedio = cursos.length > 0 
+          ? (cursos.reduce((sum, curso) => sum + parseFloat(curso.calificacion || 0), 0) / cursos.length).toFixed(2)
+          : 0;
+        
+        setMetricas({ 
+          totalAlumnos, 
+          cursosActivos, 
+          calificacionPromedio: parseFloat(calificacionPromedio) 
+        });
+      } catch (error) {
+        mostrarToast('Error al cargar los cursos: ' + error.message, 'error');
+      } finally {
+        setCargando(false);
+      }
+    };
+    
+    cargarDatos();
   }, []);
 
   const mostrarToast = (mensaje, tipo = 'info') => {
@@ -107,36 +88,28 @@ const HomeDocente = () => {
     toastTimerRef.current = setTimeout(() => setToast(null), 5000);
   };
 
-  const cargarEstudiantesDelCurso = async (curso_id) => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/docente/curso/${curso_id}/estudiantes`, { headers: getAuthHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        setAlumnosCurso(data.map(al => ({
-          id: al.id,
-          nombre: `${al.nombre} ${al.apellido_paterno} ${al.apellido_materno || ''}`.trim(),
-          ci: al.ci_nit || 'N/A',
-          notaFinal: al.nota_final,
-          asistencia: 100, // Placeholder hasta que lo integres en la BD
-          error: false
-        })));
-      } else {
-        mostrarToast("No se pudieron cargar los estudiantes", "error");
-      }
-    } catch (error) {
-      mostrarToast("Error de red al obtener estudiantes", "error");
-    }
-  };
-
-  const abrirModal = (tipo, curso) => {
+  const abrirModal = async (tipo, curso) => {
     setCursoActual(curso);
     setModalActivo(tipo);
     setMostrarConfirmacion(false);
     
-    // Si abrimos la vista de alumnos o asignación de notas, consumimos la API
-    if (tipo === 'alumnos' || tipo === 'notas') {
-      setAlumnosCurso([]); // Limpiar estado residual
-      cargarEstudiantesDelCurso(curso.id);
+    try {
+      if (tipo === 'alumnos' || tipo === 'notas') {
+        const estudiantes = await obtenerEstudiantesCurso(curso.id);
+        setAlumnosCurso(
+          estudiantes.map(al => ({
+            ...al,
+            notaFinal: al.nota_final ?? null,
+            error: false
+          }))
+        );
+      } else if (tipo === 'metricas') {
+        const metricas = await obtenerMetricasCurso(curso.id);
+        // Las métricas se usarán en el renderModalContent
+      }
+    } catch (error) {
+      mostrarToast('Error al cargar datos: ' + error.message, 'error');
+      setModalActivo(null);
     }
   };
 
@@ -146,28 +119,14 @@ const HomeDocente = () => {
     setMostrarConfirmacion(false);
   };
 
-  const cambiarEstadoCurso = async (nuevoEstado) => {
+  const cambiarEstadoCursoHandler = async (nuevoEstado) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/docente/estado-curso`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          curso_id: cursoActual.id,
-          estado: nuevoEstado
-        })
-      });
-
-      if (res.ok) {
-        setMisCursos(misCursos.map(c => c.id === cursoActual.id ? { ...c, estado_curso: nuevoEstado } : c));
-        mostrarToast(`El curso ha cambiado a: ${nuevoEstado}`, 'exito');
-        cerrarModal();
-        cargarDashboard(); // Refrescar métricas
-      } else {
-        const err = await res.json();
-        mostrarToast(err.error || "Error al actualizar el estado", "error");
-      }
+      await cambiarEstadoCurso(cursoActual.id, nuevoEstado);
+      setMisCursos(misCursos.map(c => c.id === cursoActual.id ? { ...c, estado_curso: nuevoEstado } : c));
+      mostrarToast(`El curso ha cambiado a: ${nuevoEstado}`, 'exito');
+      cerrarModal();
     } catch (error) {
-      mostrarToast("Error de conexión al cambiar estado", "error");
+      mostrarToast('Error: ' + error.message, 'error');
     }
   };
 
@@ -185,28 +144,18 @@ const HomeDocente = () => {
   const guardarNotas = async (e) => {
     e.preventDefault();
     if (hayErroresEnNotas) return;
-
+    
     try {
-      // Filtrar a los estudiantes que tienen una nota digitada
-      const promesasGuardado = alumnosCurso
-        .filter(al => al.notaFinal !== null && al.notaFinal !== undefined)
-        .map(al => fetch(`${API_BASE_URL}/docente/curso/${cursoActual.id}/estudiante/${al.id}/nota`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ nota: Number(al.notaFinal) })
-        }));
-
-      const resultados = await Promise.all(promesasGuardado);
+      const notas = alumnosCurso.map(al => ({
+        estudiante_curso_id: al.id,
+        nota_final: al.notaFinal
+      }));
       
-      const hayFallas = resultados.some(res => !res.ok);
-      if (hayFallas) {
-        mostrarToast("Se guardaron parcialmente. Hubo error en algunos alumnos.", 'warning');
-      } else {
-        mostrarToast("Calificaciones guardadas exitosamente en la base de datos.", 'exito');
-        cerrarModal();
-      }
+      await guardarNotasEstudiantes(cursoActual.id, notas);
+      mostrarToast("Calificaciones guardadas exitosamente en la base de datos.", 'exito');
+      cerrarModal();
     } catch (error) {
-      mostrarToast("Error crítico guardando las calificaciones.", 'error');
+      mostrarToast('Error: ' + error.message, 'error');
     }
   };
 
@@ -266,7 +215,7 @@ const HomeDocente = () => {
                 <p>Esta acción es irreversible. Ya no podrás modificar notas ni interactuar con el curso.</p>
                 <div className="confirmacion-acciones">
                   <button onClick={() => setMostrarConfirmacion(false)} className="btn-outline">Cancelar</button>
-                  <button onClick={() => cambiarEstadoCurso('FINALIZADO')} className="btn-modal-action danger">
+                  <button onClick={() => cambiarEstadoCursoHandler('FINALIZADO')} className="btn-modal-action danger">
                     Sí, Finalizar Curso
                   </button>
                 </div>
@@ -276,7 +225,7 @@ const HomeDocente = () => {
                 {cursoActual.estado_curso === 'NO ACTIVO' && (
                   <>
                     <p>Este curso aún no ha comenzado. ¿Deseas dar inicio a las clases?</p>
-                    <button className="btn-modal-action success" onClick={() => cambiarEstadoCurso('ACTIVO')}>
+                    <button className="btn-modal-action success" onClick={() => cambiarEstadoCursoHandler('ACTIVO')}>
                       <IconPlay /> Iniciar Curso Ahora
                     </button>
                   </>
