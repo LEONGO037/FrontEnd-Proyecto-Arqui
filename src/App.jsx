@@ -10,6 +10,7 @@ import Home from './features/home/homePrincipal';
 import Catalogo from './features/catalogo/catalogoCursos';
 import Perfil from './features/perfil/perfilEstudiante';
 import AdminMenu from './components/admin/adminMenu';
+import DocenteMenu from './components/docente/docenteMenu';
 
 import './App.css';
 
@@ -57,16 +58,16 @@ function App() {
           {/* Rutas protegidas por rol — DOCENTE */}
           <Route path="/docente/*" element={
             <RoleProtectedRoute allowedRoles={['DOCENTE']}>
-              {/* DocenteMenu — próximamente */}
               <div className="app-wrapper">
                 <Header />
-                <main style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <h2 style={{ color: '#003366' }}>Panel Docente — En construcción</h2>
+                <main style={{ minHeight: '80vh' }}>
+                  <DocenteMenu />
                 </main>
                 <Footer />
               </div>
             </RoleProtectedRoute>
           } />
+
         </Routes>
       </Router>
     </AuthProvider>
