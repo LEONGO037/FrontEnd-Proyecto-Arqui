@@ -27,19 +27,15 @@ const VISUAL = [
   { icono: '📡', color: 'linear-gradient(135deg,#1e3a5f,#2e6da4)', categoria: 'Redes' },
 ];
 
-const ALUMNOS_MOCK_INICIAL = [
-  { id: 1, nombre: 'Ana García', ci: '8475639', notaFinal: 85, asistencia: 90 },
-  { id: 2, nombre: 'Carlos López', ci: '9384756', notaFinal: 45, asistencia: 60 },
-  { id: 3, nombre: 'María Fernández', ci: '7465839', notaFinal: 92, asistencia: 95 },
-  { id: 4, nombre: 'Juan Pérez', ci: '6374859', notaFinal: null, asistencia: 80 }, 
-];
+// Configuración Base URL para el Backend
+const API_BASE_URL = 'http://localhost:3000/api';
 
 const HomeDocente = () => {
   const navigate = useNavigate();
   const { usuario } = useAuth();
   
   const [misCursos, setMisCursos] = useState([]);
-  const [metricas, setMetricas] = useState({ totalAlumnos: 0, cursosActivos: 0, calificacionPromedio: 0 });
+  const [metricas, setMetricas] = useState({ totalAlumnos: 0, cursosActivos: 0, calificacionPromedio: 4.85 }); // calificacion hardcoded visual
   const [cargando, setCargando] = useState(true);
 
   // Estados de Búsqueda y Filtros
@@ -49,23 +45,60 @@ const HomeDocente = () => {
   // Estados del modal y edición de notas
   const [modalActivo, setModalActivo] = useState(null); 
   const [cursoActual, setCursoActual] = useState(null);
-  const [alumnosCurso, setAlumnosCurso] = useState(ALUMNOS_MOCK_INICIAL);
-  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false); // Para confirmación doble
+  const [alumnosCurso, setAlumnosCurso] = useState([]);
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
 
   // Estado para Toasts
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
 
-  useEffect(() => {
-    setTimeout(() => {
-      setMisCursos([
-        { id: 101, nombre: 'Arquitectura de Software Avanzada', descripcion: 'Patrones de diseño, microservicios y escalabilidad.', alumnos: 45, estado_curso: 'ACTIVO', calificacion: 4.8 },
-        { id: 102, nombre: 'Frontend con React y Vite', descripcion: 'Desarrollo moderno de interfaces de usuario.', alumnos: 32, estado_curso: 'NO ACTIVO', calificacion: 0 },
-        { id: 103, nombre: 'Redes Cisco CCNA', descripcion: 'Configuración de VLANs, OSPF, DHCP y ACLs.', alumnos: 28, estado_curso: 'FINALIZADO', calificacion: 4.9 },
+  // Helper para headers de autenticación (Asegúrate que el AuthContext o localStorage gestione el token JWT)
+  const getAuthHeaders = () => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('token') || ''}` 
+  });
+
+  const cargarDashboard = async () => {
+    setCargando(true);
+    try {
+      // Peticiones concurrentes para el Dashboard (Cursos + Métricas)
+      const [resCursos, resCursosActivos, resEstudiantesActivos] = await Promise.all([
+        fetch(`${API_BASE_URL}/docente/cursos`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE_URL}/docente/cursos-activos/cantidad`, { headers: getAuthHeaders() }),
+        fetch(`${API_BASE_URL}/docente/estudiantes-activos/cantidad`, { headers: getAuthHeaders() })
       ]);
-      setMetricas({ totalAlumnos: 105, cursosActivos: 1, calificacionPromedio: 4.85 });
+
+      if (resCursos.ok) {
+        const dataCursos = await resCursos.json();
+        // Mapeo adaptando la respuesta del backend
+        setMisCursos(dataCursos.map(c => ({
+          ...c,
+          estado_curso: c.estado || (c.activo ? 'ACTIVO' : 'NO ACTIVO'),
+          alumnos: c.alumnos || 0, // Fallback si aún no viene en el query
+          calificacion: c.calificacion || 0 // Fallback
+        })));
+      }
+
+      let actCursos = 0, actEstudiantes = 0;
+      if (resCursosActivos.ok) actCursos = (await resCursosActivos.json()).cantidad;
+      if (resEstudiantesActivos.ok) actEstudiantes = (await resEstudiantesActivos.json()).cantidad_estudiantes;
+
+      setMetricas(prev => ({
+        ...prev,
+        cursosActivos: actCursos,
+        totalAlumnos: actEstudiantes
+      }));
+
+    } catch (error) {
+      console.error("Error al cargar dashboard:", error);
+      mostrarToast("Error conectando con el servidor", "error");
+    } finally {
       setCargando(false);
-    }, 800);
+    }
+  };
+
+  useEffect(() => {
+    cargarDashboard();
   }, []);
 
   const mostrarToast = (mensaje, tipo = 'info') => {
@@ -74,11 +107,37 @@ const HomeDocente = () => {
     toastTimerRef.current = setTimeout(() => setToast(null), 5000);
   };
 
+  const cargarEstudiantesDelCurso = async (curso_id) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/docente/curso/${curso_id}/estudiantes`, { headers: getAuthHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setAlumnosCurso(data.map(al => ({
+          id: al.id,
+          nombre: `${al.nombre} ${al.apellido_paterno} ${al.apellido_materno || ''}`.trim(),
+          ci: al.ci_nit || 'N/A',
+          notaFinal: al.nota_final,
+          asistencia: 100, // Placeholder hasta que lo integres en la BD
+          error: false
+        })));
+      } else {
+        mostrarToast("No se pudieron cargar los estudiantes", "error");
+      }
+    } catch (error) {
+      mostrarToast("Error de red al obtener estudiantes", "error");
+    }
+  };
+
   const abrirModal = (tipo, curso) => {
     setCursoActual(curso);
     setModalActivo(tipo);
     setMostrarConfirmacion(false);
-    setAlumnosCurso(ALUMNOS_MOCK_INICIAL.map(al => ({ ...al, error: false }))); // Reiniciar con estado de error
+    
+    // Si abrimos la vista de alumnos o asignación de notas, consumimos la API
+    if (tipo === 'alumnos' || tipo === 'notas') {
+      setAlumnosCurso([]); // Limpiar estado residual
+      cargarEstudiantesDelCurso(curso.id);
+    }
   };
 
   const cerrarModal = () => {
@@ -87,10 +146,29 @@ const HomeDocente = () => {
     setMostrarConfirmacion(false);
   };
 
-  const cambiarEstadoCurso = (nuevoEstado) => {
-    setMisCursos(misCursos.map(c => c.id === cursoActual.id ? { ...c, estado_curso: nuevoEstado } : c));
-    mostrarToast(`El curso ha cambiado a: ${nuevoEstado}`, 'exito');
-    cerrarModal();
+  const cambiarEstadoCurso = async (nuevoEstado) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/docente/estado-curso`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          curso_id: cursoActual.id,
+          estado: nuevoEstado
+        })
+      });
+
+      if (res.ok) {
+        setMisCursos(misCursos.map(c => c.id === cursoActual.id ? { ...c, estado_curso: nuevoEstado } : c));
+        mostrarToast(`El curso ha cambiado a: ${nuevoEstado}`, 'exito');
+        cerrarModal();
+        cargarDashboard(); // Refrescar métricas
+      } else {
+        const err = await res.json();
+        mostrarToast(err.error || "Error al actualizar el estado", "error");
+      }
+    } catch (error) {
+      mostrarToast("Error de conexión al cambiar estado", "error");
+    }
   };
 
   const handleNotaChange = (id, valor) => {
@@ -104,18 +182,38 @@ const HomeDocente = () => {
 
   const hayErroresEnNotas = alumnosCurso.some(al => al.error);
 
-  const guardarNotas = (e) => {
+  const guardarNotas = async (e) => {
     e.preventDefault();
     if (hayErroresEnNotas) return;
-    mostrarToast("Calificaciones guardadas exitosamente en la base de datos.", 'exito');
-    cerrarModal();
+
+    try {
+      // Filtrar a los estudiantes que tienen una nota digitada
+      const promesasGuardado = alumnosCurso
+        .filter(al => al.notaFinal !== null && al.notaFinal !== undefined)
+        .map(al => fetch(`${API_BASE_URL}/docente/curso/${cursoActual.id}/estudiante/${al.id}/nota`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ nota: Number(al.notaFinal) })
+        }));
+
+      const resultados = await Promise.all(promesasGuardado);
+      
+      const hayFallas = resultados.some(res => !res.ok);
+      if (hayFallas) {
+        mostrarToast("Se guardaron parcialmente. Hubo error en algunos alumnos.", 'warning');
+      } else {
+        mostrarToast("Calificaciones guardadas exitosamente en la base de datos.", 'exito');
+        cerrarModal();
+      }
+    } catch (error) {
+      mostrarToast("Error crítico guardando las calificaciones.", 'error');
+    }
   };
 
   const generarReporte = () => {
     mostrarToast("Generando reporte en PDF, la descarga comenzará en breve...", 'info');
   };
 
-  // Función Nativa para Exportar a CSV (Sin librerías)
   const exportarCSV = () => {
     const encabezados = "ID,Nombre del Alumno,CI/NIT,Asistencia %,Nota Final,Estado Académico\n";
     const filas = alumnosCurso.map(al => {
@@ -124,7 +222,6 @@ const HomeDocente = () => {
       return `${al.id},"${al.nombre}",${al.ci},${al.asistencia},${notaStr},${estadoStr}`;
     }).join("\n");
 
-    // \uFEFF asegura que Excel interprete correctamente los caracteres UTF-8 (tildes, eñes)
     const blob = new Blob(["\uFEFF" + encabezados + filas], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     
@@ -139,11 +236,11 @@ const HomeDocente = () => {
   };
 
   const getBadgeClass = (estado) => {
+    if(!estado) return 'badge-neutro';
     const estadoLimpio = estado.toLowerCase().replace(/ó/g, 'o').replace(/ /g, '-');
     return `badge-${estadoLimpio}`;
   };
 
-  // Filtrado de cursos
   const cursosFiltrados = misCursos.filter(curso => {
     const coincideTexto = curso.nombre.toLowerCase().includes(busqueda.toLowerCase());
     const coincideEstado = filtroEstado === 'TODOS' || curso.estado_curso === filtroEstado;
@@ -231,19 +328,23 @@ const HomeDocente = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {alumnosCurso.map(al => (
-                    <tr key={al.id}>
-                      <td><div className="alumno-nombre-td">{al.nombre}</div></td>
-                      <td>{al.ci}</td>
-                      <td>{al.asistencia}%</td>
-                      <td><strong>{al.notaFinal !== null ? al.notaFinal : '-'}</strong></td>
-                      <td>
-                        {al.notaFinal === null ? <span className="estado-badge neutro">Pendiente</span> :
-                         al.notaFinal >= 51 ? <span className="estado-badge exito">Aprobado</span> : 
-                         <span className="estado-badge error">Reprobado</span>}
-                      </td>
-                    </tr>
-                  ))}
+                  {alumnosCurso.length === 0 ? (
+                    <tr><td colSpan="5" style={{textAlign: 'center', padding: '2rem'}}>No hay estudiantes inscritos</td></tr>
+                  ) : (
+                    alumnosCurso.map(al => (
+                      <tr key={al.id}>
+                        <td><div className="alumno-nombre-td">{al.nombre}</div></td>
+                        <td>{al.ci}</td>
+                        <td>{al.asistencia}%</td>
+                        <td><strong>{al.notaFinal !== null ? al.notaFinal : '-'}</strong></td>
+                        <td>
+                          {al.notaFinal === null ? <span className="estado-badge neutro">Pendiente</span> :
+                           al.notaFinal >= 51 ? <span className="estado-badge exito">Aprobado</span> : 
+                           <span className="estado-badge error">Reprobado</span>}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -293,7 +394,7 @@ const HomeDocente = () => {
               </div>
               <div className="modal-footer-actions">
                 <button type="button" className="btn-cancelar" onClick={cerrarModal}>Cancelar</button>
-                <button type="submit" className="btn-guardar" disabled={hayErroresEnNotas}>
+                <button type="submit" className="btn-guardar" disabled={hayErroresEnNotas || alumnosCurso.length === 0}>
                   <IconClipboard /> Guardar Calificaciones
                 </button>
               </div>
@@ -408,9 +509,9 @@ const HomeDocente = () => {
 
         {/* ── Grid de Cursos del Docente ── */}
         {cargando ? (
-          <div className="cargando-estado">Cargando tu panel de gestión...</div>
+          <div className="cargando-estado">Cargando tu panel de gestión desde la Base de Datos...</div>
         ) : cursosFiltrados.length === 0 ? (
-          <div className="vacio-estado">No se encontraron cursos con los filtros actuales.</div>
+          <div className="vacio-estado">No se encontraron cursos registrados con los filtros actuales.</div>
         ) : (
           <div className="cursos-docente-grid">
             {cursosFiltrados.map((curso, i) => {
