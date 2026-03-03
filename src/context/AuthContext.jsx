@@ -21,6 +21,7 @@ export const AuthProvider = ({ children }) => {
       } catch {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        sessionStorage.removeItem('role');
       }
     }
     setCargando(false);
@@ -41,6 +42,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = (datosUsuario) => {
     setUsuario(datosUsuario);
+    // Guardar rol en sessionStorage por seguridad de sesión (se borra al cerrar la pestaña)
+    if (datosUsuario?.rol) {
+      sessionStorage.setItem('role', datosUsuario.rol);
+    }
     const token = localStorage.getItem('token');
     if (token) fetchInscripciones(token);
   };
@@ -50,6 +55,14 @@ export const AuthProvider = ({ children }) => {
     setCursosInscritos([]);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    sessionStorage.removeItem('role');
+  };
+
+  /**
+   * Retorna el rol del usuario desde sesión o memoria.
+   */
+  const getRol = () => {
+    return usuario?.rol || sessionStorage.getItem('role');
   };
 
   const inscribirCurso = async (cursoId) => {
@@ -98,6 +111,7 @@ export const AuthProvider = ({ children }) => {
       cargando,
       login,
       logout,
+      getRol,
       inscribirCurso,
       desinscribirCurso,
       estaInscrito,
