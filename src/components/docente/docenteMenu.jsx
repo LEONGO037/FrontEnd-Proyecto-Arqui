@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { obtenerMisCursos, obtenerEstudiantesCurso, guardarNotasEstudiantes, obtenerMetricasCurso, cambiarEstadoCurso } from '../../services/docenteApi';
 import './docenteMenu.css';
 
 // --- Iconos en línea ---
@@ -57,15 +58,32 @@ const HomeDocente = () => {
   const toastTimerRef = useRef(null);
 
   useEffect(() => {
-    setTimeout(() => {
-      setMisCursos([
-        { id: 101, nombre: 'Arquitectura de Software Avanzada', descripcion: 'Patrones de diseño, microservicios y escalabilidad.', alumnos: 45, estado_curso: 'ACTIVO', calificacion: 4.8 },
-        { id: 102, nombre: 'Frontend con React y Vite', descripcion: 'Desarrollo moderno de interfaces de usuario.', alumnos: 32, estado_curso: 'NO ACTIVO', calificacion: 0 },
-        { id: 103, nombre: 'Redes Cisco CCNA', descripcion: 'Configuración de VLANs, OSPF, DHCP y ACLs.', alumnos: 28, estado_curso: 'FINALIZADO', calificacion: 4.9 },
-      ]);
-      setMetricas({ totalAlumnos: 105, cursosActivos: 1, calificacionPromedio: 4.85 });
-      setCargando(false);
-    }, 800);
+    const cargarDatos = async () => {
+      try {
+        setCargando(true);
+        const cursos = await obtenerMisCursos();
+        setMisCursos(cursos);
+        
+        // Calcular métricas globales
+        const totalAlumnos = cursos.reduce((sum, curso) => sum + parseInt(curso.alumnos || 0), 0);
+        const cursosActivos = cursos.filter(c => c.estado_curso === 'ACTIVO').length;
+        const calificacionPromedio = cursos.length > 0 
+          ? (cursos.reduce((sum, curso) => sum + parseFloat(curso.calificacion || 0), 0) / cursos.length).toFixed(2)
+          : 0;
+        
+        setMetricas({ 
+          totalAlumnos, 
+          cursosActivos, 
+          calificacionPromedio: parseFloat(calificacionPromedio) 
+        });
+      } catch (error) {
+        mostrarToast('Error al cargar los cursos: ' + error.message, 'error');
+      } finally {
+        setCargando(false);
+      }
+    };
+    
+    cargarDatos();
   }, []);
 
   const mostrarToast = (mensaje, tipo = 'info') => {
@@ -74,11 +92,29 @@ const HomeDocente = () => {
     toastTimerRef.current = setTimeout(() => setToast(null), 5000);
   };
 
-  const abrirModal = (tipo, curso) => {
+  const abrirModal = async (tipo, curso) => {
     setCursoActual(curso);
     setModalActivo(tipo);
     setMostrarConfirmacion(false);
-    setAlumnosCurso(ALUMNOS_MOCK_INICIAL.map(al => ({ ...al, error: false }))); // Reiniciar con estado de error
+    
+    try {
+      if (tipo === 'alumnos' || tipo === 'notas') {
+        const estudiantes = await obtenerEstudiantesCurso(curso.id);
+        setAlumnosCurso(
+          estudiantes.map(al => ({
+            ...al,
+            notaFinal: al.nota_final ?? null,
+            error: false
+          }))
+        );
+      } else if (tipo === 'metricas') {
+        const metricas = await obtenerMetricasCurso(curso.id);
+        // Las métricas se usarán en el renderModalContent
+      }
+    } catch (error) {
+      mostrarToast('Error al cargar datos: ' + error.message, 'error');
+      setModalActivo(null);
+    }
   };
 
   const cerrarModal = () => {
@@ -87,10 +123,15 @@ const HomeDocente = () => {
     setMostrarConfirmacion(false);
   };
 
-  const cambiarEstadoCurso = (nuevoEstado) => {
-    setMisCursos(misCursos.map(c => c.id === cursoActual.id ? { ...c, estado_curso: nuevoEstado } : c));
-    mostrarToast(`El curso ha cambiado a: ${nuevoEstado}`, 'exito');
-    cerrarModal();
+  const cambiarEstadoCursoHandler = async (nuevoEstado) => {
+    try {
+      await cambiarEstadoCurso(cursoActual.id, nuevoEstado);
+      setMisCursos(misCursos.map(c => c.id === cursoActual.id ? { ...c, estado_curso: nuevoEstado } : c));
+      mostrarToast(`El curso ha cambiado a: ${nuevoEstado}`, 'exito');
+      cerrarModal();
+    } catch (error) {
+      mostrarToast('Error: ' + error.message, 'error');
+    }
   };
 
   const handleNotaChange = (id, valor) => {
@@ -104,11 +145,22 @@ const HomeDocente = () => {
 
   const hayErroresEnNotas = alumnosCurso.some(al => al.error);
 
-  const guardarNotas = (e) => {
+  const guardarNotas = async (e) => {
     e.preventDefault();
     if (hayErroresEnNotas) return;
-    mostrarToast("Calificaciones guardadas exitosamente en la base de datos.", 'exito');
-    cerrarModal();
+    
+    try {
+      const notas = alumnosCurso.map(al => ({
+        estudiante_curso_id: al.id,
+        nota_final: al.notaFinal
+      }));
+      
+      await guardarNotasEstudiantes(cursoActual.id, notas);
+      mostrarToast("Calificaciones guardadas exitosamente en la base de datos.", 'exito');
+      cerrarModal();
+    } catch (error) {
+      mostrarToast('Error: ' + error.message, 'error');
+    }
   };
 
   const generarReporte = () => {
@@ -169,7 +221,7 @@ const HomeDocente = () => {
                 <p>Esta acción es irreversible. Ya no podrás modificar notas ni interactuar con el curso.</p>
                 <div className="confirmacion-acciones">
                   <button onClick={() => setMostrarConfirmacion(false)} className="btn-outline">Cancelar</button>
-                  <button onClick={() => cambiarEstadoCurso('FINALIZADO')} className="btn-modal-action danger">
+                  <button onClick={() => cambiarEstadoCursoHandler('FINALIZADO')} className="btn-modal-action danger">
                     Sí, Finalizar Curso
                   </button>
                 </div>
@@ -179,7 +231,7 @@ const HomeDocente = () => {
                 {cursoActual.estado_curso === 'NO ACTIVO' && (
                   <>
                     <p>Este curso aún no ha comenzado. ¿Deseas dar inicio a las clases?</p>
-                    <button className="btn-modal-action success" onClick={() => cambiarEstadoCurso('ACTIVO')}>
+                    <button className="btn-modal-action success" onClick={() => cambiarEstadoCursoHandler('ACTIVO')}>
                       <IconPlay /> Iniciar Curso Ahora
                     </button>
                   </>
