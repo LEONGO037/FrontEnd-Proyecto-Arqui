@@ -1,6 +1,5 @@
 // docenteMenu.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { obtenerMisCursos, obtenerEstudiantesCurso, guardarNotasEstudiantes, obtenerMetricasCurso, cambiarEstadoCurso } from '../../services/docenteApi';
 import './docenteMenu.css';
@@ -28,15 +27,12 @@ const VISUAL = [
   { icono: '📡', color: 'linear-gradient(135deg,#1e3a5f,#2e6da4)', categoria: 'Redes' },
 ];
 
-// Configuración Base URL para el Backend
-const API_BASE_URL = 'http://localhost:3000/api';
-
 const HomeDocente = () => {
-  const navigate = useNavigate();
   const { usuario } = useAuth();
   
   const [misCursos, setMisCursos] = useState([]);
-  const [metricas, setMetricas] = useState({ totalAlumnos: 0, cursosActivos: 0, calificacionPromedio: 4.85 }); // calificacion hardcoded visual
+  const [metricas, setMetricas] = useState({ totalAlumnos: 0, cursosActivos: 0, calificacionPromedio: 0 });
+  const [metricasCurso, setMetricasCurso] = useState({ promedio_curso: 0, tasa_aprobacion: 0, asistencia_promedio: 0 });
   const [cargando, setCargando] = useState(true);
 
   // Estados de Búsqueda y Filtros
@@ -53,53 +49,38 @@ const HomeDocente = () => {
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
 
-  // Helper para headers de autenticación (Asegúrate que el AuthContext o localStorage gestione el token JWT)
-  const getAuthHeaders = () => ({
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${localStorage.getItem('token') || ''}` 
-  });
-
-  const cargarDashboard = async () => {
-    setCargando(true);
-    try {
-      // Peticiones concurrentes para el Dashboard (Cursos + Métricas)
-      const [resCursos, resCursosActivos, resEstudiantesActivos] = await Promise.all([
-        fetch(`${API_BASE_URL}/docente/cursos`, { headers: getAuthHeaders() }),
-        fetch(`${API_BASE_URL}/docente/cursos-activos/cantidad`, { headers: getAuthHeaders() }),
-        fetch(`${API_BASE_URL}/docente/estudiantes-activos/cantidad`, { headers: getAuthHeaders() })
-      ]);
-
-      if (resCursos.ok) {
-        const dataCursos = await resCursos.json();
-        // Mapeo adaptando la respuesta del backend
-        setMisCursos(dataCursos.map(c => ({
-          ...c,
-          estado_curso: c.estado || (c.activo ? 'ACTIVO' : 'NO ACTIVO'),
-          alumnos: c.alumnos || 0, // Fallback si aún no viene en el query
-          calificacion: c.calificacion || 0 // Fallback
-        })));
-      }
-
-      let actCursos = 0, actEstudiantes = 0;
-      if (resCursosActivos.ok) actCursos = (await resCursosActivos.json()).cantidad;
-      if (resEstudiantesActivos.ok) actEstudiantes = (await resEstudiantesActivos.json()).cantidad_estudiantes;
-
-      setMetricas(prev => ({
-        ...prev,
-        cursosActivos: actCursos,
-        totalAlumnos: actEstudiantes
-      }));
-
-    } catch (error) {
-      console.error("Error al cargar dashboard:", error);
-      mostrarToast("Error conectando con el servidor", "error");
-    } finally {
-      setCargando(false);
-    }
-  };
+  const estadoParaUI = (estado) => (estado === 'NO_ACTIVO' ? 'NO ACTIVO' : estado);
+  const estadoParaAPI = (estado) => (estado === 'NO ACTIVO' ? 'NO_ACTIVO' : estado);
 
   useEffect(() => {
-    cargarDashboard();
+    const cargarDatos = async () => {
+      try {
+        setCargando(true);
+        const cursos = await obtenerMisCursos();
+        const cursosNormalizados = (cursos || []).map((curso) => ({
+          ...curso,
+          estado_curso: estadoParaUI(curso.estado_curso),
+          alumnos: Number(curso.alumnos || 0),
+          calificacion: Number(curso.calificacion || 0)
+        }));
+
+        setMisCursos(cursosNormalizados);
+
+        const totalAlumnos = cursosNormalizados.reduce((sum, curso) => sum + curso.alumnos, 0);
+        const cursosActivos = cursosNormalizados.filter((c) => c.estado_curso === 'ACTIVO').length;
+        const calificacionPromedio = cursosNormalizados.length > 0
+          ? Number((cursosNormalizados.reduce((sum, curso) => sum + curso.calificacion, 0) / cursosNormalizados.length).toFixed(2))
+          : 0;
+
+        setMetricas({ totalAlumnos, cursosActivos, calificacionPromedio });
+      } catch (error) {
+        mostrarToast('Error al cargar los cursos: ' + error.message, 'error');
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    cargarDatos();
   }, []);
 
   const mostrarToast = (mensaje, tipo = 'info') => {
@@ -108,36 +89,34 @@ const HomeDocente = () => {
     toastTimerRef.current = setTimeout(() => setToast(null), 5000);
   };
 
-  const cargarEstudiantesDelCurso = async (curso_id) => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/docente/curso/${curso_id}/estudiantes`, { headers: getAuthHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        setAlumnosCurso(data.map(al => ({
-          id: al.id,
-          nombre: `${al.nombre} ${al.apellido_paterno} ${al.apellido_materno || ''}`.trim(),
-          ci: al.ci_nit || 'N/A',
-          notaFinal: al.nota_final,
-          asistencia: 100, // Placeholder hasta que lo integres en la BD
-          error: false
-        })));
-      } else {
-        mostrarToast("No se pudieron cargar los estudiantes", "error");
-      }
-    } catch (error) {
-      mostrarToast("Error de red al obtener estudiantes", "error");
-    }
-  };
-
-  const abrirModal = (tipo, curso) => {
+  const abrirModal = async (tipo, curso) => {
     setCursoActual(curso);
     setModalActivo(tipo);
     setMostrarConfirmacion(false);
     
-    // Si abrimos la vista de alumnos o asignación de notas, consumimos la API
-    if (tipo === 'alumnos' || tipo === 'notas') {
-      setAlumnosCurso([]); // Limpiar estado residual
-      cargarEstudiantesDelCurso(curso.id);
+    try {
+      if (tipo === 'alumnos' || tipo === 'notas') {
+        const estudiantes = await obtenerEstudiantesCurso(curso.id);
+        setAlumnosCurso(
+          (estudiantes || []).map(al => ({
+            ...al,
+            notaFinal: al.nota_final ?? null,
+            error: false
+          }))
+        );
+      }
+
+      if (tipo === 'metricas') {
+        const dataMetricas = await obtenerMetricasCurso(curso.id);
+        setMetricasCurso({
+          promedio_curso: Number(dataMetricas?.promedio_curso || 0),
+          tasa_aprobacion: Number(dataMetricas?.tasa_aprobacion || 0),
+          asistencia_promedio: Number(dataMetricas?.asistencia_promedio || 0)
+        });
+      }
+    } catch (error) {
+      mostrarToast('Error al cargar datos: ' + error.message, 'error');
+      setModalActivo(null);
     }
   };
 
@@ -147,28 +126,16 @@ const HomeDocente = () => {
     setMostrarConfirmacion(false);
   };
 
-  const cambiarEstadoCurso = async (nuevoEstado) => {
+  const cambiarEstadoCursoHandler = async (nuevoEstado) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/docente/estado-curso`, {
-        method: 'PUT',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          curso_id: cursoActual.id,
-          estado: nuevoEstado
-        })
-      });
+      const estadoApi = estadoParaAPI(nuevoEstado);
+      await cambiarEstadoCurso(cursoActual.id, estadoApi);
 
-      if (res.ok) {
-        setMisCursos(misCursos.map(c => c.id === cursoActual.id ? { ...c, estado_curso: nuevoEstado } : c));
-        mostrarToast(`El curso ha cambiado a: ${nuevoEstado}`, 'exito');
-        cerrarModal();
-        cargarDashboard(); // Refrescar métricas
-      } else {
-        const err = await res.json();
-        mostrarToast(err.error || "Error al actualizar el estado", "error");
-      }
+      setMisCursos(misCursos.map(c => c.id === cursoActual.id ? { ...c, estado_curso: estadoParaUI(estadoApi) } : c));
+      mostrarToast(`El curso ha cambiado a: ${nuevoEstado}`, 'exito');
+      cerrarModal();
     } catch (error) {
-      mostrarToast("Error de conexión al cambiar estado", "error");
+      mostrarToast('Error: ' + error.message, 'error');
     }
   };
 
@@ -188,26 +155,16 @@ const HomeDocente = () => {
     if (hayErroresEnNotas) return;
 
     try {
-      // Filtrar a los estudiantes que tienen una nota digitada
-      const promesasGuardado = alumnosCurso
-        .filter(al => al.notaFinal !== null && al.notaFinal !== undefined)
-        .map(al => fetch(`${API_BASE_URL}/docente/curso/${cursoActual.id}/estudiante/${al.id}/nota`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ nota: Number(al.notaFinal) })
-        }));
+      const notas = alumnosCurso.map(al => ({
+        estudiante_curso_id: al.id,
+        nota_final: al.notaFinal
+      }));
 
-      const resultados = await Promise.all(promesasGuardado);
-      
-      const hayFallas = resultados.some(res => !res.ok);
-      if (hayFallas) {
-        mostrarToast("Se guardaron parcialmente. Hubo error en algunos alumnos.", 'warning');
-      } else {
-        mostrarToast("Calificaciones guardadas exitosamente en la base de datos.", 'exito');
-        cerrarModal();
-      }
+      await guardarNotasEstudiantes(cursoActual.id, notas);
+      mostrarToast('Calificaciones guardadas exitosamente en la base de datos.', 'exito');
+      cerrarModal();
     } catch (error) {
-      mostrarToast("Error crítico guardando las calificaciones.", 'error');
+      mostrarToast('Error: ' + error.message, 'error');
     }
   };
 
@@ -410,17 +367,17 @@ const HomeDocente = () => {
             <div className="metrics-grid">
               <div className="metric-box">
                 <h4>Promedio del Curso</h4>
-                <div className="metric-value text-blue">78.5 <small>/100</small></div>
+                <div className="metric-value text-blue">{metricasCurso.promedio_curso.toFixed(1)} <small>/100</small></div>
               </div>
               <div className="metric-box">
                 <h4>Tasa de Aprobación</h4>
-                <div className="metric-value text-green">85%</div>
-                <div className="progress-bar"><div className="progress-fill" style={{width: '85%', background: 'var(--verde)'}}></div></div>
+                <div className="metric-value text-green">{metricasCurso.tasa_aprobacion.toFixed(1)}%</div>
+                <div className="progress-bar"><div className="progress-fill" style={{width: `${Math.max(0, Math.min(100, metricasCurso.tasa_aprobacion))}%`, background: 'var(--verde)'}}></div></div>
               </div>
               <div className="metric-box">
                 <h4>Asistencia Promedio</h4>
-                <div className="metric-value text-orange">92%</div>
-                <div className="progress-bar"><div className="progress-fill" style={{width: '92%', background: 'var(--naranja)'}}></div></div>
+                <div className="metric-value text-orange">{metricasCurso.asistencia_promedio.toFixed(1)}%</div>
+                <div className="progress-bar"><div className="progress-fill" style={{width: `${Math.max(0, Math.min(100, metricasCurso.asistencia_promedio))}%`, background: 'var(--naranja)'}}></div></div>
               </div>
             </div>
           </div>
@@ -512,7 +469,7 @@ const HomeDocente = () => {
         {cargando ? (
           <div className="cargando-estado">Cargando tu panel de gestión desde la Base de Datos...</div>
         ) : cursosFiltrados.length === 0 ? (
-          <div className="vacio-estado">No se encontraron cursos registrados con los filtros actuales.</div>
+          <div className="vacio-estado">No se encontraron cursos con los filtros actuales.</div>
         ) : (
           <div className="cursos-docente-grid">
             {cursosFiltrados.map((curso, i) => {

@@ -59,14 +59,14 @@ export const guardarNotasEstudiantes = async (cursoId, notas) => {
 
 // Obtener métricas de un curso
 export const obtenerMetricasCurso = async (cursoId) => {
-  return jsonRequest(`/api/docente/${cursoId}/metricas`, { method: 'GET' });
+  return jsonRequest(`/api/docente/curso/${cursoId}/metricas`, { method: 'GET' });
 };
 
 // Cambiar estado del curso
 export const cambiarEstadoCurso = async (cursoId, estadoCurso) => {
   return jsonRequest('/api/docente/estado-curso', {
     method: 'PUT',
-    body: JSON.stringify({ curso_id: cursoId, estado_curso: estadoCurso })
+    body: JSON.stringify({ curso_id: cursoId, estado: estadoCurso })
   });
 };
 
