@@ -32,15 +32,29 @@ export const obtenerMisCursos = async () => {
 
 // Obtener estudiantes de un curso
 export const obtenerEstudiantesCurso = async (cursoId) => {
-  return jsonRequest(`/api/docente/${cursoId}/estudiantes`, { method: 'GET' });
+  return jsonRequest(`/api/docente/curso/${cursoId}/estudiantes`, { method: 'GET' });
 };
 
 // Guardar notas de estudiantes
 export const guardarNotasEstudiantes = async (cursoId, notas) => {
-  return jsonRequest(`/api/docente/${cursoId}/notas`, {
-    method: 'PUT',
-    body: JSON.stringify({ notas })
-  });
+  const notasValidas = (notas || []).filter(
+    (item) => item?.estudiante_curso_id && item?.nota_final !== null && item?.nota_final !== undefined
+  );
+
+  if (notasValidas.length === 0) {
+    return { mensaje: 'No hay notas válidas para guardar', resultados: [] };
+  }
+
+  const resultados = await Promise.all(
+    notasValidas.map((item) =>
+      jsonRequest(`/api/docente/curso/${cursoId}/estudiante/${item.estudiante_curso_id}/nota`, {
+        method: 'POST',
+        body: JSON.stringify({ nota: item.nota_final })
+      })
+    )
+  );
+
+  return { mensaje: 'Notas guardadas correctamente', resultados };
 };
 
 // Obtener métricas de un curso
