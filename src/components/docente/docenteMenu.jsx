@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { obtenerMisCursos, obtenerEstudiantesCurso, guardarNotasEstudiantes, obtenerMetricasCurso, cambiarEstadoCurso } from '../../services/docenteApi';
+import { validateNotas } from '../../utils/formValidators';
 import './docenteMenu.css';
 
 // --- Iconos en línea ---
@@ -164,6 +165,13 @@ const HomeDocente = () => {
 
   const guardarNotas = async (e) => {
     e.preventDefault();
+
+    const validacionNotas = validateNotas(alumnosCurso);
+    if (!validacionNotas.isValid) {
+      mostrarToast(validacionNotas.error, 'error');
+      return;
+    }
+
     if (hayErroresEnNotas) return;
 
     try {

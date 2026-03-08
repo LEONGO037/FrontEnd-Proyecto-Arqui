@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../layout/headerPrincipal';
 import Footer from '../layout/footerPrincipal';
+import { validateForm } from '../../utils/formValidators';
 import './administrarCursos.css';
 
 const API_BASE = 'http://localhost:3000';
@@ -21,7 +22,7 @@ const AdministrarCursos = () => {
         descripcion: '',
         costo: '',
         cupo_maximo: '',
-        minimo_estudiantes: '1',
+        minimo_estudiantes: '',
         prerrequisitos: []
     });
 
@@ -67,22 +68,18 @@ const AdministrarCursos = () => {
         setError(null);
         setMensajeExito('');
 
+        const validacion = validateForm('crearCurso', formData);
+        if (!validacion.isValid) {
+            setError(validacion.firstError);
+            return;
+        }
+
         const payload = {
             ...formData,
-            costo: parseFloat(formData.costo),
-            cupo_maximo: parseInt(formData.cupo_maximo),
-            minimo_estudiantes: parseInt(formData.minimo_estudiantes)
+            costo: Number(formData.costo),
+            cupo_maximo: Number(formData.cupo_maximo),
+            minimo_estudiantes: formData.minimo_estudiantes ? Number(formData.minimo_estudiantes) : 1
         };
-
-        if (payload.minimo_estudiantes < 1) {
-            setError('El mínimo de estudiantes debe ser mayor o igual a 1');
-            return;
-        }
-
-        if (payload.minimo_estudiantes > payload.cupo_maximo) {
-            setError('El mínimo de estudiantes no puede ser mayor al cupo máximo');
-            return;
-        }
 
         const token = localStorage.getItem('token');
         try {
@@ -107,7 +104,7 @@ const AdministrarCursos = () => {
                 descripcion: '',
                 costo: '',
                 cupo_maximo: '',
-                minimo_estudiantes: '1',
+                minimo_estudiantes: '',
                 prerrequisitos: []
             });
             fetchCursos(); // Recargar lista
@@ -214,8 +211,7 @@ const AdministrarCursos = () => {
                                                 name="minimo_estudiantes"
                                                 value={formData.minimo_estudiantes}
                                                 onChange={handleChange}
-                                                required
-                                                placeholder="1"
+                                                placeholder={formData.cupo_maximo ? `Ej: ${Math.ceil(Number(formData.cupo_maximo) * 0.3)}` : '1'}
                                             />
                                         </div>
                                     </div>
