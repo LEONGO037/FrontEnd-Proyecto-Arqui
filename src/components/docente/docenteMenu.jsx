@@ -60,6 +60,7 @@ const HomeDocente = () => {
         const cursosNormalizados = (cursos || []).map((curso) => ({
           ...curso,
           estado_curso: estadoParaUI(curso.estado_curso),
+          minimo_estudiantes: Number(curso.minimo_estudiantes || 1),
           alumnos: Number(curso.alumnos || 0),
           calificacion: Number(curso.calificacion || 0)
         }));
@@ -129,6 +130,17 @@ const HomeDocente = () => {
   const cambiarEstadoCursoHandler = async (nuevoEstado) => {
     try {
       const estadoApi = estadoParaAPI(nuevoEstado);
+
+      if (estadoApi === 'ACTIVO') {
+        const inscritos = Number(cursoActual?.alumnos || 0);
+        const minimoEstudiantes = Number(cursoActual?.minimo_estudiantes || 1);
+
+        if (inscritos < minimoEstudiantes) {
+          mostrarToast(`No se puede iniciar. Inscritos: ${inscritos}. Mínimo requerido: ${minimoEstudiantes}.`, 'error');
+          return;
+        }
+      }
+
       await cambiarEstadoCurso(cursoActual.id, estadoApi);
 
       setMisCursos(misCursos.map(c => c.id === cursoActual.id ? { ...c, estado_curso: estadoParaUI(estadoApi) } : c));
@@ -233,10 +245,20 @@ const HomeDocente = () => {
               <div className="admin-actions-box">
                 {cursoActual.estado_curso === 'NO ACTIVO' && (
                   <>
-                    <p>Este curso aún no ha comenzado. ¿Deseas dar inicio a las clases?</p>
-                    <button className="btn-modal-action success" onClick={() => cambiarEstadoCursoHandler('ACTIVO')}>
+                    <p>
+                      Este curso aún no ha comenzado. Inscritos actuales: <strong>{cursoActual.alumnos}</strong>.
+                      Mínimo requerido: <strong>{cursoActual.minimo_estudiantes}</strong>.
+                    </p>
+                    <button
+                      className="btn-modal-action success"
+                      onClick={() => cambiarEstadoCursoHandler('ACTIVO')}
+                      disabled={Number(cursoActual.alumnos) < Number(cursoActual.minimo_estudiantes)}
+                    >
                       <IconPlay /> Iniciar Curso Ahora
                     </button>
+                    {Number(cursoActual.alumnos) < Number(cursoActual.minimo_estudiantes) && (
+                      <p>No puedes iniciar el curso hasta cumplir el mínimo de inscritos.</p>
+                    )}
                   </>
                 )}
                 {cursoActual.estado_curso === 'ACTIVO' && (
@@ -428,7 +450,7 @@ const HomeDocente = () => {
           <div className="stat-card">
             <div className="stat-icon naranja"><IconStar /></div>
             <div className="stat-info">
-              <h3>{metricas.calificacionPromedio} <span className="stat-max">/ 5.0</span></h3>
+              <h3>{metricas.calificacionPromedio} <span className="stat-max">/ 100.0</span></h3>
               <p>Calificación Promedio</p>
             </div>
           </div>

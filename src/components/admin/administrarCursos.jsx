@@ -21,6 +21,7 @@ const AdministrarCursos = () => {
         descripcion: '',
         costo: '',
         cupo_maximo: '',
+        minimo_estudiantes: '1',
         prerrequisitos: []
     });
 
@@ -69,8 +70,19 @@ const AdministrarCursos = () => {
         const payload = {
             ...formData,
             costo: parseFloat(formData.costo),
-            cupo_maximo: parseInt(formData.cupo_maximo)
+            cupo_maximo: parseInt(formData.cupo_maximo),
+            minimo_estudiantes: parseInt(formData.minimo_estudiantes)
         };
+
+        if (payload.minimo_estudiantes < 1) {
+            setError('El mínimo de estudiantes debe ser mayor o igual a 1');
+            return;
+        }
+
+        if (payload.minimo_estudiantes > payload.cupo_maximo) {
+            setError('El mínimo de estudiantes no puede ser mayor al cupo máximo');
+            return;
+        }
 
         const token = localStorage.getItem('token');
         try {
@@ -95,6 +107,7 @@ const AdministrarCursos = () => {
                 descripcion: '',
                 costo: '',
                 cupo_maximo: '',
+                minimo_estudiantes: '1',
                 prerrequisitos: []
             });
             fetchCursos(); // Recargar lista
@@ -190,6 +203,20 @@ const AdministrarCursos = () => {
                                         <div className="form-group">
                                             <label>Cupo Máximo</label>
                                             <input type="number" name="cupo_maximo" value={formData.cupo_maximo} onChange={handleChange} required placeholder="0" />
+                                        </div>
+                                    </div>
+                                    <div className="form-grid-2">
+                                        <div className="form-group">
+                                            <label>Mínimo de Estudiantes</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                name="minimo_estudiantes"
+                                                value={formData.minimo_estudiantes}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="1"
+                                            />
                                         </div>
                                     </div>
                                     <div className="form-group">
