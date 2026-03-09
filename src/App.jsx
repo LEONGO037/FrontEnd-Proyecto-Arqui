@@ -14,7 +14,7 @@ import AdminMenu from './components/admin/adminMenu';
 import AdministrarCursos from './components/admin/administrarCursos';
 import AdminAsignarCursosDocente from './components/admin/adminAsignarCursosDocente';
 import AdminPagos from './components/admin/adminPagos';
-import AdminHeader from './components/admin/AdminHeader';
+//import AdminHeader from './components/admin/AdminHeader';
 import AdminPerfil from './components/admin/AdminPerfil';
 import AdminUsuarios from './components/admin/adminUsuarios';
 import GestionInscripciones from './components/admin/gestionInscripciones';
