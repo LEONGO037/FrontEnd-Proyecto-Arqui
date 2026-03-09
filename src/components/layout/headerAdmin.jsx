@@ -111,8 +111,8 @@ const HeaderAdmin = () => {
           <div className="secure-badge">
             <div className="lock-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </div>
             <div className="badge-text">
@@ -173,18 +173,6 @@ const HeaderAdmin = () => {
                   onMouseLeave={e => e.target.style.background = 'none'}
                 >
                   📊 Panel de Control
-                </button>
-                <button
-                  onClick={() => handleNavigate('/')}
-                  style={{
-                    width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
-                    textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
-                    color: '#2563eb', fontFamily: 'inherit', transition: 'background 0.2s',
-                  }}
-                  onMouseEnter={e => e.target.style.background = '#eff6ff'}
-                  onMouseLeave={e => e.target.style.background = 'none'}
-                >
-                  🌐 Ir al Sitio Principal
                 </button>
                 <button
                   onClick={handleLogout}

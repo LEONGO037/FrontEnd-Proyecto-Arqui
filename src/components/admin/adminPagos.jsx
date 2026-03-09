@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import AdminHeader from './AdminHeader';
+import AdminHeader from '../layout/headerAdmin';
 import Footer from '../layout/footerPrincipal';
 import { getAllPagos } from '../../services/pagosApi';
 import './adminPagos.css';

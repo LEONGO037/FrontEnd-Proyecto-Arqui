@@ -1,7 +1,7 @@
 // administrarCursos.jsx — Gestión de cursos para administradores
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminHeader from './AdminHeader';
+import AdminHeader from '../layout/headerAdmin';
 import Footer from '../layout/footerPrincipal';
 import './administrarCursos.css';
 
@@ -294,11 +294,10 @@ const AdministrarCursos = () => {
                                             {cursos.map(c => (
                                                 <label
                                                     key={c.id}
-                                                    className={`prerrequisito-item ${
-                                                        formData.prerrequisitos.includes(c.id)
+                                                    className={`prerrequisito-item ${formData.prerrequisitos.includes(c.id)
                                                             ? 'selected'
                                                             : ''
-                                                    }`}
+                                                        }`}
                                                 >
                                                     <input
                                                         type="checkbox"

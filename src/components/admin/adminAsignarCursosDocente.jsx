@@ -1,7 +1,7 @@
 // adminAsignarCursosDocente.jsx — Asignación de docentes a cursos
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import AdminHeader from './AdminHeader';
+import AdminHeader from '../layout/headerAdmin';
 import Footer from '../layout/footerPrincipal';
 import './adminAsignarCursosDocente.css';
 
