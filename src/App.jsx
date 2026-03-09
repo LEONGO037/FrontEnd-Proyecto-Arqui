@@ -13,6 +13,7 @@ import AdminMenu from './components/admin/adminMenu';
 import AdministrarCursos from './components/admin/administrarCursos';
 import AdminAsignarCursosDocente from './components/admin/adminAsignarCursosDocente';
 import DocenteMenu from './components/docente/docenteMenu';
+import GestionInscripciones from './components/admin/gestionInscripciones';
 
 import './App.css';
 
@@ -66,6 +67,18 @@ function App() {
           <Route path="/admin/asignar-docente/:cursoId" element={
             <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
               <AdminAsignarCursosDocente />
+            </RoleProtectedRoute>
+          } />
+
+          <Route path="/admin/inscripciones" element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <div className="app-wrapper">
+                <Header />
+                <main style={{ minHeight: '80vh' }}>
+                  <GestionInscripciones />
+                </main>
+                <Footer />
+              </div>
             </RoleProtectedRoute>
           } />
 
