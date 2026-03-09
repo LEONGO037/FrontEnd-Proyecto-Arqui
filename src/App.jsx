@@ -72,13 +72,7 @@ function App() {
 
           <Route path="/admin/inscripciones" element={
             <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
-              <div className="app-wrapper">
-                <Header />
-                <main style={{ minHeight: '80vh' }}>
-                  <GestionInscripciones />
-                </main>
-                <Footer />
-              </div>
+              <GestionInscripciones />
             </RoleProtectedRoute>
           } />
 

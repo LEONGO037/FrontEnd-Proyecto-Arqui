@@ -1,6 +1,9 @@
 // gestionInscripciones.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
+// Importamos los componentes de layout tal como en administrarCursos.jsx
+import HeaderAdmin from '../layout/headerAdmin';
+import Footer from '../layout/footerPrincipal';
 import './gestionInscripciones.css';
 
 const API_BASE = 'http://localhost:3000';
@@ -128,196 +131,204 @@ const GestionInscripciones = () => {
 
   return (
     <div className="gestion-inscripciones-page">
-      
-      {/* ── Banner Superior (Hero) ── */}
-      <div className="admin-header-banner">
-        <div className="admin-header-bg"><span /><span /></div>
-        <div className="admin-header-inner">
-          <div className="admin-breadcrumb">
-            <a href="/admin">Panel Admin</a><span className="sep">›</span><span>Inscripciones</span>
-          </div>
-          <h1>Gestión de <span>Inscripciones</span></h1>
-          <p>Monitorea la ocupación en tiempo real y el estado académico de los estudiantes.</p>
-        </div>
-      </div>
+      {/* 1. SE AGREGA EL HEADER ADMIN */}
+      <HeaderAdmin />
 
-      <div className="admin-page-body">
-        {/* ── Dashboard Resumen (Flotante) ── */}
-        <div className="admin-kpi-grid">
-          <div className="kpi-card">
-            <div className="kpi-icon blue"><IconUsers /></div>
-            <div className="kpi-info">
-              <h3>{totalInscripciones}</h3>
-              <p>Total Alumnos Inscritos</p>
+      {/* 2. ENVOLVEMOS EL CONTENIDO EN UN MAIN */}
+      <main>
+        {/* ── Banner Superior (Hero) ── */}
+        <div className="admin-header-banner">
+          <div className="admin-header-bg"><span /><span /></div>
+          <div className="admin-header-inner">
+            <div className="admin-breadcrumb">
+              <a href="/admin">Panel Admin</a><span className="sep">›</span><span>Inscripciones</span>
             </div>
-          </div>
-          <div className="kpi-card">
-            <div className="kpi-icon red"><IconAlertCircle /></div>
-            <div className="kpi-info">
-              <h3>{cursosEnRiesgo}</h3>
-              <p>Cursos bajo mínimo requerido</p>
-            </div>
-          </div>
-          <div className="kpi-card">
-            <div className="kpi-icon green"><IconCheckCircle /></div>
-            <div className="kpi-info">
-              <h3>Bs. {ingresosEstimados.toLocaleString('es-BO')}</h3>
-              <p>Recaudación Bruta Estimada</p>
-            </div>
+            <h1>Gestión de <span>Inscripciones</span></h1>
+            <p>Monitorea la ocupación en tiempo real y el estado académico de los estudiantes.</p>
           </div>
         </div>
 
-        {/* ── Barra de Herramientas ── */}
-        <div className="admin-toolbar">
-          <div className="toolbar-search">
-            <IconSearch />
-            <input 
-              type="text" 
-              placeholder="Buscar curso por nombre..." 
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
+        <div className="admin-page-body">
+          {/* ── Dashboard Resumen (Flotante) ── */}
+          <div className="admin-kpi-grid">
+            <div className="kpi-card">
+              <div className="kpi-icon blue"><IconUsers /></div>
+              <div className="kpi-info">
+                <h3>{totalInscripciones}</h3>
+                <p>Total Alumnos Inscritos</p>
+              </div>
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-icon red"><IconAlertCircle /></div>
+              <div className="kpi-info">
+                <h3>{cursosEnRiesgo}</h3>
+                <p>Cursos bajo mínimo requerido</p>
+              </div>
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-icon green"><IconCheckCircle /></div>
+              <div className="kpi-info">
+                <h3>Bs. {ingresosEstimados.toLocaleString('es-BO')}</h3>
+                <p>Recaudación Bruta Estimada</p>
+              </div>
+            </div>
           </div>
-          
-          <div className="toolbar-filter">
-            <IconFilter />
-            <select value={filtroOcupacion} onChange={(e) => setFiltroOcupacion(e.target.value)}>
-              <option value="TODOS">Todos los cursos</option>
-              <option value="DISPONIBLES">Con cupos disponibles</option>
-              <option value="LLENOS">Cupos llenos (100%)</option>
-              <option value="RIESGO">En riesgo (Bajo mínimo)</option>
-            </select>
-          </div>
-        </div>
 
-        {/* ── Lista de Cursos (Acordeón) ── */}
-        <div className="lista-inscripciones-container">
-          {cargando ? (
-            <div className="state-box loading">
-              <div className="spinner"></div>
-              <p>Cargando datos de inscripciones...</p>
-            </div>
-          ) : errorFetch ? (
-            <div className="state-box error">
-              <IconAlertCircle />
-              <p>{errorFetch}</p>
-            </div>
-          ) : cursosFiltrados.length === 0 ? (
-            <div className="state-box empty">
+          {/* ── Barra de Herramientas ── */}
+          <div className="admin-toolbar">
+            <div className="toolbar-search">
               <IconSearch />
-              <p>No se encontraron cursos con estos filtros.</p>
+              <input 
+                type="text" 
+                placeholder="Buscar curso por nombre..." 
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
             </div>
-          ) : (
-            cursosFiltrados.map((curso, index) => {
-              const ocupados = curso.inscritos ? curso.inscritos.length : 0;
-              const porcentaje = (ocupados / curso.cupo_maximo) * 100;
-              const estaLleno = ocupados >= curso.cupo_maximo;
-              const enRiesgo = ocupados < curso.minimo_estudiantes;
+            
+            <div className="toolbar-filter">
+              <IconFilter />
+              <select value={filtroOcupacion} onChange={(e) => setFiltroOcupacion(e.target.value)}>
+                <option value="TODOS">Todos los cursos</option>
+                <option value="DISPONIBLES">Con cupos disponibles</option>
+                <option value="LLENOS">Cupos llenos (100%)</option>
+                <option value="RIESGO">En riesgo (Bajo mínimo)</option>
+              </select>
+            </div>
+          </div>
 
-              return (
-                <div 
-                  key={curso.id} 
-                  className={`curso-accordion-item ${cursoExpandido === curso.id ? 'expanded' : ''}`}
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
-                  {/* Cabecera del Acordeón */}
-                  <div className="accordion-header" onClick={() => toggleExpandir(curso.id)}>
-                    <div className="curso-info-principal">
-                      <h4>{curso.nombre}</h4>
-                      <div className="curso-badges">
-                        <span className="badge-precio">Bs. {Number(curso.costo)}</span>
-                        {estaLleno && <span className="badge-status full">Cupos Llenos</span>}
-                        {enRiesgo && !estaLleno && <span className="badge-status risk">Bajo Mínimo</span>}
-                      </div>
-                    </div>
+          {/* ── Lista de Cursos (Acordeón) ── */}
+          <div className="lista-inscripciones-container">
+            {cargando ? (
+              <div className="state-box loading">
+                <div className="spinner"></div>
+                <p>Cargando datos de inscripciones...</p>
+              </div>
+            ) : errorFetch ? (
+              <div className="state-box error">
+                <IconAlertCircle />
+                <p>{errorFetch}</p>
+              </div>
+            ) : cursosFiltrados.length === 0 ? (
+              <div className="state-box empty">
+                <IconSearch />
+                <p>No se encontraron cursos con estos filtros.</p>
+              </div>
+            ) : (
+              cursosFiltrados.map((curso, index) => {
+                const ocupados = curso.inscritos ? curso.inscritos.length : 0;
+                const porcentaje = (ocupados / curso.cupo_maximo) * 100;
+                const estaLleno = ocupados >= curso.cupo_maximo;
+                const enRiesgo = ocupados < curso.minimo_estudiantes;
 
-                    <div className="curso-ocupacion-visual">
-                      <div className="ocupacion-text">
-                        <strong>{ocupados}</strong> / {curso.cupo_maximo} cupos
-                      </div>
-                      <div className="progress-track">
-                        <div 
-                          className={`progress-fill ${estaLleno ? 'bg-red' : enRiesgo ? 'bg-orange' : 'bg-green'}`}
-                          style={{ width: `${Math.min(porcentaje, 100)}%` }}
-                        />
-                      </div>
-                      <div className="ocupacion-footer">
-                        <small className="minimo-req">Mínimo requerido: {curso.minimo_estudiantes}</small>
-                        <small className="porcentaje-text">{Math.round(porcentaje)}%</small>
-                      </div>
-                    </div>
-
-                    <div className="accordion-toggle-icon">
-                      {cursoExpandido === curso.id ? <IconChevronUp /> : <IconChevronDown />}
-                    </div>
-                  </div>
-
-                  {/* Contenido Expandible (Tabla de Alumnos) */}
-                  {cursoExpandido === curso.id && (
-                    <div className="accordion-body">
-                      {ocupados === 0 ? (
-                        <div className="no-students">
-                          <IconUsers />
-                          <p>Aún no hay estudiantes inscritos en este curso.</p>
+                return (
+                  <div 
+                    key={curso.id} 
+                    className={`curso-accordion-item ${cursoExpandido === curso.id ? 'expanded' : ''}`}
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    {/* Cabecera del Acordeón */}
+                    <div className="accordion-header" onClick={() => toggleExpandir(curso.id)}>
+                      <div className="curso-info-principal">
+                        <h4>{curso.nombre}</h4>
+                        <div className="curso-badges">
+                          <span className="badge-precio">Bs. {Number(curso.costo)}</span>
+                          {estaLleno && <span className="badge-status full">Cupos Llenos</span>}
+                          {enRiesgo && !estaLleno && <span className="badge-status risk">Bajo Mínimo</span>}
                         </div>
-                      ) : (
-                        <>
-                          <div className="accordion-actions">
-                            <button className="btn-export-csv" onClick={() => exportarCSV(curso)}>
-                              <IconDownload /> Exportar Lista CSV
-                            </button>
-                          </div>
-                          <div className="table-wrapper">
-                            <table className="admin-table">
-                              <thead>
-                                <tr>
-                                  <th>Nº</th>
-                                  <th>Estudiante</th>
-                                  <th>CI / NIT</th>
-                                  <th>Fecha Inscripción</th>
-                                  <th>Estado Académico</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {curso.inscritos.map((alumno, idx) => (
-                                  <tr key={alumno.id_relacion}>
-                                    <td className="text-muted">{idx + 1}</td>
-                                    <td className="fw-bold">{alumno.nombre} {alumno.apellido}</td>
-                                    <td>{alumno.ci_nit}</td>
-                                    <td>{new Date(alumno.fecha_registro).toLocaleDateString('es-BO')}</td>
-                                    <td>
-                                      <span className={`estado-academico-badge ${alumno.estado_academico.toLowerCase()}`}>
-                                        {alumno.estado_academico}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
+                      </div>
 
-      {/* ── Notificaciones Flotantes (Toasts) ── */}
-      {toast && (
-        <div className={`toast-flotante ${toast.tipo}`}>
-          <div className="toast-icon">
-            {toast.tipo === 'exito' ? <IconCheckCircle /> : <IconAlertCircle />}
-          </div>
-          <div className="toast-content">
-            <span className="toast-title">{toast.tipo === 'exito' ? '¡Éxito!' : 'Aviso'}</span>
-            <span className="toast-message">{toast.mensaje}</span>
+                      <div className="curso-ocupacion-visual">
+                        <div className="ocupacion-text">
+                          <strong>{ocupados}</strong> / {curso.cupo_maximo} cupos
+                        </div>
+                        <div className="progress-track">
+                          <div 
+                            className={`progress-fill ${estaLleno ? 'bg-red' : enRiesgo ? 'bg-orange' : 'bg-green'}`}
+                            style={{ width: `${Math.min(porcentaje, 100)}%` }}
+                          />
+                        </div>
+                        <div className="ocupacion-footer">
+                          <small className="minimo-req">Mínimo requerido: {curso.minimo_estudiantes}</small>
+                          <small className="porcentaje-text">{Math.round(porcentaje)}%</small>
+                        </div>
+                      </div>
+
+                      <div className="accordion-toggle-icon">
+                        {cursoExpandido === curso.id ? <IconChevronUp /> : <IconChevronDown />}
+                      </div>
+                    </div>
+
+                    {/* Contenido Expandible (Tabla de Alumnos) */}
+                    {cursoExpandido === curso.id && (
+                      <div className="accordion-body">
+                        {ocupados === 0 ? (
+                          <div className="no-students">
+                            <IconUsers />
+                            <p>Aún no hay estudiantes inscritos en este curso.</p>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="accordion-actions">
+                              <button className="btn-export-csv" onClick={() => exportarCSV(curso)}>
+                                <IconDownload /> Exportar Lista CSV
+                              </button>
+                            </div>
+                            <div className="table-wrapper">
+                              <table className="admin-table">
+                                <thead>
+                                  <tr>
+                                    <th>Nº</th>
+                                    <th>Estudiante</th>
+                                    <th>CI / NIT</th>
+                                    <th>Fecha Inscripción</th>
+                                    <th>Estado Académico</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {curso.inscritos.map((alumno, idx) => (
+                                    <tr key={alumno.id_relacion}>
+                                      <td className="text-muted">{idx + 1}</td>
+                                      <td className="fw-bold">{alumno.nombre} {alumno.apellido}</td>
+                                      <td>{alumno.ci_nit}</td>
+                                      <td>{new Date(alumno.fecha_registro).toLocaleDateString('es-BO')}</td>
+                                      <td>
+                                        <span className={`estado-academico-badge ${alumno.estado_academico.toLowerCase()}`}>
+                                          {alumno.estado_academico}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
-      )}
+
+        {/* ── Notificaciones Flotantes (Toasts) ── */}
+        {toast && (
+          <div className={`toast-flotante ${toast.tipo}`}>
+            <div className="toast-icon">
+              {toast.tipo === 'exito' ? <IconCheckCircle /> : <IconAlertCircle />}
+            </div>
+            <div className="toast-content">
+              <span className="toast-title">{toast.tipo === 'exito' ? '¡Éxito!' : 'Aviso'}</span>
+              <span className="toast-message">{toast.mensaje}</span>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* 3. SE AGREGA EL FOOTER */}
+      <Footer />
     </div>
   );
 };
