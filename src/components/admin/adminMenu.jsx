@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Header from '../layout/headerPrincipal';
+import AdminHeader from './AdminHeader';
 import Footer from '../layout/footerPrincipal';
 import './adminMenu.css';
 
@@ -60,7 +60,7 @@ const AdminMenu = () => {
 
     return (
         <div className="admin-page">
-            <Header />
+            <AdminHeader />
 
             <main className="admin-main">
                 {/* Hero de bienvenida */}

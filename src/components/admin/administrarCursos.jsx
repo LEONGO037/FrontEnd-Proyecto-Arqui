@@ -1,7 +1,7 @@
 // administrarCursos.jsx — Gestión de cursos para administradores
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../layout/headerPrincipal';
+import AdminHeader from './AdminHeader';
 import Footer from '../layout/footerPrincipal';
 import './administrarCursos.css';
 
@@ -105,7 +105,7 @@ const AdministrarCursos = () => {
 
     return (
         <div className="admin-cursos-page">
-            <Header />
+            <AdminHeader />
 
             <main className="admin-cursos-main">
                 <div className="admin-cursos-header">

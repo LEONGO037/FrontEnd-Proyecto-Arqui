@@ -39,6 +39,16 @@ export const getAllPagos = async (limit = 10, offset = 0) => {
     });
 };
 
+/**
+ * Obtiene los pagos del usuario actual (estudiante)
+ */
+export const getMisPagos = async () => {
+    return await jsonRequest('/api/pagos/usuario', {
+        method: 'GET'
+    });
+};
+
 export default {
-    getAllPagos
+    getAllPagos,
+    getMisPagos
 };
