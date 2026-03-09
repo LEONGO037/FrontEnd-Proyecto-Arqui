@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import HeaderAdmin from '../layout/headerAdmin';
+import AdminHeader from './AdminHeader';
 import Footer from '../layout/footerPrincipal';
 import './adminMenu.css';
 
@@ -54,33 +54,46 @@ const AdminMenu = () => {
     const { usuario } = useAuth();
 
     const nombreAdmin = usuario?.nombre || 'Administrador';
+
     const fecha = new Date().toLocaleDateString('es-BO', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
     });
 
     return (
         <div className="admin-page">
-            <HeaderAdmin />
+            <AdminHeader />
 
             <main className="admin-main">
                 {/* Hero de bienvenida */}
                 <section className="admin-hero">
                     <div className="admin-hero-content">
-                        <div className="admin-avatar">{nombreAdmin.charAt(0).toUpperCase()}</div>
+                        <div className="admin-avatar">
+                            {nombreAdmin.charAt(0).toUpperCase()}
+                        </div>
+
                         <div>
                             <p className="admin-date">{fecha}</p>
+
                             <h1 className="admin-title">
                                 Bienvenido, <span className="admin-name">{nombreAdmin}</span>
                             </h1>
-                            <span className="admin-badge">Administrador del Sistema</span>
+
+                            <span className="admin-badge">
+                                Administrador del Sistema
+                            </span>
                         </div>
                     </div>
+
                     <div className="admin-hero-glow" />
                 </section>
 
-                {/* Tarjetas de acceso rápido */}
+                {/* Tarjetas */}
                 <section className="admin-grid-section">
                     <h2 className="admin-section-title">Panel de Control</h2>
+
                     <div className="admin-card-grid">
                         {cards.map((card) => (
                             <button
@@ -90,8 +103,15 @@ const AdminMenu = () => {
                                 style={{ '--card-color': card.color }}
                             >
                                 <div className="admin-card-icon">{card.icon}</div>
-                                <h3 className="admin-card-title">{card.title}</h3>
-                                <p className="admin-card-desc">{card.desc}</p>
+
+                                <h3 className="admin-card-title">
+                                    {card.title}
+                                </h3>
+
+                                <p className="admin-card-desc">
+                                    {card.desc}
+                                </p>
+
                                 <div className="admin-card-arrow">→</div>
                             </button>
                         ))}

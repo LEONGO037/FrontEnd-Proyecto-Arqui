@@ -1,7 +1,7 @@
 // adminAsignarCursosDocente.jsx — Asignación de docentes a cursos
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import HeaderAdmin from '../layout/headerAdmin';
+import AdminHeader from './AdminHeader';
 import Footer from '../layout/footerPrincipal';
 import './adminAsignarCursosDocente.css';
 
@@ -25,7 +25,6 @@ const AdminAsignarCursosDocente = () => {
             try {
                 const token = localStorage.getItem('token');
 
-                // 1. Obtener detalles del curso (solo los que no tienen docente)
                 const resCurso = await fetch(`${API_BASE}/api/cursos/sin-docente`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -34,7 +33,6 @@ const AdminAsignarCursosDocente = () => {
                 const cursoEncontrado = todosCursos.find(c => c.id === parseInt(cursoId));
                 setCurso(cursoEncontrado);
 
-                // 2. Obtener lista de docentes
                 const resDocentes = await fetch(`${API_BASE}/api/admin-docente-curso/docentes`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -59,6 +57,7 @@ const AdminAsignarCursosDocente = () => {
         setError(null);
         setExito(null);
         const token = localStorage.getItem('token');
+
         try {
             const res = await fetch(`${API_BASE}/api/admin-docente-curso/asignar-curso`, {
                 method: 'POST',
@@ -79,6 +78,7 @@ const AdminAsignarCursosDocente = () => {
 
             setExito('¡Docente asignado correctamente al curso!');
             setTimeout(() => navigate('/admin/cursos'), 2000);
+
         } catch (err) {
             setError(err.message);
         } finally {
@@ -92,7 +92,6 @@ const AdminAsignarCursosDocente = () => {
         return fullNombre.includes(query) || d.email?.toLowerCase().includes(query);
     });
 
-    // Componente de Esqueleto
     const SkeletonCard = () => (
         <div className="docente-assign-card skeleton">
             <div className="docente-assign-avatar skeleton-shimmer"></div>
@@ -107,7 +106,7 @@ const AdminAsignarCursosDocente = () => {
 
     return (
         <div className="admin-asignar-page">
-            <HeaderAdmin />
+            <AdminHeader />
 
             <main className="admin-asignar-main">
                 <div className="admin-asignar-header">
@@ -129,7 +128,8 @@ const AdminAsignarCursosDocente = () => {
 
                 <div className="asignar-search-bar">
                     <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg>
                     <input
                         type="text"
@@ -141,7 +141,6 @@ const AdminAsignarCursosDocente = () => {
 
                 <div className="docentes-cards-grid">
                     {cargando ? (
-                        // Mostrar 6 esqueletos mientras carga
                         [...Array(6)].map((_, i) => <SkeletonCard key={i} />)
                     ) : docentesFiltrados.length === 0 ? (
                         <div className="vacio-box">No se encontraron docentes disponibles.</div>
@@ -153,11 +152,17 @@ const AdminAsignarCursosDocente = () => {
                             <div className="docente-assign-info">
                                 <h3>{`${docente.nombre} ${docente.apellido_paterno || ''} ${docente.apellido_materno || ''}`.trim()}</h3>
                                 <p>{docente.email}</p>
-                                <div className="docente-meta-info" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1rem' }}>
+
+                                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1rem' }}>
                                     <span className="docente-id-badge">ID: {docente.id}</span>
-                                    {docente.telefono && <span className="docente-id-badge" style={{ background: '#ecfdf5', color: '#059669' }}>📞 {docente.telefono}</span>}
+                                    {docente.telefono && (
+                                        <span className="docente-id-badge" style={{ background: '#ecfdf5', color: '#059669' }}>
+                                            📞 {docente.telefono}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
+
                             <button
                                 className={`btn-assign-action ${enviando ? 'loading' : ''}`}
                                 onClick={() => handleAsignar(docente.id)}
