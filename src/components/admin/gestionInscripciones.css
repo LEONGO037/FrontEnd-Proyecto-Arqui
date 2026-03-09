@@ -1,0 +1,243 @@
+/* gestionInscripciones.css */
+
+:root {
+  --azul: #003366;
+  --azul-oscuro: #001a33;
+  --verde: #8cc63f;
+  --naranja: #f59e0b;
+  --rojo: #dc2626;
+  --gris-bg: #f5f7fa;
+  --borde: #e2e8f0;
+  --sombra-suave: 0 4px 20px rgba(0, 51, 102, 0.06);
+  --sombra-fuerte: 0 12px 32px rgba(0, 51, 102, 0.12);
+  --radio: 16px;
+}
+
+.gestion-inscripciones-page {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--gris-bg);
+  min-height: 100vh;
+  padding-top: 80px; /* Separación del Navbar global */
+}
+
+/* ── Banner Superior (Hero) ── */
+.admin-header-banner {
+  background: linear-gradient(135deg, var(--azul) 0%, var(--azul-oscuro) 100%);
+  padding: 3rem 2rem 7rem; /* Bottom padding extra para que suban las tarjetas KPI */
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-header-banner::after {
+  content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+  height: 60px; background: var(--gris-bg);
+  clip-path: ellipse(55% 100% at 50% 100%);
+}
+
+.admin-header-bg { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.admin-header-bg span { position: absolute; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.05); }
+.admin-header-bg span:nth-child(1) { width: 500px; height: 500px; top: -200px; right: -150px; background: rgba(0,51,102,0.4); }
+.admin-header-bg span:nth-child(2) { width: 300px; height: 300px; bottom: -50px; left: -100px; background: rgba(140,198,63,0.1); }
+
+.admin-header-inner {
+  max-width: 1200px; margin: 0 auto; position: relative; z-index: 2;
+}
+
+.admin-breadcrumb {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.8rem; color: rgba(255,255,255,0.5);
+  margin-bottom: 1.5rem; letter-spacing: 0.03em;
+}
+.admin-breadcrumb a { color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+.admin-breadcrumb a:hover { color: var(--verde); }
+.admin-breadcrumb .sep { color: rgba(255,255,255,0.25); }
+.admin-breadcrumb span:last-child { color: var(--verde); font-weight: 600; }
+
+.admin-header-inner h1 {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-weight: 800; color: white;
+  margin: 0 0 0.5rem; letter-spacing: -0.03em;
+}
+.admin-header-inner h1 span { color: var(--verde); }
+.admin-header-inner > p { color: rgba(255,255,255,0.7); font-size: 1rem; margin: 0; max-width: 600px; line-height: 1.5; }
+
+/* ── Body ── */
+.admin-page-body {
+  max-width: 1200px; margin: 0 auto;
+  padding: 0 2rem 5rem;
+}
+
+/* ── Dashboard KPI Flotante ── */
+.admin-kpi-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: -3.5rem; /* Efecto flotante sobre el banner */
+  margin-bottom: 3rem;
+  position: relative; z-index: 10;
+}
+
+.kpi-card {
+  background: white; padding: 1.5rem; border-radius: var(--radio);
+  box-shadow: var(--sombra-suave); display: flex; align-items: center; gap: 1.25rem;
+  border: 1px solid rgba(0,0,0,0.03); transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.kpi-card:hover { transform: translateY(-5px); box-shadow: var(--sombra-fuerte); }
+
+.kpi-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+.kpi-icon svg { width: 28px; height: 28px; }
+.kpi-icon.blue { background: rgba(0, 51, 102, 0.08); color: var(--azul); }
+.kpi-icon.red { background: rgba(220, 38, 38, 0.1); color: var(--rojo); }
+.kpi-icon.green { background: rgba(140, 198, 63, 0.15); color: #4d7c0f; }
+
+.kpi-info h3 { margin: 0 0 0.2rem; font-size: 1.6rem; font-weight: 800; color: var(--azul); }
+.kpi-info p { margin: 0; font-size: 0.9rem; color: #64748b; font-weight: 600; }
+
+/* ── Toolbar (Filtros) ── */
+.admin-toolbar {
+  display: flex; justify-content: space-between; gap: 1rem;
+  background: white; padding: 1rem 1.5rem; border-radius: 14px;
+  box-shadow: var(--sombra-suave); border: 1px solid rgba(0,0,0,0.03);
+  margin-bottom: 2rem; flex-wrap: wrap;
+}
+
+.toolbar-search, .toolbar-filter { position: relative; display: flex; align-items: center; flex: 1; min-width: 250px; }
+.toolbar-search svg, .toolbar-filter svg { position: absolute; left: 1.2rem; width: 18px; height: 18px; color: #94a3b8; pointer-events: none; }
+
+.toolbar-search input, .toolbar-filter select {
+  width: 100%; padding: 0.8rem 1rem 0.8rem 2.8rem; border-radius: 10px;
+  border: 2px solid var(--borde); font-family: inherit; font-size: 0.95rem; font-weight: 500;
+  outline: none; background: #f8fafc; color: #333; transition: all 0.3s;
+}
+.toolbar-search input:focus, .toolbar-filter select:focus { border-color: var(--azul); background: white; box-shadow: 0 0 0 4px rgba(0,51,102,0.08); }
+.toolbar-filter select { cursor: pointer; appearance: none; }
+
+/* ── Acordeón de Cursos ── */
+.lista-inscripciones-container { display: flex; flex-direction: column; gap: 1.2rem; }
+
+.curso-accordion-item {
+  background: white; border-radius: var(--radio); border: 1px solid var(--borde);
+  box-shadow: var(--sombra-suave); overflow: hidden;
+  transition: all 0.3s ease; border-left: 5px solid transparent;
+  animation: slideFadeUp 0.5s ease backwards; /* Animación de entrada en cascada */
+}
+.curso-accordion-item:hover { box-shadow: var(--sombra-fuerte); transform: translateY(-2px); }
+.curso-accordion-item.expanded { border-color: var(--azul); box-shadow: var(--sombra-fuerte); border-left-color: var(--azul); transform: translateY(-2px); }
+
+@keyframes slideFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.accordion-header {
+  padding: 1.5rem; display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; gap: 2rem; user-select: none;
+}
+
+.curso-info-principal { flex: 2; }
+.curso-info-principal h4 { margin: 0 0 0.5rem; font-size: 1.15rem; color: var(--azul); font-weight: 800; }
+
+.curso-badges { display: flex; gap: 0.6rem; align-items: center; }
+.badge-precio { background: #f1f5f9; color: #475569; padding: 0.25rem 0.7rem; border-radius: 50px; font-size: 0.8rem; font-weight: 800; }
+.badge-status { padding: 0.25rem 0.7rem; border-radius: 50px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+.badge-status.full { background: #fee2e2; color: var(--rojo); border: 1px solid #fca5a5; }
+.badge-status.risk { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+
+/* Barra de Progreso Mejorada */
+.curso-ocupacion-visual { flex: 1; min-width: 220px; }
+.ocupacion-text { margin-bottom: 0.5rem; font-size: 0.9rem; color: #64748b; }
+.ocupacion-text strong { color: var(--azul); font-size: 1.2rem; font-weight: 800;}
+
+.progress-track { width: 100%; height: 10px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 0.4rem; }
+.progress-fill { height: 100%; border-radius: 10px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+.bg-green { background: linear-gradient(90deg, var(--verde), #65a30d); }
+.bg-orange { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.bg-red { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+.ocupacion-footer { display: flex; justify-content: space-between; align-items: center; }
+.minimo-req { font-size: 0.75rem; color: #94a3b8; font-weight: 600; }
+.porcentaje-text { font-size: 0.75rem; font-weight: 800; color: #64748b; }
+
+.accordion-toggle-icon {
+  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  color: var(--azul); background: #f1f5f9; border-radius: 50%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.curso-accordion-item:hover .accordion-toggle-icon { background: #e2e8f0; }
+.curso-accordion-item.expanded .accordion-toggle-icon { background: var(--azul); color: white; transform: rotate(180deg); }
+
+/* ── Contenido Expandido (Tabla) ── */
+.accordion-body { padding: 0 1.5rem 1.5rem; background: white; border-top: 1px solid #f1f5f9; margin-top: 0.5rem; padding-top: 1.5rem; }
+
+.accordion-actions { display: flex; justify-content: flex-end; margin-bottom: 1rem; }
+.btn-export-csv {
+  background: white; border: 1.5px solid #107c41; color: #107c41; padding: 0.5rem 1.2rem;
+  border-radius: 50px; font-weight: 700; font-size: 0.85rem; font-family: inherit;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;
+}
+.btn-export-csv:hover { background: #107c41; color: white; box-shadow: 0 4px 12px rgba(16,124,65,0.2); transform: translateY(-2px); }
+.btn-export-csv svg { width: 16px; height: 16px; }
+
+.no-students { text-align: center; padding: 3rem 1rem; color: #94a3b8; }
+.no-students svg { width: 48px; height: 48px; opacity: 0.5; margin-bottom: 1rem; }
+.no-students p { margin: 0; font-size: 1.05rem; font-weight: 500; }
+
+.table-wrapper { overflow-x: auto; border: 1px solid var(--borde); border-radius: 12px; }
+.admin-table { width: 100%; border-collapse: collapse; text-align: left; }
+.admin-table th { background: #f8fafc; padding: 1rem 1.25rem; font-size: 0.75rem; color: #475569; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; border-bottom: 2px solid var(--borde); }
+.admin-table td { padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; font-size: 0.95rem; color: #333; }
+.admin-table tbody tr:last-child td { border-bottom: none; }
+.admin-table tbody tr:hover { background: #f8fafc; }
+
+.text-muted { color: #94a3b8; font-weight: 600; }
+.fw-bold { font-weight: 700; color: var(--azul); }
+
+/* Badges de Estado Académico */
+.estado-academico-badge { padding: 0.35rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; }
+.estado-academico-badge.activo { background: #dcfce7; color: #16a34a; }
+.estado-academico-badge.retirado { background: #f1f5f9; color: #64748b; text-decoration: line-through; }
+.estado-academico-badge.suspendido { background: #fee2e2; color: var(--rojo); }
+
+/* Estados de Sistema */
+.state-box { text-align: center; padding: 5rem 2rem; background: white; border-radius: 20px; border: 2px dashed var(--borde); }
+.state-box p { margin: 1rem 0 0; color: #64748b; font-size: 1.1rem; font-weight: 500; }
+.state-box svg { width: 50px; height: 50px; color: #cbd5e1; }
+.state-box.error { border-color: #fca5a5; background: #fef2f2; }
+.state-box.error p { color: var(--rojo); font-weight: 700; }
+.state-box.error svg { color: var(--rojo); }
+
+.spinner { width: 40px; height: 40px; border: 4px solid #f1f5f9; border-top: 4px solid var(--azul); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* ── Toasts Flotantes ── */
+.toast-flotante {
+  position: fixed; bottom: 2rem; right: 2rem; z-index: 9999;
+  display: flex; align-items: center; gap: 1rem; padding: 1rem 1.5rem;
+  border-radius: 14px; background: white; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 6px solid;
+}
+.toast-flotante.exito { border-left-color: var(--verde); }
+.toast-flotante.info { border-left-color: var(--azul); }
+
+.toast-icon { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; }
+.toast-flotante.exito .toast-icon { background: rgba(140, 198, 63, 0.15); color: var(--verde); }
+.toast-flotante.info .toast-icon { background: rgba(0, 51, 102, 0.1); color: var(--azul); }
+.toast-icon svg { width: 20px; height: 20px; }
+
+.toast-content { display: flex; flex-direction: column; gap: 0.2rem; }
+.toast-title { font-weight: 800; font-size: 0.95rem; color: #333; }
+.toast-message { font-size: 0.9rem; color: #666; line-height: 1.4; }
+
+@keyframes slideInUp { from { opacity: 0; transform: translateY(50px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-header-banner { padding: 2.5rem 1.5rem 6rem; }
+  .admin-page-body { padding: 0 1.5rem 4rem; }
+  .admin-kpi-grid { margin-top: -2.5rem; grid-template-columns: 1fr; }
+  .admin-toolbar { flex-direction: column; }
+  .toolbar-search, .toolbar-filter { width: 100%; min-width: auto; }
+  .accordion-header { flex-direction: column; align-items: flex-start; gap: 1rem; position: relative;}
+  .accordion-toggle-icon { position: absolute; top: 1.5rem; right: 1.5rem; }
+  .curso-ocupacion-visual { width: 100%; }
+  .toast-flotante { bottom: 1rem; right: 1rem; left: 1rem; }
+}
