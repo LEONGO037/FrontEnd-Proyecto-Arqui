@@ -1,7 +1,7 @@
 // adminAsignarCursosDocente.jsx — Asignación de docentes a cursos
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../layout/headerPrincipal';
+import HeaderAdmin from '../layout/headerAdmin';
 import Footer from '../layout/footerPrincipal';
 import './adminAsignarCursosDocente.css';
 
@@ -107,7 +107,7 @@ const AdminAsignarCursosDocente = () => {
 
     return (
         <div className="admin-asignar-page">
-            <Header />
+            <HeaderAdmin />
 
             <main className="admin-asignar-main">
                 <div className="admin-asignar-header">
