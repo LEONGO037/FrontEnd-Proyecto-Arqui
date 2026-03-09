@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import AdminHeader from './AdminHeader';
+import AdminHeader from '../layout/headerAdmin';
 import Footer from '../layout/footerPrincipal';
 import './adminMenu.css';
 

@@ -1,7 +1,7 @@
 // AdminPerfil.jsx — Perfil simplificado para administradores
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import AdminHeader from './AdminHeader';
+import AdminHeader from '../layout/headerAdmin';
 import Footer from '../layout/footerPrincipal';
 import './adminMenu.css'; // Reutilizamos estilos de layout
 

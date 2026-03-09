@@ -1,7 +1,7 @@
 // adminUsuarios.jsx — Gestión de docentes para administradores
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminHeader from './AdminHeader';
+import AdminHeader from '../layout/headerAdmin';
 import Footer from '../layout/footerPrincipal';
 import './adminUsuarios.css';
 
