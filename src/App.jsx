@@ -1,6 +1,6 @@
 // App.jsx
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
 
@@ -9,17 +9,20 @@ import Footer from './components/layout/footerPrincipal';
 import Home from './features/home/homePrincipal';
 import Catalogo from './features/catalogo/catalogoCursos';
 import Perfil from './features/perfil/perfilEstudiante';
+
 import AdminMenu from './components/admin/adminMenu';
 import AdministrarCursos from './components/admin/administrarCursos';
 import AdminAsignarCursosDocente from './components/admin/adminAsignarCursosDocente';
 import AdminPagos from './components/admin/adminPagos';
-import EstudiantePagos from './components/estudiante/estudiantePagos';
-import HeaderEstudiante from './components/estudiante/headerEstudiante';
 import AdminHeader from './components/admin/AdminHeader';
 import AdminPerfil from './components/admin/AdminPerfil';
 import AdminUsuarios from './components/admin/adminUsuarios';
+import GestionInscripciones from './components/admin/gestionInscripciones';
+
+import EstudiantePagos from './components/estudiante/estudiantePagos';
+import HeaderEstudiante from './components/estudiante/headerEstudiante';
+
 import DocenteMenu from './components/docente/docenteMenu';
-import { useAuth } from './context/AuthContext';
 
 import './App.css';
 
@@ -34,8 +37,8 @@ function App() {
 function AppContent() {
   const { usuario } = useAuth();
 
-  // Selecciona el header según el rol
   let SelectedHeader = Header;
+
   if (usuario?.rol === 'ESTUDIANTE') {
     SelectedHeader = HeaderEstudiante;
   } else if (usuario?.rol === 'ADMINISTRADOR') {
@@ -45,91 +48,141 @@ function AppContent() {
   return (
     <Router>
       <Routes>
+
         {/* Ruta pública */}
-        <Route path="/" element={
-          <div className="app-wrapper">
-            <SelectedHeader />
-            <main style={{ minHeight: '80vh' }}><Home /></main>
-            <Footer />
-          </div>
-        } />
-
-        {/* Rutas protegidas — requieren sesión */}
-        <Route path="/cursos" element={
-          <ProtectedRoute>
+        <Route
+          path="/"
+          element={
             <div className="app-wrapper">
               <SelectedHeader />
-              <main style={{ minHeight: '80vh' }}><Catalogo /></main>
-              <Footer />
-            </div>
-          </ProtectedRoute>
-        } />
-        <Route path="/perfil" element={
-          <ProtectedRoute>
-            <div className="app-wrapper">
-              <SelectedHeader />
-              <main style={{ minHeight: '80vh' }}><Perfil /></main>
-              <Footer />
-            </div>
-          </ProtectedRoute>
-        } />
-
-        {/* Ruta de Pagos para Estudiantes */}
-        <Route path="/estudiante/pagos" element={
-          <RoleProtectedRoute allowedRoles={['ESTUDIANTE', 'ADMINISTRADOR']}>
-            <EstudiantePagos />
-          </RoleProtectedRoute>
-        } />
-
-        {/* Rutas protegidas por rol — ADMINISTRADOR */}
-        <Route path="/admin" element={
-          <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
-            <AdminMenu />
-          </RoleProtectedRoute>
-        } />
-
-        <Route path="/admin/perfil" element={
-          <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
-            <AdminPerfil />
-          </RoleProtectedRoute>
-        } />
-
-        <Route path="/admin/usuarios" element={
-          <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
-            <AdminUsuarios />
-          </RoleProtectedRoute>
-        } />
-
-        <Route path="/admin/cursos" element={
-          <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
-            <AdministrarCursos />
-          </RoleProtectedRoute>
-        } />
-
-        <Route path="/admin/asignar-docente/:cursoId" element={
-          <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
-            <AdminAsignarCursosDocente />
-          </RoleProtectedRoute>
-        } />
-
-        <Route path="/admin/pagos" element={
-          <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
-            <AdminPagos />
-          </RoleProtectedRoute>
-        } />
-
-        {/* Rutas protegidas por rol — DOCENTE */}
-        <Route path="/docente/*" element={
-          <RoleProtectedRoute allowedRoles={['DOCENTE']}>
-            <div className="app-wrapper">
-              <Header />
               <main style={{ minHeight: '80vh' }}>
-                <DocenteMenu />
+                <Home />
               </main>
               <Footer />
             </div>
-          </RoleProtectedRoute>
-        } />
+          }
+        />
+
+        {/* Rutas protegidas */}
+        <Route
+          path="/cursos"
+          element={
+            <ProtectedRoute>
+              <div className="app-wrapper">
+                <SelectedHeader />
+                <main style={{ minHeight: '80vh' }}>
+                  <Catalogo />
+                </main>
+                <Footer />
+              </div>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/perfil"
+          element={
+            <ProtectedRoute>
+              <div className="app-wrapper">
+                <SelectedHeader />
+                <main style={{ minHeight: '80vh' }}>
+                  <Perfil />
+                </main>
+                <Footer />
+              </div>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Pagos estudiante */}
+        <Route
+          path="/estudiante/pagos"
+          element={
+            <RoleProtectedRoute allowedRoles={['ESTUDIANTE', 'ADMINISTRADOR']}>
+              <EstudiantePagos />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* ADMIN */}
+        <Route
+          path="/admin"
+          element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <AdminMenu />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/perfil"
+          element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <AdminPerfil />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/usuarios"
+          element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <AdminUsuarios />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/cursos"
+          element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <AdministrarCursos />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/asignar-docente/:cursoId"
+          element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <AdminAsignarCursosDocente />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/pagos"
+          element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <AdminPagos />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/inscripciones"
+          element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <GestionInscripciones />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* DOCENTE */}
+        <Route
+          path="/docente/*"
+          element={
+            <RoleProtectedRoute allowedRoles={['DOCENTE']}>
+              <div className="app-wrapper">
+                <Header />
+                <main style={{ minHeight: '80vh' }}>
+                  <DocenteMenu />
+                </main>
+                <Footer />
+              </div>
+            </RoleProtectedRoute>
+          }
+        />
 
       </Routes>
     </Router>

@@ -1,9 +1,27 @@
-/* ModalPago.css */
+/* ModalPago.css - VERSIÓN CORREGIDA */
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 /* Contenido del pago dentro del carrito */
 .pago-contenido-carrito {
   font-family: 'Plus Jakarta Sans', sans-serif;
+  
+  /* CORRECCIÓN 1: Ajustamos el alto y quitamos el margen negativo */
+  max-height: 70vh; 
+  overflow-y: auto; 
+  padding-right: 10px; 
+  padding-bottom: 1.5rem; 
+}
+
+/* Estilos de la barra de scroll */
+.pago-contenido-carrito::-webkit-scrollbar {
+  width: 6px;
+}
+.pago-contenido-carrito::-webkit-scrollbar-track {
+  background: transparent;
+}
+.pago-contenido-carrito::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 10px;
 }
 
 /* Header compacto para carrito */
@@ -365,7 +383,11 @@
   border-radius: 28px;
   max-width: 520px;
   width: 100%;
-  overflow: hidden;
+  
+  /* CORRECCIÓN 2: Restaurado el overflow hidden para mantener el contenido 
+     dentro de los bordes redondeados */
+  overflow: hidden; 
+  
   box-shadow: 0 32px 80px rgba(0,0,0,0.4);
   animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -415,4 +437,69 @@
 @media (max-width: 540px) {
   .pago-overlay { padding: 0; align-items: flex-end; }
   .pago-modal { border-radius: 24px 24px 0 0; max-height: 95vh; overflow-y: auto; }
+}
+
+/* Formularios de facturación */
+.pago-factura-form {
+  background: #f8fafc;
+  border: 1.5px solid #e8edf3;
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.pago-factura-form h4 {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #003366;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.factura-field {
+  margin-bottom: 1rem;
+}
+
+.factura-field:last-child {
+  margin-bottom: 0;
+}
+
+.factura-field label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.4rem;
+}
+
+.factura-field label svg {
+  width: 14px;
+  height: 14px;
+  color: #8cc63f;
+}
+
+.factura-field input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1.5px solid #e8edf3;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  box-sizing: border-box; 
+}
+
+.factura-field input:focus {
+  outline: none;
+  border-color: #8cc63f;
+}
+
+.factura-field small {
+  display: block;
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 0.25rem;
 }
