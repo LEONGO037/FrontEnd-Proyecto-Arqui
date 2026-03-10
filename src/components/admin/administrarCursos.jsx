@@ -317,8 +317,8 @@ const AdministrarCursos = () => {
                                                 <label
                                                     key={c.id}
                                                     className={`prerrequisito-item ${formData.prerrequisitos.includes(c.id)
-                                                            ? 'selected'
-                                                            : ''
+                                                        ? 'selected'
+                                                        : ''
                                                         }`}
                                                 >
                                                     <input
