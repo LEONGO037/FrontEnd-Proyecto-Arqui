@@ -533,3 +533,16 @@
     font-size: 0.75rem;
   }
 }
+
+/* Hide native browser password reveal/clear buttons so our single toggle is the only icon shown */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* WebKit-based browsers (Chrome, Safari) native reveal/credentials buttons */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-password-reveal-button,
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none !important;
+}
