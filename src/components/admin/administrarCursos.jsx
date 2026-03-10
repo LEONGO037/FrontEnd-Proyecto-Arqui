@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminHeader from '../layout/headerAdmin';
 import Footer from '../layout/footerPrincipal';
+import { validateForm } from '../../utils/formValidators';
 import './administrarCursos.css';
 
 const API_BASE = 'http://localhost:3000';
@@ -20,6 +21,7 @@ const AdministrarCursos = () => {
         descripcion: '',
         costo: '',
         cupo_maximo: '',
+        minimo_estudiantes: '',
         prerrequisitos: []
     });
 
@@ -70,10 +72,17 @@ const AdministrarCursos = () => {
         setError(null);
         setMensajeExito('');
 
+        const validacion = validateForm('crearCurso', formData);
+        if (!validacion.isValid) {
+            setError(validacion.firstError);
+            return;
+        }
+
         const payload = {
             ...formData,
-            costo: parseFloat(formData.costo),
-            cupo_maximo: parseInt(formData.cupo_maximo)
+            costo: Number(formData.costo),
+            cupo_maximo: Number(formData.cupo_maximo),
+            minimo_estudiantes: formData.minimo_estudiantes ? Number(formData.minimo_estudiantes) : 1
         };
 
         const token = localStorage.getItem('token');
@@ -101,6 +110,7 @@ const AdministrarCursos = () => {
                 descripcion: '',
                 costo: '',
                 cupo_maximo: '',
+                minimo_estudiantes: '',
                 prerrequisitos: []
             });
 
@@ -273,7 +283,19 @@ const AdministrarCursos = () => {
                                         </div>
 
                                     </div>
-
+                                    <div className="form-grid-2">
+                                        <div className="form-group">
+                                            <label>Mínimo de Estudiantes</label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                name="minimo_estudiantes"
+                                                value={formData.minimo_estudiantes}
+                                                onChange={handleChange}
+                                                placeholder={formData.cupo_maximo ? `Ej: ${Math.ceil(Number(formData.cupo_maximo) * 0.3)}` : '1'}
+                                            />
+                                        </div>
+                                    </div>
                                     <div className="form-group">
                                         <label>Descripción</label>
 
