@@ -219,14 +219,43 @@ const CatalogoCursos = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const agregarAlCarrito = (curso) => {
+  const agregarAlCarrito = async (curso) => {
+
+  try {
+
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(
+      `${API_BASE}/api/cursos/validar-inscripcion/${curso.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      mostrarToast(data.mensaje || "No puedes inscribirte a este curso", "error");
+      return;
+    }
+
     if (carrito.some(c => c.id === curso.id)) {
       mostrarToast('Este curso ya está en tu carrito', 'info');
       return;
     }
+
     setCarrito([...carrito, curso]);
+
     mostrarToast(`"${curso.nombre}" agregado al carrito`, 'exito');
-  };
+
+  } catch (error) {
+
+    mostrarToast("Error validando prerrequisitos", "error");
+
+  }
+};
 
   const eliminarDelCarrito = (cursoId) => {
     setCarrito(carrito.filter(c => c.id !== cursoId));
