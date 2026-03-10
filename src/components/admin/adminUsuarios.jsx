@@ -110,7 +110,7 @@ const AdminUsuarios = () => {
                                 </svg>
                             </button>
                             <div>
-                                <h1 className="admin-usuarios-title">Gestión de Usuarios</h1>
+                                <h1 className="admin-usuarios-title">Gestión de Docentes</h1>
                                 <p className="admin-usuarios-subtitle">Manejo de la nómina de docentes del sistema</p>
                             </div>
                         </div>
