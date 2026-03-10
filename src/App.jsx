@@ -10,18 +10,20 @@ import Home from './features/home/homePrincipal';
 import Catalogo from './features/catalogo/catalogoCursos';
 import Perfil from './features/perfil/perfilEstudiante';
 
+import AdminHeader from './components/layout/headerAdmin';
 import AdminMenu from './components/admin/adminMenu';
 import AdministrarCursos from './components/admin/administrarCursos';
 import AdminAsignarCursosDocente from './components/admin/adminAsignarCursosDocente';
 import AdminPagos from './components/admin/adminPagos';
-import AdminHeader from './components/layout/headerAdmin';
 import AdminPerfil from './components/admin/AdminPerfil';
 import AdminUsuarios from './components/admin/adminUsuarios';
 import GestionInscripciones from './components/admin/gestionInscripciones';
+import AdminReportes from './components/admin/adminReportes';
 
 import EstudiantePagos from './components/estudiante/estudiantePagos';
 import HeaderEstudiante from './components/estudiante/headerEstudiante';
 
+import HeaderDocente from './components/docente/headerDocente';
 import DocenteMenu from './components/docente/docenteMenu';
 
 import './App.css';
@@ -42,7 +44,9 @@ function AppContent() {
   if (usuario?.rol === 'ESTUDIANTE') {
     SelectedHeader = HeaderEstudiante;
   } else if (usuario?.rol === 'ADMINISTRADOR') {
-    SelectedHeader = Header;
+    SelectedHeader = AdminHeader;
+  } else if (usuario?.rol === 'DOCENTE') {
+    SelectedHeader = HeaderDocente;
   }
 
   return (
@@ -104,7 +108,7 @@ function AppContent() {
           }
         />
 
-        {/* ADMIN */}
+        {/* ── ADMIN ── */}
         <Route
           path="/admin"
           element={
@@ -168,13 +172,22 @@ function AppContent() {
           }
         />
 
-        {/* DOCENTE */}
+        <Route
+          path="/admin/reportes"
+          element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <AdminReportes />
+            </RoleProtectedRoute>
+          }
+        />
+
+        {/* ── DOCENTE ── */}
         <Route
           path="/docente/*"
           element={
             <RoleProtectedRoute allowedRoles={['DOCENTE']}>
               <div className="app-wrapper">
-                <Header />
+                <HeaderDocente />
                 <main style={{ minHeight: '80vh' }}>
                   <DocenteMenu />
                 </main>
