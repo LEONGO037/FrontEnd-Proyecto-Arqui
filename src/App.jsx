@@ -14,7 +14,7 @@ import AdminMenu from './components/admin/adminMenu';
 import AdministrarCursos from './components/admin/administrarCursos';
 import AdminAsignarCursosDocente from './components/admin/adminAsignarCursosDocente';
 import AdminPagos from './components/admin/adminPagos';
-//import AdminHeader from './components/admin/AdminHeader';
+import AdminHeader from './components/layout/headerAdmin';
 import AdminPerfil from './components/admin/AdminPerfil';
 import AdminUsuarios from './components/admin/adminUsuarios';
 import GestionInscripciones from './components/admin/gestionInscripciones';
@@ -42,7 +42,7 @@ function AppContent() {
   if (usuario?.rol === 'ESTUDIANTE') {
     SelectedHeader = HeaderEstudiante;
   } else if (usuario?.rol === 'ADMINISTRADOR') {
-    SelectedHeader = AdminHeader;
+    SelectedHeader = Header;
   }
 
   return (
@@ -67,7 +67,7 @@ function AppContent() {
         <Route
           path="/cursos"
           element={
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={["ESTUDIANTE","ADMINISTRADOR"]}>
               <div className="app-wrapper">
                 <SelectedHeader />
                 <main style={{ minHeight: '80vh' }}>
@@ -75,7 +75,7 @@ function AppContent() {
                 </main>
                 <Footer />
               </div>
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           }
         />
 
