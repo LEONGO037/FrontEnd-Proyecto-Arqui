@@ -1,20 +1,21 @@
 // perfilEstudiante.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import CursoDetalle from '../../components/cursoDetalle/CursoDetalle';
+import { obtenerMisCursos } from '../../services/docenteApi';
 import './perfilEstudiante.css';
 
-// Mismo catálogo — en producción vendría del backend
-// TODO: GET /api/cursos  →  usa los IDs para enriquecer la data
-const CURSOS_DATA = {
-  1: { nombre: 'Programación Orientada a Objetos', codigo: 'INF-301', icono: '💻', color: 'linear-gradient(135deg,#003366,#0055aa)', docente: 'Lic. María Fernández', horario: 'Lun-Mié  18:00–20:00', progreso: 72 },
-  2: { nombre: 'Cálculo Diferencial e Integral',   codigo: 'MAT-210', icono: '📐', color: 'linear-gradient(135deg,#1e3a5f,#2e6da4)', docente: 'Dr. Carlos Mendoza',  horario: 'Mar-Jue  16:00–18:00', progreso: 45 },
-  3: { nombre: 'Fundamentos de Administración',    codigo: 'ADM-115', icono: '📊', color: 'linear-gradient(135deg,#5a8a1a,#8cc63f)', docente: 'Mg. Ana Quiroga',      horario: 'Vie  14:00–18:00',     progreso: 0  },
-  4: { nombre: 'Inglés Avanzado Empresarial',      codigo: 'ING-402', icono: '🌎', color: 'linear-gradient(135deg,#4338ca,#6366f1)', docente: 'Prof. David Smith',    horario: 'Lun-Mié-Vie  07:00–08:00', progreso: 100 },
-  5: { nombre: 'Diseño UX/UI para Productos',      codigo: 'DIS-208', icono: '🎨', color: 'linear-gradient(135deg,#b45309,#f59e0b)', docente: 'Dis. Laura Quispe',   horario: 'Sáb  09:00–13:00',     progreso: 30 },
-  6: { nombre: 'Análisis de Datos con Python',     codigo: 'DAT-330', icono: '📈', color: 'linear-gradient(135deg,#065f46,#10b981)', docente: 'Ing. Roberto Flores',  horario: 'Mar-Jue  19:00–21:00', progreso: 15 },
-};
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+const CURSO_VISUAL = [
+  { icono: '💻', color: 'linear-gradient(135deg,#003366,#0055aa)', categoria: 'Tecnología' },
+  { icono: '📐', color: 'linear-gradient(135deg,#1e3a5f,#2e6da4)', categoria: 'Ciencias' },
+  { icono: '📊', color: 'linear-gradient(135deg,#5a8a1a,#8cc63f)', categoria: 'Negocios' },
+  { icono: '🌎', color: 'linear-gradient(135deg,#4338ca,#6366f1)', categoria: 'Idiomas' },
+  { icono: '🎨', color: 'linear-gradient(135deg,#b45309,#f59e0b)', categoria: 'Diseño' },
+  { icono: '📈', color: 'linear-gradient(135deg,#065f46,#10b981)', categoria: 'Datos' },
+];
 
 const IconUser   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
 const IconCal    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
@@ -77,17 +78,74 @@ const PerfilEstudiante = () => {
   const { usuario, cursosInscritos, desinscribirCurso, logout } = useAuth();
   const [toast, setToast]               = useState(null);
   const [cursoDetalle, setCursoDetalle] = useState(null);
+  const [cursosCatalogo, setCursosCatalogo] = useState([]);
+  const [cargandoCursos, setCargandoCursos] = useState(true);
+  const [misCursosDocente, setMisCursosDocente] = useState([]);
+  const [cargandoMisCursos, setCargandoMisCursos] = useState(false);
 
-  // Enriquecer IDs con datos del catálogo
-  const cursosConDatos = cursosInscritos
-    .map(id => ({ id, datos: CURSOS_DATA[id] }))
-    .filter(c => c.datos); // filtra si el id no existe en el mock
+  useEffect(() => {
+    let mounted = true;
 
-  const handleBaja = (id) => {
-    // TODO: DELETE /api/estudiante/inscripcion/:id
-    const nombre = CURSOS_DATA[id]?.nombre;
-    desinscribirCurso(id);
-    setToast(`Baja registrada: "${nombre}"`);
+    // Docentes don't need the public catalog on their profile
+    if (usuario?.rol === 'DOCENTE') {
+      setCursosCatalogo([]);
+      setCargandoCursos(false);
+      return () => { mounted = false; };
+    }
+    fetch(`${API_BASE}/api/cursos`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (!mounted) return;
+        setCursosCatalogo(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setCursosCatalogo([]);
+      })
+      .finally(() => {
+        if (mounted) setCargandoCursos(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [usuario]);
+
+  const cursosConDatos = useMemo(() => {
+    return cursosInscritos
+      .map((id, index) => {
+        const idNumero = Number(id);
+        const curso = cursosCatalogo.find((c) => Number(c.id) === idNumero);
+        if (!curso) return null;
+
+        const visual = CURSO_VISUAL[index % CURSO_VISUAL.length];
+        return {
+          id: idNumero,
+          datos: {
+            ...curso,
+            codigo: curso.codigo || `CUR-${String(curso.id).padStart(3, '0')}`,
+            icono: visual.icono,
+            color: visual.color,
+            docente: curso.docente || 'Docente por asignar',
+            horario: curso.horario || 'Horario por definir',
+            progreso: Number(curso.progreso ?? 0),
+          },
+        };
+      })
+      .filter(Boolean);
+  }, [cursosCatalogo, cursosInscritos]);
+
+  const handleBaja = async (id) => {
+    const curso = cursosConDatos.find((c) => c.id === id);
+    const nombre = curso?.datos?.nombre || `Curso ${id}`;
+
+    try {
+      await desinscribirCurso(id);
+      setToast(`Baja registrada: "${nombre}"`);
+    } catch {
+      setToast(`No se pudo dar de baja: "${nombre}"`);
+    }
+
     setTimeout(() => setToast(null), 3000);
   };
 
@@ -100,6 +158,85 @@ const PerfilEstudiante = () => {
   const iniciales = usuario
     ? usuario.nombre.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()
     : '?';
+
+  // If the current user is a docente, render an enhanced profile (personal data + quick stats)
+  if (usuario?.rol === 'DOCENTE') {
+    // fetch docente courses for metrics (small request)
+    useEffect(() => {
+      let mounted = true;
+      (async () => {
+        try {
+          setCargandoMisCursos(true);
+          const cursos = await obtenerMisCursos();
+          if (!mounted) return;
+          const normalized = (cursos || []).map(c => ({ id: c.id, alumnos: Number(c.alumnos || 0), calificacion: Number(c.calificacion || 0) }));
+          setMisCursosDocente(normalized);
+        } catch (e) {
+          if (!mounted) return;
+          setMisCursosDocente([]);
+        } finally {
+          if (mounted) setCargandoMisCursos(false);
+        }
+      })();
+      return () => { mounted = false; };
+    }, [usuario?.id]);
+
+    const totalAlumnos = misCursosDocente.reduce((s, c) => s + (c.alumnos || 0), 0);
+    const cursosCount = misCursosDocente.length;
+    const califProm = cursosCount > 0 ? Math.round(misCursosDocente.reduce((s, c) => s + (c.calificacion || 0), 0) / cursosCount) : 'N/A';
+
+    return (
+      <div className="perfil-page perfil-docente-mejorado">
+        <div className="perfil-hero">
+          <div className="perfil-hero-bg"><span /><span /></div>
+          <div className="perfil-hero-inner">
+            <div className="perfil-breadcrumb">
+              <a href="/">Inicio</a>
+              <span className="sep">›</span>
+              <span>Mi Perfil</span>
+            </div>
+
+            <div className="perfil-usuario-card">
+              <div className="perfil-avatar">{iniciales}</div>
+
+              <div className="perfil-usuario-info">
+                <h1>{usuario?.nombre ?? 'Docente'}</h1>
+                <p className="perfil-email-primary">{usuario?.email ?? ''}</p>
+                {usuario?.telefono && <p className="perfil-telefono">📞 {usuario.telefono}</p>}
+                {usuario?.departamento && <p className="perfil-departamento">🏷️ {usuario.departamento}</p>}
+                {usuario?.bio && <p className="perfil-bio">{usuario.bio}</p>}
+
+                <div className="perfil-badges">
+                  <span className="pbadge">👩‍🏫 Docente</span>
+                  <span className="pbadge green">✓ Cuenta verificada</span>
+                </div>
+
+                <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => navigate('/docente')} className="btn-primary">Panel Docente</button>
+                  <a href={`mailto:${usuario?.email || ''}`} className="btn-outline">Contactar</a>
+                </div>
+              </div>
+
+              <div className="perfil-stats-docente">
+                <div className="pstat">
+                  <span className="pstat-number">{cursosCount}</span>
+                  <span className="pstat-label">Cursos</span>
+                </div>
+                <div className="pstat">
+                  <span className="pstat-number">{totalAlumnos}</span>
+                  <span className="pstat-label">Alumnos</span>
+                </div>
+                <div className="pstat">
+                  <span className="pstat-number">{califProm}</span>
+                  <span className="pstat-label">Calif. Promedio</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="perfil-page">
@@ -171,7 +308,11 @@ const PerfilEstudiante = () => {
           </button>
         </div>
 
-        {cursosConDatos.length === 0 ? (
+        {cargandoCursos ? (
+          <div className="perfil-empty">
+            <h3>Cargando tus cursos...</h3>
+          </div>
+        ) : cursosConDatos.length === 0 ? (
           <div className="perfil-empty">
             <div className="perfil-empty-icon">📚</div>
             <h3>No tienes cursos inscritos</h3>
@@ -186,8 +327,9 @@ const PerfilEstudiante = () => {
             {cursosConDatos.map(({ id, datos }) => (
               <PerfilCursoCard key={id} cursoId={id} datos={datos} onBaja={handleBaja}
                 onVerDetalle={(cid) => {
-                  const d = CURSOS_DATA[cid];
-                  if (d) setCursoDetalle({ id: cid, nombre: d.nombre, descripcion: '', costo: 0, cupo_maximo: 30, ...d });
+                  const curso = cursosConDatos.find((c) => c.id === cid);
+                  const d = curso?.datos;
+                  if (d) setCursoDetalle({ id: cid, nombre: d.nombre, descripcion: d.descripcion || '', costo: d.costo || 0, cupo_maximo: d.cupo_maximo || 30, ...d });
                 }}
               />
             ))}

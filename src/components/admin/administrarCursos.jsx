@@ -1,7 +1,7 @@
 // administrarCursos.jsx — Gestión de cursos para administradores
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../layout/headerPrincipal';
+import AdminHeader from '../layout/headerAdmin';
 import Footer from '../layout/footerPrincipal';
 import { validateForm } from '../../utils/formValidators';
 import './administrarCursos.css';
@@ -15,7 +15,6 @@ const AdministrarCursos = () => {
     const [error, setError] = useState(null);
     const [mensajeExito, setMensajeExito] = useState('');
 
-    // Estado del formulario
     const [mostrarModal, setMostrarModal] = useState(false);
     const [formData, setFormData] = useState({
         nombre: '',
@@ -29,13 +28,17 @@ const AdministrarCursos = () => {
     const fetchCursos = async () => {
         setCargando(true);
         const token = localStorage.getItem('token');
+
         try {
             const res = await fetch(`${API_BASE}/api/cursos/sin-docente`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+
             if (!res.ok) throw new Error('Error al cargar cursos');
+
             const data = await res.json();
             setCursos(data);
+
         } catch (err) {
             setError(err.message);
         } finally {
@@ -55,6 +58,7 @@ const AdministrarCursos = () => {
     const handlePrerrequisitoToggle = (id) => {
         setFormData(prev => {
             const current = prev.prerrequisitos;
+
             if (current.includes(id)) {
                 return { ...prev, prerrequisitos: current.filter(pid => pid !== id) };
             } else {
@@ -82,6 +86,7 @@ const AdministrarCursos = () => {
         };
 
         const token = localStorage.getItem('token');
+
         try {
             const res = await fetch(`${API_BASE}/api/cursos/crear`, {
                 method: 'POST',
@@ -99,6 +104,7 @@ const AdministrarCursos = () => {
 
             setMensajeExito('¡Curso creado exitosamente!');
             setMostrarModal(false);
+
             setFormData({
                 nombre: '',
                 descripcion: '',
@@ -107,7 +113,9 @@ const AdministrarCursos = () => {
                 minimo_estudiantes: '',
                 prerrequisitos: []
             });
-            fetchCursos(); // Recargar lista
+
+            fetchCursos();
+
         } catch (err) {
             setError(err.message);
         }
@@ -115,23 +123,37 @@ const AdministrarCursos = () => {
 
     return (
         <div className="admin-cursos-page">
-            <Header />
+            <AdminHeader />
 
             <main className="admin-cursos-main">
+
                 <div className="admin-cursos-header">
                     <div className="header-title-section">
-                        <button className="btn-back-circle" onClick={() => navigate('/admin')} title="Regresar al Menú">
+
+                        <button
+                            className="btn-back-circle"
+                            onClick={() => navigate('/admin')}
+                            title="Regresar al Menú"
+                        >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                 <path d="M15 18l-6-6 6-6" />
                             </svg>
                         </button>
+
                         <div>
                             <h1 className="admin-cursos-title">Gestión de Cursos</h1>
-                            <p className="admin-cursos-subtitle">Administra el catálogo de cursos extraacadémicos</p>
+                            <p className="admin-cursos-subtitle">
+                                Administra el catálogo de cursos extraacadémicos
+                            </p>
                         </div>
+
                     </div>
+
                     <div className="header-actions">
-                        <button className="btn-add-curso" onClick={() => setMostrarModal(true)}>
+                        <button
+                            className="btn-add-curso"
+                            onClick={() => setMostrarModal(true)}
+                        >
                             <span>+ Nuevo Curso</span>
                         </button>
                     </div>
@@ -142,6 +164,7 @@ const AdministrarCursos = () => {
 
                 <div className="cursos-table-container">
                     <table className="cursos-table">
+
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -152,9 +175,14 @@ const AdministrarCursos = () => {
                                 <th>Acciones</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             {cargando ? (
-                                <tr><td colSpan="6" className="text-center">Cargando cursos...</td></tr>
+                                <tr>
+                                    <td colSpan="6" className="text-center">
+                                        Cargando cursos...
+                                    </td>
+                                </tr>
                             ) : cursos.map(curso => (
                                 <tr key={curso.id}>
                                     <td>{curso.id}</td>
@@ -162,6 +190,7 @@ const AdministrarCursos = () => {
                                     <td className="curso-table-desc">{curso.descripcion}</td>
                                     <td>Bs. {curso.costo}</td>
                                     <td>{curso.cupo_maximo}</td>
+
                                     <td className="table-actions-cell">
                                         <button
                                             className="btn-assign-teacher"
@@ -170,37 +199,89 @@ const AdministrarCursos = () => {
                                         >
                                             Asignar
                                         </button>
-                                        <button className="btn-edit">Editar</button>
+
+                                        <button className="btn-edit">
+                                            Editar
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
+
                     </table>
                 </div>
 
-                {/* Modal de Creación */}
                 {mostrarModal && (
-                    <div className="modal-overlay" onClick={() => setMostrarModal(false)}>
-                        <div className="modal-content" onClick={e => e.stopPropagation()}>
+                    <div
+                        className="modal-overlay"
+                        onClick={() => setMostrarModal(false)}
+                    >
+
+                        <div
+                            className="modal-content"
+                            onClick={e => e.stopPropagation()}
+                        >
+
                             <div className="modal-header">
                                 <h2>Crear Nuevo Curso</h2>
-                                <button className="close-modal" onClick={() => setMostrarModal(false)}>&times;</button>
+
+                                <button
+                                    className="close-modal"
+                                    onClick={() => setMostrarModal(false)}
+                                >
+                                    &times;
+                                </button>
                             </div>
-                            <form onSubmit={handleSubmit} className="curso-form">
+
+                            <form
+                                onSubmit={handleSubmit}
+                                className="curso-form"
+                            >
+
                                 <div className="form-grid">
+
                                     <div className="form-group">
                                         <label>Nombre del Curso</label>
-                                        <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required placeholder="Ej: Arquitectura de Software" />
+
+                                        <input
+                                            type="text"
+                                            name="nombre"
+                                            value={formData.nombre}
+                                            onChange={handleChange}
+                                            required
+                                            placeholder="Ej: Arquitectura de Software"
+                                        />
                                     </div>
+
                                     <div className="form-grid-2">
+
                                         <div className="form-group">
                                             <label>Costo (Bs.)</label>
-                                            <input type="number" step="0.01" name="costo" value={formData.costo} onChange={handleChange} required placeholder="0.00" />
+
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                name="costo"
+                                                value={formData.costo}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="0.00"
+                                            />
                                         </div>
+
                                         <div className="form-group">
                                             <label>Cupo Máximo</label>
-                                            <input type="number" name="cupo_maximo" value={formData.cupo_maximo} onChange={handleChange} required placeholder="0" />
+
+                                            <input
+                                                type="number"
+                                                name="cupo_maximo"
+                                                value={formData.cupo_maximo}
+                                                onChange={handleChange}
+                                                required
+                                                placeholder="0"
+                                            />
                                         </div>
+
                                     </div>
                                     <div className="form-grid-2">
                                         <div className="form-group">
@@ -217,34 +298,70 @@ const AdministrarCursos = () => {
                                     </div>
                                     <div className="form-group">
                                         <label>Descripción</label>
-                                        <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} required rows="3" placeholder="Describe brevemente el curso..." />
+
+                                        <textarea
+                                            name="descripcion"
+                                            value={formData.descripcion}
+                                            onChange={handleChange}
+                                            required
+                                            rows="3"
+                                            placeholder="Describe brevemente el curso..."
+                                        />
                                     </div>
 
                                     <div className="form-group">
-                                        <label>Prerrequisitos (Selecciona cursos previos)</label>
+                                        <label>Prerrequisitos</label>
+
                                         <div className="prerrequisitos-list">
                                             {cursos.map(c => (
-                                                <label key={c.id} className={`prerrequisito-item ${formData.prerrequisitos.includes(c.id) ? 'selected' : ''}`}>
+                                                <label
+                                                    key={c.id}
+                                                    className={`prerrequisito-item ${formData.prerrequisitos.includes(c.id)
+                                                            ? 'selected'
+                                                            : ''
+                                                        }`}
+                                                >
                                                     <input
                                                         type="checkbox"
                                                         checked={formData.prerrequisitos.includes(c.id)}
                                                         onChange={() => handlePrerrequisitoToggle(c.id)}
                                                     />
+
                                                     <span>{c.nombre}</span>
                                                 </label>
                                             ))}
                                         </div>
                                     </div>
+
                                 </div>
+
                                 <div className="form-actions">
-                                    <button type="button" className="btn-cancel" onClick={() => setMostrarModal(false)}>Cancelar</button>
-                                    <button type="submit" className="btn-submit">Crear Curso</button>
+
+                                    <button
+                                        type="button"
+                                        className="btn-cancel"
+                                        onClick={() => setMostrarModal(false)}
+                                    >
+                                        Cancelar
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        className="btn-submit"
+                                    >
+                                        Crear Curso
+                                    </button>
+
                                 </div>
+
                             </form>
+
                         </div>
                     </div>
                 )}
+
             </main>
+
             <Footer />
         </div>
     );
