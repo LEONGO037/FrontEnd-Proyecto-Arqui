@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import loginApi from '../../services/loginApi';
 const { login: apiLogin, register: apiRegister } = loginApi;
 import { getRolePath } from '../../utils/roleUtils';
+import { validateForm, validationPatterns } from '../../utils/formValidators';
 import './Login.css';
 
 const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
@@ -28,6 +29,14 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const tipoFormulario = isLogin ? 'login' : 'register';
+    const validacion = validateForm(tipoFormulario, formData);
+    if (!validacion.isValid) {
+      setError(validacion.firstError);
+      return;
+    }
+
     setIsLoading(true);
     setError('');
     try {
@@ -41,11 +50,6 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
         onLoginSuccess?.();
         navigate(getRolePath(res.usuario?.rol));
       } else {
-        if (formData.password !== formData.confirmPassword) {
-          setError('Las contraseñas no coinciden');
-          setIsLoading(false);
-          return;
-        }
         const parts = (formData.name || '').trim().split(/\s+/);
         const nombre = parts.shift() || '';
         const apellido_paterno = parts.shift() || '';
@@ -142,7 +146,7 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
                 <input className="login-input" type="email" name="email" placeholder="nombre@ucb.edu.bo"
-                  value={formData.email} onChange={handleChange} required />
+                  value={formData.email} onChange={handleChange} required pattern={validationPatterns.emailUcb.source} />
               </div>
             </div>
 
@@ -154,7 +158,13 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
                 <input className="login-input" type={showPassword ? 'text' : 'password'} name="password"
-                  placeholder="••••••••" value={formData.password} onChange={handleChange} required />
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  minLength={isLogin ? undefined : 8}
+                  pattern={isLogin ? undefined : validationPatterns.strongPassword.source}
+                />
                 <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword
                     ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>

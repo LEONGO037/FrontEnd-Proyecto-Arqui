@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import CursoDetalle from '../../components/cursoDetalle/CursoDetalle';
+import { obtenerMisCursos } from '../../services/docenteApi';
 import './perfilEstudiante.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -79,10 +80,18 @@ const PerfilEstudiante = () => {
   const [cursoDetalle, setCursoDetalle] = useState(null);
   const [cursosCatalogo, setCursosCatalogo] = useState([]);
   const [cargandoCursos, setCargandoCursos] = useState(true);
+  const [misCursosDocente, setMisCursosDocente] = useState([]);
+  const [cargandoMisCursos, setCargandoMisCursos] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
+    // Docentes don't need the public catalog on their profile
+    if (usuario?.rol === 'DOCENTE') {
+      setCursosCatalogo([]);
+      setCargandoCursos(false);
+      return () => { mounted = false; };
+    }
     fetch(`${API_BASE}/api/cursos`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
@@ -100,7 +109,7 @@ const PerfilEstudiante = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [usuario]);
 
   const cursosConDatos = useMemo(() => {
     return cursosInscritos
@@ -149,6 +158,85 @@ const PerfilEstudiante = () => {
   const iniciales = usuario
     ? usuario.nombre.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()
     : '?';
+
+  // If the current user is a docente, render an enhanced profile (personal data + quick stats)
+  if (usuario?.rol === 'DOCENTE') {
+    // fetch docente courses for metrics (small request)
+    useEffect(() => {
+      let mounted = true;
+      (async () => {
+        try {
+          setCargandoMisCursos(true);
+          const cursos = await obtenerMisCursos();
+          if (!mounted) return;
+          const normalized = (cursos || []).map(c => ({ id: c.id, alumnos: Number(c.alumnos || 0), calificacion: Number(c.calificacion || 0) }));
+          setMisCursosDocente(normalized);
+        } catch (e) {
+          if (!mounted) return;
+          setMisCursosDocente([]);
+        } finally {
+          if (mounted) setCargandoMisCursos(false);
+        }
+      })();
+      return () => { mounted = false; };
+    }, [usuario?.id]);
+
+    const totalAlumnos = misCursosDocente.reduce((s, c) => s + (c.alumnos || 0), 0);
+    const cursosCount = misCursosDocente.length;
+    const califProm = cursosCount > 0 ? Math.round(misCursosDocente.reduce((s, c) => s + (c.calificacion || 0), 0) / cursosCount) : 'N/A';
+
+    return (
+      <div className="perfil-page perfil-docente-mejorado">
+        <div className="perfil-hero">
+          <div className="perfil-hero-bg"><span /><span /></div>
+          <div className="perfil-hero-inner">
+            <div className="perfil-breadcrumb">
+              <a href="/">Inicio</a>
+              <span className="sep">›</span>
+              <span>Mi Perfil</span>
+            </div>
+
+            <div className="perfil-usuario-card">
+              <div className="perfil-avatar">{iniciales}</div>
+
+              <div className="perfil-usuario-info">
+                <h1>{usuario?.nombre ?? 'Docente'}</h1>
+                <p className="perfil-email-primary">{usuario?.email ?? ''}</p>
+                {usuario?.telefono && <p className="perfil-telefono">📞 {usuario.telefono}</p>}
+                {usuario?.departamento && <p className="perfil-departamento">🏷️ {usuario.departamento}</p>}
+                {usuario?.bio && <p className="perfil-bio">{usuario.bio}</p>}
+
+                <div className="perfil-badges">
+                  <span className="pbadge">👩‍🏫 Docente</span>
+                  <span className="pbadge green">✓ Cuenta verificada</span>
+                </div>
+
+                <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => navigate('/docente')} className="btn-primary">Panel Docente</button>
+                  <a href={`mailto:${usuario?.email || ''}`} className="btn-outline">Contactar</a>
+                </div>
+              </div>
+
+              <div className="perfil-stats-docente">
+                <div className="pstat">
+                  <span className="pstat-number">{cursosCount}</span>
+                  <span className="pstat-label">Cursos</span>
+                </div>
+                <div className="pstat">
+                  <span className="pstat-number">{totalAlumnos}</span>
+                  <span className="pstat-label">Alumnos</span>
+                </div>
+                <div className="pstat">
+                  <span className="pstat-number">{califProm}</span>
+                  <span className="pstat-label">Calif. Promedio</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="perfil-page">

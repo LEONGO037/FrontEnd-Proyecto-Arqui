@@ -23,7 +23,7 @@ import AdminReportes from './components/admin/adminReportes';
 import EstudiantePagos from './components/estudiante/estudiantePagos';
 import HeaderEstudiante from './components/estudiante/headerEstudiante';
 
-import HeaderDocente from './components/docente/headerDocente'; // ← NUEVO
+import HeaderDocente from './components/docente/headerDocente';
 import DocenteMenu from './components/docente/docenteMenu';
 
 import './App.css';
@@ -40,11 +40,12 @@ function AppContent() {
   const { usuario } = useAuth();
 
   let SelectedHeader = Header;
+
   if (usuario?.rol === 'ESTUDIANTE') {
     SelectedHeader = HeaderEstudiante;
   } else if (usuario?.rol === 'ADMINISTRADOR') {
     SelectedHeader = AdminHeader;
-  } else if (usuario?.rol === 'DOCENTE') {   // ← NUEVO
+  } else if (usuario?.rol === 'DOCENTE') {
     SelectedHeader = HeaderDocente;
   }
 
@@ -58,7 +59,9 @@ function AppContent() {
           element={
             <div className="app-wrapper">
               <SelectedHeader />
-              <main style={{ minHeight: '80vh' }}><Home /></main>
+              <main style={{ minHeight: '80vh' }}>
+                <Home />
+              </main>
               <Footer />
             </div>
           }
@@ -68,13 +71,15 @@ function AppContent() {
         <Route
           path="/cursos"
           element={
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={["ESTUDIANTE","ADMINISTRADOR"]}>
               <div className="app-wrapper">
                 <SelectedHeader />
-                <main style={{ minHeight: '80vh' }}><Catalogo /></main>
+                <main style={{ minHeight: '80vh' }}>
+                  <Catalogo />
+                </main>
                 <Footer />
               </div>
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           }
         />
 
@@ -84,7 +89,9 @@ function AppContent() {
             <ProtectedRoute>
               <div className="app-wrapper">
                 <SelectedHeader />
-                <main style={{ minHeight: '80vh' }}><Perfil /></main>
+                <main style={{ minHeight: '80vh' }}>
+                  <Perfil />
+                </main>
                 <Footer />
               </div>
             </ProtectedRoute>
@@ -180,8 +187,10 @@ function AppContent() {
           element={
             <RoleProtectedRoute allowedRoles={['DOCENTE']}>
               <div className="app-wrapper">
-                <HeaderDocente />          {/* ← antes era Header genérico */}
-                <main style={{ minHeight: '80vh' }}><DocenteMenu /></main>
+                <HeaderDocente />
+                <main style={{ minHeight: '80vh' }}>
+                  <DocenteMenu />
+                </main>
                 <Footer />
               </div>
             </RoleProtectedRoute>
