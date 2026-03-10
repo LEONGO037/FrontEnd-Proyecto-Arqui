@@ -105,17 +105,33 @@ const Header = () => {
                     >
                       🎓 Mi Perfil
                     </button>
-                    <button onClick={() => { navigate('/cursos'); setShowUserMenu(false); }}
-                      style={{
-                        width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
-                        textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
-                        color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
-                      }}
-                      onMouseEnter={e => e.target.style.background = '#f5f7fa'}
-                      onMouseLeave={e => e.target.style.background = 'none'}
-                    >
-                      📚 Catálogo de Cursos
-                    </button>
+                    {usuario?.rol === 'DOCENTE' ? (
+                      <>
+                        <button onClick={() => { navigate('/docente'); setShowUserMenu(false); }}
+                          style={{
+                            width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
+                            textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
+                            color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
+                          }}
+                          onMouseEnter={e => e.target.style.background = '#f5f7fa'}
+                          onMouseLeave={e => e.target.style.background = 'none'}
+                        >
+                          📊 Panel Docente
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={() => { navigate('/cursos'); setShowUserMenu(false); }}
+                        style={{
+                          width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
+                          textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
+                          color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
+                        }}
+                        onMouseEnter={e => e.target.style.background = '#f5f7fa'}
+                        onMouseLeave={e => e.target.style.background = 'none'}
+                      >
+                        📚 Catálogo de Cursos
+                      </button>
+                    )}
                     <button onClick={() => { logout(); navigate('/'); setShowUserMenu(false); }}
                       style={{
                         width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',

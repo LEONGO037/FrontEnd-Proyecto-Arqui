@@ -42,7 +42,7 @@ function AppContent() {
   if (usuario?.rol === 'ESTUDIANTE') {
     SelectedHeader = HeaderEstudiante;
   } else if (usuario?.rol === 'ADMINISTRADOR') {
-    SelectedHeader = AdminHeader;
+    SelectedHeader = Header;
   }
 
   return (
@@ -67,7 +67,7 @@ function AppContent() {
         <Route
           path="/cursos"
           element={
-            <ProtectedRoute>
+            <RoleProtectedRoute allowedRoles={["ESTUDIANTE","ADMINISTRADOR"]}>
               <div className="app-wrapper">
                 <SelectedHeader />
                 <main style={{ minHeight: '80vh' }}>
@@ -75,7 +75,7 @@ function AppContent() {
                 </main>
                 <Footer />
               </div>
-            </ProtectedRoute>
+            </RoleProtectedRoute>
           }
         />
 

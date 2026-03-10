@@ -428,7 +428,7 @@ const HomeDocente = () => {
           <div className="stat-card">
             <div className="stat-icon naranja"><IconStar /></div>
             <div className="stat-info">
-              <h3>{metricas.calificacionPromedio} <span className="stat-max">/ 5.0</span></h3>
+              <h3>{metricas.calificacionPromedio} <span className="stat-max">/ 100.0</span></h3>
               <p>Calificación Promedio</p>
             </div>
           </div>
