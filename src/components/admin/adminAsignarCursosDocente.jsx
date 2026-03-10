@@ -25,7 +25,7 @@ const AdminAsignarCursosDocente = () => {
             try {
                 const token = localStorage.getItem('token');
 
-                const resCurso = await fetch(`${API_BASE}/api/cursos/sin-docente`, {
+                const resCurso = await fetch(`${API_BASE}/api/cursos`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!resCurso.ok) throw new Error('Error al obtener cursos');

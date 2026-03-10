@@ -11,6 +11,7 @@ const API_BASE = 'http://localhost:3000';
 const AdministrarCursos = () => {
     const navigate = useNavigate();
     const [cursos, setCursos] = useState([]);
+    const [todosCursos, setTodosCursos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
     const [mensajeExito, setMensajeExito] = useState('');
@@ -34,7 +35,7 @@ const AdministrarCursos = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            if (!res.ok) throw new Error('Error al cargar cursos');
+            if (!res.ok) throw new Error('Error al cargar cursos sin docente');
 
             const data = await res.json();
             setCursos(data);
@@ -46,8 +47,23 @@ const AdministrarCursos = () => {
         }
     };
 
+    const fetchAllCursos = async () => {
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch(`${API_BASE}/api/cursos`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Error al cargar todos los cursos');
+            const data = await res.json();
+            setTodosCursos(data);
+        } catch (err) {
+            console.error('Error fetching all courses for prerequisites:', err);
+        }
+    };
+
     useEffect(() => {
         fetchCursos();
+        fetchAllCursos();
     }, []);
 
     const handleChange = (e) => {
@@ -313,7 +329,7 @@ const AdministrarCursos = () => {
                                         <label>Prerrequisitos</label>
 
                                         <div className="prerrequisitos-list">
-                                            {cursos.map(c => (
+                                            {todosCursos.map(c => (
                                                 <label
                                                     key={c.id}
                                                     className={`prerrequisito-item ${formData.prerrequisitos.includes(c.id)
