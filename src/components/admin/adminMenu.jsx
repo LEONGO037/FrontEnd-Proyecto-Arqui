@@ -10,8 +10,8 @@ const cards = [
     {
         id: 'usuarios',
         icon: '👥',
-        title: 'Gestión de Usuarios',
-        desc: 'Administra estudiantes, docentes y cuentas del sistema.',
+        title: 'Gestión de Docentes',
+        desc: 'Administra docentes del sistema.',
         color: '#4f46e5',
         path: '/admin/usuarios',
     },
