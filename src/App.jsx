@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
+import CambioContraseña from './components/auth/CambioContraseña';
 
 import Header from './components/layout/headerPrincipal';
 import Footer from './components/layout/footerPrincipal';
@@ -187,6 +188,7 @@ function AppContent() {
           element={
             <RoleProtectedRoute allowedRoles={['DOCENTE']}>
               <div className="app-wrapper">
+                <CambioContraseña />
                 <HeaderDocente />
                 <main style={{ minHeight: '80vh' }}>
                   <DocenteMenu />
