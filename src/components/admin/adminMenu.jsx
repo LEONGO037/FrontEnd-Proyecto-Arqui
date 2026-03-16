@@ -47,6 +47,14 @@ const cards = [
         color: '#ef4444',
         path: '/admin/reportes',
     },
+    {
+        id: 'auditoria',
+        icon: '🧾',
+        title: 'Auditoria',
+        desc: 'Consulta la actividad relevante registrada por el sistema.',
+        color: '#0f766e',
+        path: '/admin/auditoria',
+    },
 ];
 
 const AdminMenu = () => {
