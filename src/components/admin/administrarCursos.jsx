@@ -17,6 +17,8 @@ const AdministrarCursos = () => {
     const [mensajeExito, setMensajeExito] = useState('');
 
     const [mostrarModal, setMostrarModal] = useState(false);
+    const [mostrarModalEditar, setMostrarModalEditar] = useState(false);
+    const [cursoEditando, setCursoEditando] = useState(null);
     const [formData, setFormData] = useState({
         nombre: '',
         descripcion: '',
@@ -82,7 +84,20 @@ const AdministrarCursos = () => {
             }
         });
     };
+    const abrirEditarCurso = (curso) => {
+    setCursoEditando(curso);
 
+    setFormData({
+        nombre: curso.nombre || '',
+        descripcion: curso.descripcion || '',
+        costo: curso.costo || '',
+        cupo_maximo: curso.cupo_maximo || '',
+        minimo_estudiantes: curso.minimo_estudiantes || '',
+        prerrequisitos: []
+    });
+
+    setMostrarModalEditar(true);
+};
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
@@ -136,7 +151,51 @@ const AdministrarCursos = () => {
             setError(err.message);
         }
     };
+const handleUpdateCurso = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setMensajeExito('');
 
+    const payload = {
+        nombre: formData.nombre,
+        descripcion: formData.descripcion,
+        costo: Number(formData.costo),
+        cupo_maximo: Number(formData.cupo_maximo),
+        minimo_estudiantes: formData.minimo_estudiantes
+            ? Number(formData.minimo_estudiantes)
+            : 1
+    };
+
+    const token = localStorage.getItem('token');
+
+    try {
+        const res = await fetch(
+            `${API_BASE}/api/cursos/${cursoEditando.id}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            }
+        );
+
+        if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error || "Error al actualizar el curso");
+        }
+
+        setMensajeExito("Curso actualizado correctamente");
+
+        setMostrarModalEditar(false);
+
+        fetchCursos();
+
+    } catch (err) {
+        setError(err.message);
+    }
+};
     return (
         <div className="admin-cursos-page">
             <AdminHeader />
@@ -216,9 +275,12 @@ const AdministrarCursos = () => {
                                             Asignar
                                         </button>
 
-                                        <button className="btn-edit">
-                                            Editar
-                                        </button>
+                                        <button
+    className="btn-edit"
+    onClick={() => abrirEditarCurso(curso)}
+>
+    Editar
+</button>
                                     </td>
                                 </tr>
                             ))}
@@ -367,6 +429,7 @@ const AdministrarCursos = () => {
                                     >
                                         Crear Curso
                                     </button>
+                                    
 
                                 </div>
 
@@ -375,7 +438,116 @@ const AdministrarCursos = () => {
                         </div>
                     </div>
                 )}
+                    {mostrarModalEditar && (
+<div
+    className="modal-overlay"
+    onClick={() => setMostrarModalEditar(false)}
+>
 
+<div
+    className="modal-content"
+    onClick={e => e.stopPropagation()}
+>
+
+<div className="modal-header">
+    <h2>Editar Curso</h2>
+
+    <button
+        className="close-modal"
+        onClick={() => setMostrarModalEditar(false)}
+    >
+        &times;
+    </button>
+</div>
+
+<form onSubmit={handleUpdateCurso} className="curso-form">
+
+<div className="form-grid">
+
+<div className="form-group">
+<label>Nombre del Curso</label>
+
+<input
+    type="text"
+    name="nombre"
+    value={formData.nombre}
+    onChange={handleChange}
+/>
+</div>
+
+<div className="form-grid-2">
+
+<div className="form-group">
+<label>Costo (Bs.)</label>
+
+<input
+    type="number"
+    name="costo"
+    value={formData.costo}
+    onChange={handleChange}
+/>
+</div>
+
+<div className="form-group">
+<label>Cupo Máximo</label>
+
+<input
+    type="number"
+    name="cupo_maximo"
+    value={formData.cupo_maximo}
+    onChange={handleChange}
+/>
+</div>
+
+</div>
+
+<div className="form-group">
+<label>Mínimo de Estudiantes</label>
+
+<input
+    type="number"
+    name="minimo_estudiantes"
+    value={formData.minimo_estudiantes}
+    onChange={handleChange}
+/>
+</div>
+
+<div className="form-group">
+<label>Descripción</label>
+
+<textarea
+    name="descripcion"
+    value={formData.descripcion}
+    onChange={handleChange}
+/>
+</div>
+
+</div>
+
+<div className="form-actions">
+
+<button
+    type="button"
+    className="btn-cancel"
+    onClick={() => setMostrarModalEditar(false)}
+>
+    Cancelar
+</button>
+
+<button
+    type="submit"
+    className="btn-submit"
+>
+    Guardar Cambios
+</button>
+
+</div>
+
+</form>
+
+</div>
+</div>
+)}
             </main>
 
             <Footer />
