@@ -31,46 +31,57 @@ const Toast = ({ msg }) => (
   </div>
 );
 
-const PerfilCursoCard = ({ cursoId, datos, onBaja, onVerDetalle }) => (
-  <div className="perfil-curso-card">
-    <div className="pccard-banner" style={{ background: datos.color }}>
-      <span style={{ position: 'relative', zIndex: 2 }}>{datos.icono}</span>
-    </div>
-    <div className="pccard-body">
-      <div className="pccard-top">
-        <div>
-          <div className="pccard-titulo">{datos.nombre}</div>
-          <div className="pccard-codigo">{datos.codigo}</div>
+const PerfilCursoCard = ({ cursoId, datos, onBaja, onVerDetalle }) => {
+  const estadoCurso = (datos.estado || datos.estado_curso || '').toString().toUpperCase();
+  const puedeDarBaja = estadoCurso !== 'FINALIZADO';
+
+  return (
+    <div className="perfil-curso-card">
+      <div className="pccard-banner" style={{ background: datos.color }}>
+        <span style={{ position: 'relative', zIndex: 2 }}>{datos.icono}</span>
+      </div>
+      <div className="pccard-body">
+        <div className="pccard-top">
+          <div>
+            <div className="pccard-titulo">{datos.nombre}</div>
+            <div className="pccard-codigo">{datos.codigo}</div>
+          </div>
+          <span className="pccard-badge">Inscrito</span>
         </div>
-        <span className="pccard-badge">Inscrito</span>
+
+        <div className="pccard-meta">
+          <div className="pccard-meta-item"><IconUser />{datos.docente}</div>
+          <div className="pccard-meta-item"><IconCal />{datos.horario}</div>
+        </div>
+
+        <div className="pccard-progreso">
+          <div className="pccard-prog-label">
+            <span>Progreso</span>
+            <span className="pccard-prog-pct">{datos.progreso}%</span>
+          </div>
+          <div className="pccard-prog-track">
+            <div className="pccard-prog-fill" style={{ width: `${datos.progreso}%` }} />
+          </div>
+        </div>
       </div>
 
-      <div className="pccard-meta">
-        <div className="pccard-meta-item"><IconUser />{datos.docente}</div>
-        <div className="pccard-meta-item"><IconCal />{datos.horario}</div>
-      </div>
-
-      <div className="pccard-progreso">
-        <div className="pccard-prog-label">
-          <span>Progreso</span>
-          <span className="pccard-prog-pct">{datos.progreso}%</span>
-        </div>
-        <div className="pccard-prog-track">
-          <div className="pccard-prog-fill" style={{ width: `${datos.progreso}%` }} />
-        </div>
+      <div className="pccard-footer">
+        <button className="btn-pcdetalle" onClick={() => onVerDetalle(cursoId)}>
+          <IconEye /><span>Ver detalle</span>
+        </button>
+        <button
+          className="btn-pcbaja"
+          onClick={() => puedeDarBaja && onBaja(cursoId)}
+          disabled={!puedeDarBaja}
+          title={!puedeDarBaja ? 'No se puede dar de baja un curso finalizado' : 'Dar de baja'}
+          style={!puedeDarBaja ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+        >
+          <IconTrash /><span>Dar de baja</span>
+        </button>
       </div>
     </div>
-
-    <div className="pccard-footer">
-      <button className="btn-pcdetalle" onClick={() => onVerDetalle(cursoId)}>
-        <IconEye /><span>Ver detalle</span>
-      </button>
-      <button className="btn-pcbaja" onClick={() => onBaja(cursoId)}>
-        <IconTrash /><span>Dar de baja</span>
-      </button>
-    </div>
-  </div>
-);
+  );
+};
 
 // ── Componente principal ──────────────────────────────────────────────────
 const PerfilEstudiante = () => {

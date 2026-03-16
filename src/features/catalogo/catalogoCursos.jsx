@@ -303,7 +303,10 @@ const CatalogoCursos = () => {
 
         <div className="catalogo-contador">
           <p>
-            Mostrando <strong>{cursos.length} cursos</strong>
+            Mostrando <strong>{cursos.filter((curso) => {
+              const estadoCurso = (curso.estado || curso.estado_curso || '').toString().toUpperCase();
+              return estadoCurso !== 'ACTIVO' && estadoCurso !== 'FINALIZADO';
+            }).length} cursos</strong>
             {cursosInscritos.length > 0 && (
               <> · <strong style={{ color:'#8cc63f' }}>{cursosInscritos.length} inscrito{cursosInscritos.length > 1 ? 's' : ''}</strong></>
             )}
@@ -336,17 +339,22 @@ const CatalogoCursos = () => {
           </div>
         ) : (
           <div className="cursos-catalogo-grid">
-            {cursos.map((curso, i) => (
-              <CursoCard
-                key={curso.id}
-                curso={curso}
-                visual={VISUAL[i % VISUAL.length]}
-                inscrito={estaInscrito(curso.id)}
-                preinscrito={estaPreinscrito(curso.id)}
-                onPreinscribir={agregarAlCarrito}
-                onEliminarPreinscripcion={eliminarDelCarrito}
-                onVerDetalle={(c) => setCursoDetalle(c)}
-              />
+            {cursos
+              .filter((curso) => {
+                const estadoCurso = (curso.estado || curso.estado_curso || '').toString().toUpperCase();
+                return estadoCurso !== 'ACTIVO' && estadoCurso !== 'FINALIZADO';
+              })
+              .map((curso, i) => (
+                <CursoCard
+                  key={curso.id}
+                  curso={curso}
+                  visual={VISUAL[i % VISUAL.length]}
+                  inscrito={estaInscrito(curso.id)}
+                  preinscrito={estaPreinscrito(curso.id)}
+                  onPreinscribir={agregarAlCarrito}
+                  onEliminarPreinscripcion={eliminarDelCarrito}
+                  onVerDetalle={(c) => setCursoDetalle(c)}
+                />
             ))}
           </div>
         )}

@@ -1,5 +1,7 @@
 // docenteMenu.jsx
 import React, { useState, useEffect, useRef } from 'react';
+import jsPDF from 'jspdf';
+import logo from '../../assets/logo.png';
 import { useAuth } from '../../context/AuthContext';
 import { obtenerMisCursos, obtenerEstudiantesCurso, guardarNotasEstudiantes, obtenerMetricasCurso, cambiarEstadoCurso } from '../../services/docenteApi';
 import { validateNotas } from '../../utils/formValidators';
@@ -97,7 +99,7 @@ const HomeDocente = () => {
     setMostrarConfirmacion(false);
     
     try {
-      if (tipo === 'alumnos' || tipo === 'notas') {
+      if (tipo === 'alumnos' || tipo === 'notas' || tipo === 'administrar') {
         const estudiantes = await obtenerEstudiantesCurso(curso.id);
         setAlumnosCurso(
           (estudiantes || []).map(al => ({
@@ -138,6 +140,14 @@ const HomeDocente = () => {
 
         if (inscritos < minimoEstudiantes) {
           mostrarToast(`No se puede iniciar. Inscritos: ${inscritos}. Mínimo requerido: ${minimoEstudiantes}.`, 'error');
+          return;
+        }
+      }
+
+      if (estadoApi === 'FINALIZADO') {
+        const pendientes = (alumnosCurso || []).filter(al => al.notaFinal === null || al.notaFinal === undefined);
+        if (pendientes.length > 0) {
+          mostrarToast('No se puede finalizar el curso. Todos los estudiantes deben tener una nota asignada.', 'error');
           return;
         }
       }
@@ -188,29 +198,259 @@ const HomeDocente = () => {
     }
   };
 
-  const generarReporte = () => {
-    mostrarToast("Generando reporte en PDF, la descarga comenzará en breve...", 'info');
+  // Función para dibujar rectángulo con color de fondo (simulando fill de pdfkit)
+  const dibujarFondoTabla = (doc, x, y, width, height, color) => {
+    doc.setFillColor(color);
+    doc.rect(x, y, width, height, 'F');
   };
 
-  const exportarCSV = () => {
-    const encabezados = "ID,Nombre del Alumno,CI/NIT,Asistencia %,Nota Final,Estado Académico\n";
-    const filas = alumnosCurso.map(al => {
-      const estadoStr = al.notaFinal === null ? 'Pendiente' : (al.notaFinal >= 51 ? 'Aprobado' : 'Reprobado');
-      const notaStr = al.notaFinal === null ? 'N/A' : al.notaFinal;
-      return `${al.id},"${al.nombre}",${al.ci},${al.asistencia},${notaStr},${estadoStr}`;
-    }).join("\n");
+  // Función para dibujar línea horizontal
+  const dibujarLinea = (doc, x1, y1, x2, y2, color = '#cbd5e1', width = 1) => {
+    doc.setDrawColor(color);
+    doc.setLineWidth(width / 2.83465); // Convertir pt a mm aproximado para jsPDF
+    doc.line(x1, y1, x2, y2);
+  };
 
-    const blob = new Blob(["\uFEFF" + encabezados + filas], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+  const exportarPDF = async () => {
+    if (!cursoActual) {
+      mostrarToast('No hay curso seleccionado para generar el PDF.', 'error');
+      return;
+    }
+
+    // Crear documento A4 con márgenes (jsPDF usa mm por defecto)
+    const margen = 17.6;
+    const anchoPagina = 210;
+    const anchoUsable = anchoPagina - (margen * 2);
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+    // Colores
+    const colorPrimario = '#003366';
+    const colorGrisClaro = '#f1f5f9';
+    const colorGrisMedio = '#cbd5e1';
+    const colorGrisOscuro = '#666666';
+    const colorTexto = '#333333';
+    const colorNegro = '#000000';
+    const colorVerde = '#10b981';
+    const colorRojo = '#ef4444';
+    const colorNaranja = '#f59e0b';
+
+    let y = margen + 10;
+
+    // --- Logo en PDF ---
+    try {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      const logoData = await new Promise((resolve, reject) => {
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = (e) => reject(new Error('No se pudo cargar el logo para PDF')); 
+        img.src = logo;
+      });
+
+      const logoWidth = 45;
+      const logoHeight = 25;
+      doc.addImage(logoData, 'PNG', margen, margen, logoWidth, logoHeight);
+    } catch (err) {
+      console.warn('No se pudo insertar el logo en el PDF:', err);
+      // sigue sin el logo y sin bloquear la generación
+    }
+
+    // --- Título del documento ---
+    doc.setTextColor(colorPrimario);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('REPORTE DE NOTAS', anchoPagina / 2, y + 5, { align: 'center' });
     
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Reporte_Notas_${cursoActual.nombre.replace(/\s+/g, '_')}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    y += 15;
+
+    // --- Información del curso (emisor) ---
+    doc.setTextColor(colorNegro);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Curso: ${cursoActual.nombre || 'N/A'}`, margen, y);
+    y += 6;
     
-    mostrarToast("Archivo CSV exportado exitosamente", "exito");
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`ID de curso: ${cursoActual.id || 'N/A'}`, margen, y);
+    y += 5;
+    doc.text(`Estado: ${cursoActual.estado_curso || 'N/A'}`, margen, y);
+    y += 5;
+    doc.text(`Total estudiantes: ${alumnosCurso.length}`, margen, y);
+    y += 5;
+    doc.text(`Fecha de generación: ${new Date().toLocaleString('es-BO')}`, margen, y);
+    y += 10;
+
+    // --- Métricas del curso (resumen) ---
+    const aprobados = alumnosCurso.filter(al => al.notaFinal !== null && al.notaFinal >= 51).length;
+    const reprobados = alumnosCurso.filter(al => al.notaFinal !== null && al.notaFinal < 51).length;
+    const pendientes = alumnosCurso.filter(al => al.notaFinal === null || al.notaFinal === undefined).length;
+    
+    const promedioNotas = alumnosCurso.filter(al => al.notaFinal !== null).length > 0
+      ? (alumnosCurso.filter(al => al.notaFinal !== null).reduce((sum, al) => sum + al.notaFinal, 0) / 
+         alumnosCurso.filter(al => al.notaFinal !== null).length).toFixed(1)
+      : 'N/A';
+
+    // Caja de métricas con fondo gris claro
+    dibujarFondoTabla(doc, margen, y, anchoUsable, 25, colorGrisClaro);
+    
+    doc.setTextColor(colorPrimario);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RESUMEN DEL CURSO', margen + 5, y + 6);
+    
+    doc.setTextColor(colorTexto);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    
+    const col1 = margen + 5;
+    const col2 = margen + 60;
+    const col3 = margen + 115;
+    const col4 = margen + 170;
+    
+    doc.text(`Promedio: ${promedioNotas}`, col1, y + 14);
+    doc.text(`Aprobados: ${aprobados}`, col2, y + 14);
+    doc.text(`Reprobados: ${reprobados}`, col3, y + 14);
+    doc.text(`Pendientes: ${pendientes}`, col4, y + 14);
+    
+    y += 30;
+
+    // --- Tabla de estudiantes ---
+    // Encabezado con fondo gris
+    const altoFila = 8;
+    const altoEncabezado = 10;
+    
+    dibujarFondoTabla(doc, margen, y, anchoUsable, altoEncabezado, colorGrisClaro);
+    
+    // Línea superior del encabezado
+    dibujarLinea(doc, margen, y, anchoPagina - margen, y, colorGrisMedio, 1);
+    
+    // Textos del encabezado
+    doc.setTextColor(colorPrimario);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    
+    const colNro = margen + 3;
+    const colNombre = margen + 12;
+    const colCI = margen + 85;
+    const colAsistencia = margen + 120;
+    const colNota = margen + 145;
+    const colEstado = margen + 165;
+    
+    doc.text('N°', colNro, y + 6);
+    doc.text('Nombre del Estudiante', colNombre, y + 6);
+    doc.text('CI/NIT', colCI, y + 6);
+    doc.text('Asist.', colAsistencia, y + 6);
+    doc.text('Nota', colNota, y + 6);
+    doc.text('Estado', colEstado, y + 6);
+    
+    // Línea inferior del encabezado
+    dibujarLinea(doc, margen, y + altoEncabezado, anchoPagina - margen, y + altoEncabezado, colorGrisMedio, 1);
+    
+    y += altoEncabezado;
+
+    // Filas de la tabla
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(colorTexto);
+    doc.setFontSize(9);
+
+    alumnosCurso.forEach((al, index) => {
+      // Verificar si necesitamos nueva página
+      if (y > 270) {
+        doc.addPage();
+        y = margen;
+        
+        // Repetir encabezado en nueva página
+        dibujarFondoTabla(doc, margen, y, anchoUsable, altoEncabezado, colorGrisClaro);
+        dibujarLinea(doc, margen, y, anchoPagina - margen, y, colorGrisMedio, 1);
+        
+        doc.setTextColor(colorPrimario);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('N°', colNro, y + 6);
+        doc.text('Nombre del Estudiante', colNombre, y + 6);
+        doc.text('CI/NIT', colCI, y + 6);
+        doc.text('Asist.', colAsistencia, y + 6);
+        doc.text('Nota', colNota, y + 6);
+        doc.text('Estado', colEstado, y + 6);
+        
+        dibujarLinea(doc, margen, y + altoEncabezado, anchoPagina - margen, y + altoEncabezado, colorGrisMedio, 1);
+        y += altoEncabezado;
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(colorTexto);
+      }
+
+      const estadoStr = al.notaFinal === null || al.notaFinal === undefined ? 'Pendiente' : (al.notaFinal >= 51 ? 'Aprobado' : 'Reprobado');
+      const notaStr = al.notaFinal === null || al.notaFinal === undefined ? '-' : String(al.notaFinal);
+      
+      // Color del estado
+      let colorEstado = colorGrisOscuro;
+      if (estadoStr === 'Aprobado') colorEstado = colorVerde;
+      if (estadoStr === 'Reprobado') colorEstado = colorRojo;
+      if (estadoStr === 'Pendiente') colorEstado = colorNaranja;
+
+      doc.text(String(index + 1), colNro, y + 5);
+      doc.text(al.nombre || '', colNombre, y + 5);
+      doc.text(al.ci || '', colCI, y + 5);
+      doc.text(`${al.asistencia ?? '0'}%`, colAsistencia, y + 5);
+      doc.text(notaStr, colNota, y + 5);
+      
+      // Estado con color
+      doc.setTextColor(colorEstado);
+      doc.setFont('helvetica', 'bold');
+      doc.text(estadoStr, colEstado, y + 5);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colorTexto);
+      
+      // Línea separadora sutil
+      dibujarLinea(doc, margen, y + altoFila, anchoPagina - margen, y + altoFila, '#e2e8f0', 0.5);
+      
+      y += altoFila;
+    });
+
+    // Línea final de la tabla
+    dibujarLinea(doc, margen, y, anchoPagina - margen, y, colorGrisMedio, 1);
+
+    y += 10;
+
+    // --- Total de estudiantes ---
+    doc.setTextColor(colorNegro);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text(`TOTAL ESTUDIANTES: ${alumnosCurso.length}`, anchoPagina - margen, y, { align: 'right' });
+    
+    y += 15;
+
+    // --- Leyendas obligatorias (estilo factura) ---
+    doc.setTextColor(colorGrisOscuro);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    
+    const textoLeyenda1 = 'ESTE DOCUMENTO ES UN REPORTE OFICIAL DE CALIFICACIONES GENERADO POR EL SISTEMA ACADÉMICO.';
+    doc.text(textoLeyenda1, anchoPagina / 2, y, { align: 'center', maxWidth: anchoUsable });
+    y += 4;
+    
+    const textoLeyenda2 = 'X College Nexus - Sistema de Gestión Educativa. Todos los derechos reservados.';
+    doc.text(textoLeyenda2, anchoPagina / 2, y, { align: 'center', maxWidth: anchoUsable });
+    y += 4;
+    
+    const textoLeyenda3 = `Documento generado el ${new Date().toLocaleDateString('es-BO')} a las ${new Date().toLocaleTimeString('es-BO')}`;
+    doc.text(textoLeyenda3, anchoPagina / 2, y, { align: 'center', maxWidth: anchoUsable });
+    
+    y += 8;
+    doc.setFontSize(6);
+    doc.text(`Docente: ${usuario?.nombre || 'No especificado'} | ID Curso: ${cursoActual.id}`, anchoPagina / 2, y, { align: 'center' });
+
+    // Guardar PDF
+    doc.save(`Reporte_Notas_${(cursoActual.nombre || 'curso').replace(/\s+/g, '_')}.pdf`);
+    mostrarToast('PDF generado y descargado correctamente.', 'exito');
   };
 
   const getBadgeClass = (estado) => {
@@ -279,13 +519,10 @@ const HomeDocente = () => {
                 )}
                 {cursoActual.estado_curso === 'FINALIZADO' && (
                   <>
-                    <p>Este curso ya ha concluido. Descarga el reporte o exporta las notas a Excel.</p>
+                    <p>Este curso ya ha concluido. Descarga el reporte en PDF con toda la información de notas.</p>
                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                      <button className="btn-modal-action primary" onClick={generarReporte}>
-                        <IconFileText /> Generar PDF
-                      </button>
-                      <button className="btn-modal-action verde-excel" onClick={exportarCSV}>
-                        <IconDownload /> Exportar a CSV
+                      <button className="btn-modal-action primary" onClick={exportarPDF}>
+                        <IconFileText /> Descargar PDF
                       </button>
                     </div>
                   </>
@@ -300,8 +537,8 @@ const HomeDocente = () => {
           <div className="modal-content-table">
             <div className="modal-header-flexible">
               <h3>Listado de Alumnos - {cursoActual.nombre}</h3>
-              <button className="btn-export-small" onClick={exportarCSV} title="Descargar CSV">
-                <IconDownload /> CSV
+              <button className="btn-export-small" onClick={exportarPDF} title="Descargar PDF">
+                <IconDownload /> PDF
               </button>
             </div>
             <div className="table-responsive">
