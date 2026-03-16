@@ -19,6 +19,7 @@ import AdminPerfil from './components/admin/AdminPerfil';
 import AdminUsuarios from './components/admin/adminUsuarios';
 import GestionInscripciones from './components/admin/gestionInscripciones';
 import AdminReportes from './components/admin/adminReportes';
+import AdminAuditoria from './components/admin/adminAuditoria';
 
 import EstudiantePagos from './components/estudiante/estudiantePagos';
 import HeaderEstudiante from './components/estudiante/headerEstudiante';
@@ -177,6 +178,15 @@ function AppContent() {
           element={
             <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
               <AdminReportes />
+            </RoleProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/auditoria"
+          element={
+            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+              <AdminAuditoria />
             </RoleProtectedRoute>
           }
         />

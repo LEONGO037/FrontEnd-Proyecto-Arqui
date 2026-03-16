@@ -1,0 +1,127 @@
+@import './adminPagos.css';
+
+.admin-auditoria-container {
+    padding: 2rem;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.admin-auditoria-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.auditoria-back-button {
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    cursor: pointer;
+    background: #ecfeff;
+    color: #0f766e;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.admin-auditoria-title {
+    margin: 0;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.admin-auditoria-subtitle {
+    margin: 0.4rem 0 0;
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.auditoria-filtros {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto auto;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.auditoria-filtros input {
+    border: 1px solid #d1d5db;
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.9rem;
+}
+
+.auditoria-filtros button {
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.65rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #0f766e;
+    color: white;
+}
+
+.auditoria-filtros button[type='button'] {
+    background: #334155;
+}
+
+.auditoria-error {
+    margin-bottom: 1rem;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+}
+
+.auditoria-usuario {
+    font-weight: 600;
+}
+
+.auditoria-email {
+    font-size: 0.78rem;
+    color: #6b7280;
+}
+
+.auditoria-badge {
+    display: inline-block;
+    background: #ecfeff;
+    color: #0f766e;
+    border-radius: 999px;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.admin-auditoria-container .admin-table-wrapper {
+    overflow-x: auto;
+}
+
+.admin-auditoria-container .admin-pagos-table {
+    table-layout: fixed;
+    min-width: 1100px;
+}
+
+.admin-auditoria-container .admin-pagos-table th,
+.admin-auditoria-container .admin-pagos-table td {
+    vertical-align: top;
+}
+
+.admin-auditoria-container .admin-pagos-table th:nth-child(5),
+.admin-auditoria-container .admin-pagos-table td:nth-child(5) {
+    width: 42%;
+}
+
+.auditoria-detalle-cell {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+}
+
+@media (max-width: 980px) {
+    .auditoria-filtros {
+        grid-template-columns: 1fr;
+    }
+}

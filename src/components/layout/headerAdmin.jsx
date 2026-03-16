@@ -34,6 +34,7 @@ const HeaderAdmin = () => {
     { path: '/admin/inscripciones', label: 'Inscripciones' },
     { path: '/admin/pagos', label: 'Pagos' },
     { path: '/admin/reportes', label: 'Reportes' },
+    { path: '/admin/auditoria', label: 'Auditoria' },
   ];
 
   // Función para determinar si un enlace está activo
