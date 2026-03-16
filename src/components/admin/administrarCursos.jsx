@@ -93,7 +93,7 @@ const AdministrarCursos = () => {
         costo: curso.costo || '',
         cupo_maximo: curso.cupo_maximo || '',
         minimo_estudiantes: curso.minimo_estudiantes || '',
-        prerrequisitos: []
+        prerrequisitos: curso.prerrequisitos || []
     });
 
     setMostrarModalEditar(true);
@@ -156,7 +156,9 @@ const handleUpdateCurso = async (e) => {
     setError(null);
     setMensajeExito('');
 
-    const payload = {
+    const token = localStorage.getItem('token');
+
+    const payloadCurso = {
         nombre: formData.nombre,
         descripcion: formData.descripcion,
         costo: Number(formData.costo),
@@ -166,10 +168,10 @@ const handleUpdateCurso = async (e) => {
             : 1
     };
 
-    const token = localStorage.getItem('token');
-
     try {
-        const res = await fetch(
+
+        // 1️⃣ ACTUALIZAR CURSO
+        const resCurso = await fetch(
             `${API_BASE}/api/cursos/${cursoEditando.id}`,
             {
                 method: "PUT",
@@ -177,16 +179,36 @@ const handleUpdateCurso = async (e) => {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payloadCurso)
             }
         );
 
-        if (!res.ok) {
-            const data = await res.json();
+        if (!resCurso.ok) {
+            const data = await resCurso.json();
             throw new Error(data.error || "Error al actualizar el curso");
         }
 
-        setMensajeExito("Curso actualizado correctamente");
+        // 2️⃣ ACTUALIZAR PRERREQUISITOS
+        const resPrereq = await fetch(
+            `${API_BASE}/api/cursos/${cursoEditando.id}/prerrequisitos`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    prerrequisitos: formData.prerrequisitos
+                })
+            }
+        );
+
+        if (!resPrereq.ok) {
+            const data = await resPrereq.json();
+            throw new Error(data.error || "Error al actualizar prerrequisitos");
+        }
+
+        setMensajeExito("Curso y prerrequisitos actualizados correctamente");
 
         setMostrarModalEditar(false);
 
@@ -391,7 +413,8 @@ const handleUpdateCurso = async (e) => {
                                         <label>Prerrequisitos</label>
 
                                         <div className="prerrequisitos-list">
-                                            {todosCursos.map(c => (
+                                            {todosCursos.filter(c => c.id !== cursoEditando?.id)
+.map(c => (
                                                 <label
                                                     key={c.id}
                                                     className={`prerrequisito-item ${formData.prerrequisitos.includes(c.id)
@@ -521,6 +544,37 @@ const handleUpdateCurso = async (e) => {
     onChange={handleChange}
 />
 </div>
+<div className="form-group">
+<label>Prerrequisitos</label>
+
+<div className="prerrequisitos-list">
+{todosCursos
+.filter(c => c.id !== cursoEditando?.id)
+.map(c => (
+
+<label
+key={c.id}
+className={`prerrequisito-item ${
+formData.prerrequisitos.includes(c.id)
+? 'selected'
+: ''
+}`}
+>
+
+<input
+type="checkbox"
+checked={formData.prerrequisitos.includes(c.id)}
+onChange={() => handlePrerrequisitoToggle(c.id)}
+/>
+
+<span>{c.nombre}</span>
+
+</label>
+
+))}
+</div>
+</div>
+
 
 </div>
 
