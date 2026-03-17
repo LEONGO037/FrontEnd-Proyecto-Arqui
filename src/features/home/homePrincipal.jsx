@@ -92,7 +92,7 @@ const Home = () => {
         <div className="features-grid">
           {[
             { emoji: '🔒', title: 'Registro Seguro',       desc: 'Inscripciones mediante protocolos HTTPS para garantizar la seguridad de tus datos personales.', color: '#8cc63f' },
-            { emoji: '💳', title: 'Pagos Electrónicos',    desc: 'Aceptamos pagos vía QR, transferencia bancaria y tarjetas de débito/crédito con PayPal.', color: '#003366' },
+            { emoji: '💳', title: 'Pagos Electrónicos',    desc: 'Aceptamos transferencias bancarias y tarjetas de débito/crédito con PayPal.', color: '#003366' },
             { emoji: '⚡', title: 'Gestión Automática',    desc: 'Tu registro se sincroniza con la base central institucional inmediatamente después del pago.', color: '#0066cc' },
           ].map(({ emoji, title, desc, color }, i) => (
             <div key={i} className="feat-card" style={{ '--c': color }}>
