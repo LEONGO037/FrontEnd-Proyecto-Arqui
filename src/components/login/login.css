@@ -477,41 +477,6 @@
   font-weight: 700;
 }
 
-/* Opciones del formulario */
-.form-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.875rem;
-}
-
-.remember-me {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  color: #666;
-}
-
-.remember-me input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: #8cc63f;
-  cursor: pointer;
-}
-
-.forgot-password {
-  color: #8cc63f;
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-
-.forgot-password:hover {
-  color: #7ab332;
-  text-decoration: underline;
-}
-
 /* Botón submit */
 .submit-btn {
   background: linear-gradient(135deg, #8cc63f 0%, #7ab332 100%);

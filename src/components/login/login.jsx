@@ -285,15 +285,6 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
               </div>
             )}
 
-            {isLogin && (
-              <div className="form-options">
-                <label className="remember-me">
-                  <input type="checkbox" /><span>Recordarme</span>
-                </label>
-                <a href="#" className="forgot-password">¿Olvidaste tu contraseña?</a>
-              </div>
-            )}
-
             <button type="submit" className={`submit-btn ${isLoading ? 'loading' : ''}`} disabled={isLoading}>
               {isLoading ? <div className="spinner" /> : (
                 <>
