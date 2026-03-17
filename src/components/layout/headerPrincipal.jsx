@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './headerPrincipal.css';
 import Login from '../login/login';
+import CambiarPasswordPanel from '../auth/CambiarPasswordPanel';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -132,6 +134,17 @@ const Header = () => {
                         📚 Catálogo de Cursos
                       </button>
                     )}
+                    <button onClick={() => { setShowPasswordModal(true); setShowUserMenu(false); }}
+                      style={{
+                        width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
+                        textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
+                        color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
+                      }}
+                      onMouseEnter={e => e.target.style.background = '#f5f7fa'}
+                      onMouseLeave={e => e.target.style.background = 'none'}
+                    >
+                      🔐 Cambiar contrasena
+                    </button>
                     <button onClick={() => { logout(); navigate('/'); setShowUserMenu(false); }}
                       style={{
                         width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
@@ -165,6 +178,13 @@ const Header = () => {
           onLoginSuccess={() => setShowLogin(false)}
         />
       )}
+
+      <CambiarPasswordPanel
+        titulo="Cambiar contrasena"
+        renderTrigger={false}
+        open={showPasswordModal}
+        onOpenChange={setShowPasswordModal}
+      />
 
       <style>{`
         @keyframes fadeDown {

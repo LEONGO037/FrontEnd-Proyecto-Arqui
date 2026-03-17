@@ -318,7 +318,6 @@ const PerfilEstudiante = () => {
             Agregar más cursos
           </button>
         </div>
-
         {cargandoCursos ? (
           <div className="perfil-empty">
             <h3>Cargando tus cursos...</h3>

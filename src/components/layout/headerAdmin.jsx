@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './headerPrincipal.css';
+import CambiarPasswordPanel from '../auth/CambiarPasswordPanel';
 
 const HeaderAdmin = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const HeaderAdmin = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   // Efecto para cambiar estilo al hacer scroll
   useEffect(() => {
@@ -176,6 +178,18 @@ const HeaderAdmin = () => {
                   📊 Panel de Control
                 </button>
                 <button
+                  onClick={() => { setShowPasswordModal(true); setShowUserMenu(false); }}
+                  style={{
+                    width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
+                    textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
+                    color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={e => e.target.style.background = '#f5f7fa'}
+                  onMouseLeave={e => e.target.style.background = 'none'}
+                >
+                  🔐 Cambiar contrasena
+                </button>
+                <button
                   onClick={handleLogout}
                   style={{
                     width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
@@ -201,6 +215,13 @@ const HeaderAdmin = () => {
           to   { opacity:1; transform:translateY(0); }
         }
       `}</style>
+
+      <CambiarPasswordPanel
+        titulo="Cambiar contrasena"
+        renderTrigger={false}
+        open={showPasswordModal}
+        onOpenChange={setShowPasswordModal}
+      />
     </nav>
   );
 };

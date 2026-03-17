@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import CambiarPasswordPanel from '../auth/CambiarPasswordPanel';
 import '../layout/headerPrincipal.css';
 
 const HeaderDocente = () => {
@@ -12,6 +13,7 @@ const HeaderDocente = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -167,6 +169,19 @@ const HeaderDocente = () => {
                   🏠 Mi Panel Docente
                 </button>
 
+                <button
+                  onClick={() => { setShowPasswordModal(true); setShowUserMenu(false); }}
+                  style={{
+                    width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
+                    textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
+                    color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#f5f7fa'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                >
+                  🔐 Cambiar contrasena
+                </button>
+
                 {/* Cerrar sesión */}
                 <button
                   onClick={handleLogout}
@@ -199,6 +214,13 @@ const HeaderDocente = () => {
           width: 100%;
         }
       `}</style>
+
+      <CambiarPasswordPanel
+        titulo="Cambiar contrasena (Docente)"
+        renderTrigger={false}
+        open={showPasswordModal}
+        onOpenChange={setShowPasswordModal}
+      />
     </nav>
   );
 };

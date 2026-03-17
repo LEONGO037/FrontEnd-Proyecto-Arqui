@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import '../layout/headerPrincipal.css';
 import Login from '../login/login';
+import CambiarPasswordPanel from '../auth/CambiarPasswordPanel';
 
 const HeaderEstudiante = () => {
     const navigate = useNavigate();
@@ -13,6 +14,7 @@ const HeaderEstudiante = () => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [showLogin, setShowLogin] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -158,6 +160,15 @@ const HeaderEstudiante = () => {
                                         >
                                             💳 Mis Pagos
                                         </button>
+                                        <button onClick={() => { setShowPasswordModal(true); setShowUserMenu(false); }}
+                                            style={{
+                                                width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
+                                                textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
+                                                color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
+                                            }}
+                                        >
+                                            🔐 Cambiar contrasena
+                                        </button>
                                         <button onClick={() => { logout(); navigate('/'); setShowUserMenu(false); }}
                                             style={{
                                                 width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
@@ -189,6 +200,13 @@ const HeaderEstudiante = () => {
                     onLoginSuccess={() => setShowLogin(false)}
                 />
             )}
+
+            <CambiarPasswordPanel
+                titulo="Cambiar contrasena"
+                renderTrigger={false}
+                open={showPasswordModal}
+                onOpenChange={setShowPasswordModal}
+            />
 
             <style>{`
         @keyframes fadeDown {
