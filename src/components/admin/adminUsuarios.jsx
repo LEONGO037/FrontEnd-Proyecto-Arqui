@@ -17,6 +17,8 @@ const AdminUsuarios = () => {
 
     // Estado para el modal de registro
     const [showModal, setShowModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [docenteEditId, setDocenteEditId] = useState(null);
     const [formData, setFormData] = useState({
         nombre: '',
         apellido_paterno: '',
@@ -96,6 +98,77 @@ const AdminUsuarios = () => {
         }
     };
 
+    const abrirModalEdicion = (docente) => {
+        setError(null);
+        setSuccess('');
+        setDocenteEditId(docente.id);
+        setFormData({
+            nombre: docente.nombre || '',
+            apellido_paterno: docente.apellido_paterno || '',
+            apellido_materno: docente.apellido_materno || '',
+            ci_nit: docente.ci_nit || '',
+            email: docente.email || '',
+            password: 'Docente#Ucb2026',
+            telefono: docente.telefono || '',
+            direccion: docente.direccion || ''
+        });
+        setShowEditModal(true);
+    };
+
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        setError(null);
+        setSuccess('');
+        setSubmitting(true);
+
+        const token = localStorage.getItem('token');
+
+        try {
+            const payload = {
+                nombre: formData.nombre,
+                apellido_paterno: formData.apellido_paterno,
+                apellido_materno: formData.apellido_materno,
+                ci_nit: formData.ci_nit,
+                email: formData.email,
+                telefono: formData.telefono,
+                direccion: formData.direccion
+            };
+
+            const res = await fetch(`${API_BASE}/api/admin-docente-curso/docentes/${docenteEditId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Error al actualizar el docente');
+            }
+
+            setSuccess('Docente actualizado correctamente.');
+            setShowEditModal(false);
+            setDocenteEditId(null);
+            setFormData({
+                nombre: '',
+                apellido_paterno: '',
+                apellido_materno: '',
+                ci_nit: '',
+                email: '',
+                password: 'Docente#Ucb2026',
+                telefono: '',
+                direccion: ''
+            });
+            fetchDocentes();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     return (
         <div className="admin-page">
             <AdminHeader />
@@ -153,7 +226,13 @@ const AdminUsuarios = () => {
                                         <td>{docente.email}</td>
                                         <td>{docente.telefono || 'Sin teléfono'}</td>
                                         <td>
-                                            <button className="btn-edit" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>Editar</button>
+                                            <button
+                                                className="btn-edit"
+                                                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                                                onClick={() => abrirModalEdicion(docente)}
+                                            >
+                                                Editar
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -209,6 +288,57 @@ const AdminUsuarios = () => {
                                         <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Cancelar</button>
                                         <button type="submit" className="btn-submit" disabled={submitting}>
                                             {submitting ? 'Registrando...' : 'Registrar Docente'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Modal de Edicion */}
+                {showEditModal && (
+                    <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+                        <div className="modal-content" onClick={e => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h2>Editar Docente</h2>
+                                <button className="close-modal" onClick={() => setShowEditModal(false)}>&times;</button>
+                            </div>
+                            <form onSubmit={handleEditSubmit} className="docente-form">
+                                <div className="form-grid">
+                                    <div className="form-group">
+                                        <label>Nombre(s)</label>
+                                        <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required placeholder="Ej: Juan" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Apellido Paterno</label>
+                                        <input type="text" name="apellido_paterno" value={formData.apellido_paterno} onChange={handleChange} required placeholder="Ej: Perez" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Apellido Materno</label>
+                                        <input type="text" name="apellido_materno" value={formData.apellido_materno} onChange={handleChange} placeholder="Ej: Quispe" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>C.I. / NIT</label>
+                                        <input type="text" name="ci_nit" value={formData.ci_nit} onChange={handleChange} required placeholder="Numero de documento" />
+                                    </div>
+                                    <div className="form-group full-width">
+                                        <label>Correo Institucional (@ucb.edu.bo)</label>
+                                        <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="juan.perez@ucb.edu.bo" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Telefono de Contacto</label>
+                                        <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="70000000" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Direccion</label>
+                                        <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Calle, Av, Zona..." />
+                                    </div>
+
+                                    <div className="form-actions">
+                                        <button type="button" className="btn-cancel" onClick={() => setShowEditModal(false)}>Cancelar</button>
+                                        <button type="submit" className="btn-submit" disabled={submitting}>
+                                            {submitting ? 'Guardando...' : 'Guardar Cambios'}
                                         </button>
                                     </div>
                                 </div>

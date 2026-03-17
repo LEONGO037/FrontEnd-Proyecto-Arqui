@@ -31,7 +31,7 @@ const HeaderAdmin = () => {
   // Definición de los enlaces de administración
   const adminLinks = [
     { path: '/admin', label: 'Inicio', exact: true },
-    { path: '/admin/usuarios', label: 'Usuarios' },
+    { path: '/admin/usuarios', label: 'Docentes' },
     { path: '/admin/cursos', label: 'Cursos' },
     { path: '/admin/inscripciones', label: 'Inscripciones' },
     { path: '/admin/pagos', label: 'Pagos' },
