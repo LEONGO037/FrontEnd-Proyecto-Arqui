@@ -33,12 +33,15 @@ const Toast = ({ msg }) => (
 
 const PerfilCursoCard = ({ cursoId, datos, onBaja, onVerDetalle }) => {
   const estadoCurso = (datos.estado || datos.estado_curso || '').toString().toUpperCase();
-  const puedeDarBaja = estadoCurso !== 'FINALIZADO';
+  const esFinalizado = estadoCurso === 'FINALIZADO' || datos.progreso >= 100;
 
   return (
-    <div className="perfil-curso-card">
+    <div className={`perfil-curso-card${esFinalizado ? ' finalizado' : ''}`}>
       <div className="pccard-banner" style={{ background: datos.color }}>
         <span style={{ position: 'relative', zIndex: 2 }}>{datos.icono}</span>
+        {esFinalizado && (
+          <div className="pccard-ribbon">✓ Curso Finalizado</div>
+        )}
       </div>
       <div className="pccard-body">
         <div className="pccard-top">
@@ -46,7 +49,9 @@ const PerfilCursoCard = ({ cursoId, datos, onBaja, onVerDetalle }) => {
             <div className="pccard-titulo">{datos.nombre}</div>
             <div className="pccard-codigo">{datos.codigo}</div>
           </div>
-          <span className="pccard-badge">Inscrito</span>
+          <span className={`pccard-badge${esFinalizado ? ' finalizado' : ''}`}>
+            {esFinalizado ? 'Finalizado' : 'Inscrito'}
+          </span>
         </div>
 
         <div className="pccard-meta">
@@ -54,30 +59,28 @@ const PerfilCursoCard = ({ cursoId, datos, onBaja, onVerDetalle }) => {
           <div className="pccard-meta-item"><IconCal />{datos.horario}</div>
         </div>
 
-        <div className="pccard-progreso">
-          <div className="pccard-prog-label">
-            <span>Progreso</span>
-            <span className="pccard-prog-pct">{datos.progreso}%</span>
+        {!esFinalizado && (
+          <div className="pccard-progreso">
+            <div className="pccard-prog-label">
+              <span>Progreso</span>
+              <span className="pccard-prog-pct">{datos.progreso}%</span>
+            </div>
+            <div className="pccard-prog-track">
+              <div className="pccard-prog-fill" style={{ width: `${datos.progreso}%` }} />
+            </div>
           </div>
-          <div className="pccard-prog-track">
-            <div className="pccard-prog-fill" style={{ width: `${datos.progreso}%` }} />
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="pccard-footer">
         <button className="btn-pcdetalle" onClick={() => onVerDetalle(cursoId)}>
           <IconEye /><span>Ver detalle</span>
         </button>
-        <button
-          className="btn-pcbaja"
-          onClick={() => puedeDarBaja && onBaja(cursoId)}
-          disabled={!puedeDarBaja}
-          title={!puedeDarBaja ? 'No se puede dar de baja un curso finalizado' : 'Dar de baja'}
-          style={!puedeDarBaja ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
-        >
-          <IconTrash /><span>Dar de baja</span>
-        </button>
+        {!esFinalizado && (
+          <button className="btn-pcbaja" onClick={() => onBaja(cursoId)} title="Dar de baja">
+            <IconTrash /><span>Dar de baja</span>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -86,7 +89,7 @@ const PerfilCursoCard = ({ cursoId, datos, onBaja, onVerDetalle }) => {
 // ── Componente principal ──────────────────────────────────────────────────
 const PerfilEstudiante = () => {
   const navigate = useNavigate();
-  const { usuario, cursosInscritos, desinscribirCurso, logout } = useAuth();
+  const { usuario, cursosInscritos, inscripcionesDetalle, desinscribirCurso, logout } = useAuth();
   const [toast, setToast]               = useState(null);
   const [cursoDetalle, setCursoDetalle] = useState(null);
   const [cursosCatalogo, setCursosCatalogo] = useState([]);
@@ -129,6 +132,7 @@ const PerfilEstudiante = () => {
         const curso = cursosCatalogo.find((c) => Number(c.id) === idNumero);
         if (!curso) return null;
 
+        const detalle = inscripcionesDetalle[idNumero] || {};
         const visual = CURSO_VISUAL[index % CURSO_VISUAL.length];
         return {
           id: idNumero,
@@ -140,11 +144,13 @@ const PerfilEstudiante = () => {
             docente: curso.docente || 'Docente por asignar',
             horario: curso.horario || 'Horario por definir',
             progreso: Number(curso.progreso ?? 0),
+            estado: detalle.estado_academico || curso.estado,
+            nota_final: detalle.nota_final ?? null,
           },
         };
       })
       .filter(Boolean);
-  }, [cursosCatalogo, cursosInscritos]);
+  }, [cursosCatalogo, cursosInscritos, inscripcionesDetalle]);
 
   const handleBaja = async (id) => {
     const curso = cursosConDatos.find((c) => c.id === id);

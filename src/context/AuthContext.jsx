@@ -8,6 +8,8 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
   const [cursosInscritos, setCursosInscritos] = useState([]);
+  // Mapa curso_id → { estado_academico, nota_final }
+  const [inscripcionesDetalle, setInscripcionesDetalle] = useState({});
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -35,6 +37,14 @@ export const AuthProvider = ({ children }) => {
       if (!res.ok) return;
       const data = await res.json();
       setCursosInscritos(data.map(i => i.curso_id));
+      const detalle = {};
+      data.forEach(i => {
+        detalle[i.curso_id] = {
+          estado_academico: i.estado_academico,
+          nota_final: i.nota_final,
+        };
+      });
+      setInscripcionesDetalle(detalle);
     } catch (err) {
       console.error('Error al cargar inscripciones:', err);
     }
@@ -53,6 +63,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUsuario(null);
     setCursosInscritos([]);
+    setInscripcionesDetalle({});
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     sessionStorage.removeItem('role');
@@ -108,6 +119,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={{
       usuario,
       cursosInscritos,
+      inscripcionesDetalle,
       cargando,
       login,
       logout,
