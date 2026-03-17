@@ -213,3 +213,45 @@ export const validationPatterns = {
   emailUcb: EMAIL_UCB_REGEX,
   strongPassword: PASSWORD_STRONG_REGEX,
 };
+
+export const validateInstitutionalEmail = (email) => {
+  const normalized = normalizeValue(email || '');
+  return EMAIL_UCB_REGEX.test(normalized);
+};
+
+export const getPasswordRequirements = (password) => {
+  const passwordValue = String(password || '');
+
+  const checks = [
+    {
+      key: 'length',
+      label: 'Mínimo 8 caracteres',
+      valid: passwordValue.length >= 8,
+    },
+    {
+      key: 'uppercase',
+      label: 'Al menos una letra mayúscula',
+      valid: /[A-Z]/.test(passwordValue),
+    },
+    {
+      key: 'lowercase',
+      label: 'Al menos una letra minúscula',
+      valid: /[a-z]/.test(passwordValue),
+    },
+    {
+      key: 'number',
+      label: 'Al menos un número',
+      valid: /\d/.test(passwordValue),
+    },
+    {
+      key: 'special',
+      label: 'Al menos un carácter especial',
+      valid: /[^A-Za-z\d]/.test(passwordValue),
+    },
+  ];
+
+  return {
+    checks,
+    allValid: checks.every((check) => check.valid),
+  };
+};

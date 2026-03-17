@@ -12,6 +12,8 @@
   justify-content: center;
   z-index: 2000;
   padding: 2rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   animation: fadeIn 0.3s ease;
 }
 
@@ -33,7 +35,11 @@
   grid-template-columns: 1fr 1.2fr;
   max-width: 900px;
   width: 100%;
-  max-height: 90vh;
+  height: min(90dvh, calc(100dvh - 4rem));
+  max-height: min(90dvh, calc(100dvh - 4rem));
+  min-height: 0;
+  align-items: stretch;
+  grid-template-rows: 1fr;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.4s ease;
@@ -121,6 +127,8 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
+  min-height: 0;
+  height: 100%;
 }
 
 .visual-content {
@@ -239,8 +247,13 @@
   padding: 3rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  min-height: 0;
+  height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .form-header {
@@ -348,6 +361,120 @@
 .toggle-password svg {
   width: 20px;
   height: 20px;
+}
+
+.field-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.field-hint-error {
+  color: #b91c1c;
+}
+
+.field-hint-success {
+  color: #166534;
+}
+
+.password-rules {
+  margin-top: 0.4rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.password-strength-wrapper {
+  margin-bottom: 0.55rem;
+}
+
+.password-strength-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.3rem;
+  font-size: 0.78rem;
+  color: #334155;
+}
+
+.password-strength-label {
+  font-weight: 700;
+}
+
+.password-strength-label.very-weak,
+.password-strength-fill.very-weak {
+  color: #b91c1c;
+  background: #ef4444;
+}
+
+.password-strength-label.weak,
+.password-strength-fill.weak {
+  color: #b45309;
+  background: #f59e0b;
+}
+
+.password-strength-label.medium,
+.password-strength-fill.medium {
+  color: #0369a1;
+  background: #0ea5e9;
+}
+
+.password-strength-label.strong,
+.password-strength-fill.strong {
+  color: #166534;
+  background: #22c55e;
+}
+
+.password-strength-track {
+  width: 100%;
+  height: 0.45rem;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.password-strength-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  transition: width 0.22s ease;
+}
+
+.password-rules-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  color: #334155;
+  font-weight: 600;
+}
+
+.password-rules-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.password-rule-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+}
+
+.password-rule-item.pending {
+  color: #64748b;
+}
+
+.password-rule-item.ok {
+  color: #166534;
+}
+
+.password-rule-icon {
+  width: 0.95rem;
+  text-align: center;
+  font-weight: 700;
 }
 
 /* Opciones del formulario */
@@ -500,7 +627,8 @@
 
   .login-container {
     grid-template-columns: 1fr;
-    max-height: 95vh;
+    height: min(95dvh, calc(100dvh - 2rem));
+    max-height: min(95dvh, calc(100dvh - 2rem));
     border-radius: 20px 20px 0 0;
     animation: slideUpMobile 0.4s ease;
   }
