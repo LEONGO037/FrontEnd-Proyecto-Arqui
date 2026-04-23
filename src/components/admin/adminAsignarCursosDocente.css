@@ -1,0 +1,234 @@
+/* adminAsignarCursosDocente.css */
+.admin-asignar-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f8fafc;
+}
+
+.admin-asignar-main {
+    flex: 1;
+    padding: 6rem 2rem 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.admin-asignar-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid #eef2f6;
+}
+
+.btn-back-square {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-back-square:hover {
+    background: #f1f5f9;
+    color: #003366;
+    transform: translateX(-4px);
+}
+
+.btn-back-square svg {
+    width: 24px;
+    height: 24px;
+}
+
+.admin-asignar-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #003366;
+    margin: 0;
+}
+
+.admin-asignar-subtitle {
+    font-size: 1rem;
+    color: #64748b;
+    margin: 0.25rem 0 0;
+}
+
+/* ── Search ────────────────────────────────────────── */
+.asignar-search-bar {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto 3rem;
+}
+
+.asignar-search-bar .search-icon {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #94a3b8;
+}
+
+.asignar-search-bar input {
+    width: 100%;
+    padding: 1rem 1rem 1rem 3.5rem;
+    border-radius: 16px;
+    border: 1.5px solid #e2e8f0;
+    font-size: 1rem;
+    background: white;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.asignar-search-bar input:focus {
+    outline: none;
+    border-color: #003366;
+    box-shadow: 0 0 0 4px rgba(0, 51, 102, 0.08);
+}
+
+/* ── Grid ─────────────────────────────────────────── */
+.docentes-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.docente-assign-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    border: 1px solid #eef2f6;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.docente-assign-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 51, 102, 0.08);
+    border-color: #00336666;
+}
+
+.docente-assign-avatar {
+    width: 70px;
+    height: 70px;
+    background: #f0f7ff;
+    color: #003366;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 1.25rem;
+}
+
+.docente-assign-info h3 {
+    font-size: 1.25rem;
+    color: #0f172a;
+    margin: 0 0 0.25rem;
+    font-weight: 700;
+}
+
+.docente-assign-info p {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+}
+
+.docente-id-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.btn-assign-action {
+    width: 100%;
+    margin-top: auto;
+    background: #003366;
+    color: white;
+    border: none;
+    padding: 0.85rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-assign-action:hover {
+    background: #004d99;
+}
+
+.btn-assign-action:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* ── Skeleton ─────────────────────────────────────── */
+.docente-assign-card.skeleton {
+    pointer-events: none;
+    border-color: #f1f5f9;
+}
+
+.skeleton-shimmer {
+    background: #f1f5f9;
+    background-image: linear-gradient(90deg,
+            #f1f5f9 0px,
+            #f8fafc 40px,
+            #f1f5f9 80px);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+    border-radius: 4px;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -150% 0;
+    }
+
+    100% {
+        background-position: 150% 0;
+    }
+}
+
+.skeleton-line {
+    margin: 0 auto;
+}
+
+.skeleton-button {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    margin-top: auto;
+}
+
+.loader-container,
+.vacio-box {
+    padding: 5rem;
+    text-align: center;
+    font-size: 1.1rem;
+    color: #64748b;
+}
+
+@media (max-width: 640px) {
+    .admin-asignar-header {
+        flex-direction: column;
+        text-align: center;
+    }
+}

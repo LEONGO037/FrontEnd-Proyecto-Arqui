@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Login from '../login/login';
+import DeniedAccess from './DeniedAccess';
 
 const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
     const { usuario, getRol, cargando } = useAuth();
@@ -36,8 +37,8 @@ const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
     const rol = getRol();
 
     if (allowedRoles.length > 0 && !allowedRoles.includes(rol)) {
-        console.warn(`Acceso denegado: Rol [${rol}] no tiene permiso para esta ruta.`);
-        return <Navigate to="/" replace />;
+        console.warn(`Acceso denegado: El rol [${rol}] intentó acceder a una ruta protegida para [${allowedRoles.join(', ')}].`);
+        return <DeniedAccess />;
     }
 
     // 4. Acceso permitido

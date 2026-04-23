@@ -5,6 +5,12 @@ import { useAuth } from '../../context/AuthContext';
 import loginApi from '../../services/loginApi';
 const { login: apiLogin, register: apiRegister } = loginApi;
 import { getRolePath } from '../../utils/roleUtils';
+import {
+  validateForm,
+  validationPatterns,
+  validateInstitutionalEmail,
+  getPasswordRequirements,
+} from '../../utils/formValidators';
 import './Login.css';
 
 const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
@@ -15,11 +21,45 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
   const [formData, setFormData] = useState({ email: '', password: '', name: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+
+  const isRegisterMode = !isLogin;
+  const emailValue = formData.email || '';
+  const emailWasTyped = emailValue.trim().length > 0;
+  const isEmailValid = validateInstitutionalEmail(emailValue);
+  const passwordRules = getPasswordRequirements(formData.password);
+  const passwordWasTyped = (formData.password || '').length > 0;
+  const confirmWasTyped = (formData.confirmPassword || '').length > 0;
+  const passwordsMatch = formData.password === formData.confirmPassword;
+  const passwordScore = passwordRules.checks.filter((rule) => rule.valid).length;
+
+  let passwordStrengthLabel = 'Muy debil';
+  let passwordStrengthClass = 'very-weak';
+
+  if (passwordScore >= 5) {
+    passwordStrengthLabel = 'Fuerte';
+    passwordStrengthClass = 'strong';
+  } else if (passwordScore >= 4) {
+    passwordStrengthLabel = 'Media';
+    passwordStrengthClass = 'medium';
+  } else if (passwordScore >= 2) {
+    passwordStrengthLabel = 'Debil';
+    passwordStrengthClass = 'weak';
+  }
 
   useEffect(() => {
     setIsLogin(initialMode === 'login');
   }, [initialMode]);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -28,6 +68,14 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const tipoFormulario = isLogin ? 'login' : 'register';
+    const validacion = validateForm(tipoFormulario, formData);
+    if (!validacion.isValid) {
+      setError(validacion.firstError);
+      return;
+    }
+
     setIsLoading(true);
     setError('');
     try {
@@ -41,11 +89,6 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
         onLoginSuccess?.();
         navigate(getRolePath(res.usuario?.rol));
       } else {
-        if (formData.password !== formData.confirmPassword) {
-          setError('Las contraseñas no coinciden');
-          setIsLoading(false);
-          return;
-        }
         const parts = (formData.name || '').trim().split(/\s+/);
         const nombre = parts.shift() || '';
         const apellido_paterno = parts.shift() || '';
@@ -74,6 +117,8 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
   const toggleMode = () => {
     setIsLogin(!isLogin);
     setFormData({ email: '', password: '', name: '', confirmPassword: '' });
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setError('');
   };
 
@@ -128,7 +173,7 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                   <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
                   </svg>
-                  <input type="text" name="name" placeholder="Tu nombre completo"
+                  <input className="login-input" type="text" name="name" placeholder="Tu nombre completo"
                     value={formData.name} onChange={handleChange} required={!isLogin} />
                 </div>
               </div>
@@ -141,20 +186,34 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
-                <input type="email" name="email" placeholder="nombre@ucb.edu.bo"
-                  value={formData.email} onChange={handleChange} required />
+                <input className="login-input" type="email" name="email" placeholder="nombre@ucb.edu.bo"
+                  value={formData.email} onChange={handleChange} required pattern={validationPatterns.emailUcb.source} />
               </div>
+              {isRegisterMode && emailWasTyped && !isEmailValid && (
+                <p className="field-hint field-hint-error">
+                  Formato esperado: usuario@ucb.edu.bo
+                </p>
+              )}
+              {isRegisterMode && emailWasTyped && isEmailValid && (
+                <p className="field-hint field-hint-success">Correo institucional valido</p>
+              )}
             </div>
 
             <div className="form-group">
               <label>Contraseña</label>
-              <div className="input-wrapper">
+              <div className="input-wrapper with-toggle">
                 <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                <input type={showPassword ? 'text' : 'password'} name="password"
-                  placeholder="••••••••" value={formData.password} onChange={handleChange} required />
+                <input className="login-input" type={showPassword ? 'text' : 'password'} name="password"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  minLength={isLogin ? undefined : 8}
+                  pattern={isLogin ? undefined : validationPatterns.strongPassword.source}
+                />
                 <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword
                     ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
@@ -162,20 +221,67 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                   }
                 </button>
               </div>
+
+              {isRegisterMode && (
+                <div className="password-rules" aria-live="polite">
+                  <div className="password-strength-wrapper">
+                    <div className="password-strength-header">
+                      <span>Fuerza</span>
+                      <strong className={`password-strength-label ${passwordStrengthClass}`}>
+                        {passwordWasTyped ? passwordStrengthLabel : 'Sin evaluar'}
+                      </strong>
+                    </div>
+                    <div className="password-strength-track" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow={passwordScore}>
+                      <span
+                        className={`password-strength-fill ${passwordStrengthClass}`}
+                        style={{ width: `${(passwordScore / 5) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <p className="password-rules-title">La contraseña debe cumplir:</p>
+                  <ul className="password-rules-list">
+                    {passwordRules.checks.map((rule) => (
+                      <li
+                        key={rule.key}
+                        className={`password-rule-item ${rule.valid ? 'ok' : 'pending'}`}
+                      >
+                        <span className="password-rule-icon">{rule.valid ? '✓' : '○'}</span>
+                        <span>{rule.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {passwordWasTyped && passwordRules.allValid && (
+                    <p className="field-hint field-hint-success">Formato de contraseña cumplido</p>
+                  )}
+                </div>
+              )}
             </div>
 
             {!isLogin && (
               <div className="form-group">
                 <label>Confirmar contraseña</label>
-                <div className="input-wrapper">
+                <div className="input-wrapper with-toggle">
                   <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
-                  <input type={showPassword ? 'text' : 'password'} name="confirmPassword"
+                  <input className="login-input" type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword"
                     placeholder="••••••••" value={formData.confirmPassword}
                     onChange={handleChange} required={!isLogin} />
+                  <button type="button" className="toggle-password" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                    {showConfirmPassword
+                      ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                      : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                    }
+                  </button>
                 </div>
+                {confirmWasTyped && !passwordsMatch && (
+                  <p className="field-hint field-hint-error">Las contraseñas no coinciden</p>
+                )}
+                {confirmWasTyped && passwordsMatch && (
+                  <p className="field-hint field-hint-success">Las contraseñas coinciden</p>
+                )}
               </div>
             )}
 

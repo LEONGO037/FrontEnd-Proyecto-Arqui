@@ -37,6 +37,26 @@ export const register = async (payload) => {
   return data;
 };
 
+export const changePassword = async (passwordActual, nuevaPassword) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('No autenticado');
+  }
+
+  const data = await jsonRequest('/api/autenticacion/cambiar-password', {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      password_actual: passwordActual,
+      nueva_password: nuevaPassword,
+    }),
+  });
+
+  return data;
+};
+
 export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
@@ -48,4 +68,4 @@ export const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-export default { login, register, logout, getAuthHeaders };
+export default { login, register, changePassword, logout, getAuthHeaders };

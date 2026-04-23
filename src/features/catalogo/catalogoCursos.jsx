@@ -219,14 +219,43 @@ const CatalogoCursos = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const agregarAlCarrito = (curso) => {
+  const agregarAlCarrito = async (curso) => {
+
+  try {
+
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(
+      `${API_BASE}/api/cursos/validar-inscripcion/${curso.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      mostrarToast(data.mensaje || "No puedes inscribirte a este curso", "error");
+      return;
+    }
+
     if (carrito.some(c => c.id === curso.id)) {
       mostrarToast('Este curso ya está en tu carrito', 'info');
       return;
     }
+
     setCarrito([...carrito, curso]);
+
     mostrarToast(`"${curso.nombre}" agregado al carrito`, 'exito');
-  };
+
+  } catch (error) {
+
+    mostrarToast("Error validando prerrequisitos", "error");
+
+  }
+};
 
   const eliminarDelCarrito = (cursoId) => {
     setCarrito(carrito.filter(c => c.id !== cursoId));
@@ -274,7 +303,10 @@ const CatalogoCursos = () => {
 
         <div className="catalogo-contador">
           <p>
-            Mostrando <strong>{cursos.length} cursos</strong>
+            Mostrando <strong>{cursos.filter((curso) => {
+              const estadoCurso = (curso.estado || curso.estado_curso || '').toString().toUpperCase();
+              return estadoCurso !== 'ACTIVO' && estadoCurso !== 'FINALIZADO';
+            }).length} cursos</strong>
             {cursosInscritos.length > 0 && (
               <> · <strong style={{ color:'#8cc63f' }}>{cursosInscritos.length} inscrito{cursosInscritos.length > 1 ? 's' : ''}</strong></>
             )}
@@ -307,17 +339,22 @@ const CatalogoCursos = () => {
           </div>
         ) : (
           <div className="cursos-catalogo-grid">
-            {cursos.map((curso, i) => (
-              <CursoCard
-                key={curso.id}
-                curso={curso}
-                visual={VISUAL[i % VISUAL.length]}
-                inscrito={estaInscrito(curso.id)}
-                preinscrito={estaPreinscrito(curso.id)}
-                onPreinscribir={agregarAlCarrito}
-                onEliminarPreinscripcion={eliminarDelCarrito}
-                onVerDetalle={(c) => setCursoDetalle(c)}
-              />
+            {cursos
+              .filter((curso) => {
+                const estadoCurso = (curso.estado || curso.estado_curso || '').toString().toUpperCase();
+                return estadoCurso !== 'ACTIVO' && estadoCurso !== 'FINALIZADO';
+              })
+              .map((curso, i) => (
+                <CursoCard
+                  key={curso.id}
+                  curso={curso}
+                  visual={VISUAL[i % VISUAL.length]}
+                  inscrito={estaInscrito(curso.id)}
+                  preinscrito={estaPreinscrito(curso.id)}
+                  onPreinscribir={agregarAlCarrito}
+                  onEliminarPreinscripcion={eliminarDelCarrito}
+                  onVerDetalle={(c) => setCursoDetalle(c)}
+                />
             ))}
           </div>
         )}

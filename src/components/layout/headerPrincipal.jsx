@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './headerPrincipal.css';
 import Login from '../login/login';
+import CambiarPasswordPanel from '../auth/CambiarPasswordPanel';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -49,52 +51,13 @@ const Header = () => {
             <span /><span /><span />
           </button>
 
-          {/* Links de navegación */}
-          <ul className={`navbar-links ${mobileMenuOpen ? 'active' : ''}`}>
-            <li><a href="/" className="nav-link">Inicio</a></li>
-            <li>
-              <a
-                href="/cursos"
-                className="nav-link"
-                onClick={(e) => { e.preventDefault(); navigate('/cursos'); setMobileMenuOpen(false); }}
-              >
-                Cursos
-              </a>
-            </li>
-            {usuario && (
-              <li>
-                <a
-                  href="/perfil"
-                  className="nav-link"
-                  onClick={(e) => { e.preventDefault(); navigate('/perfil'); setMobileMenuOpen(false); }}
-                >
-                  Mi Perfil
-                </a>
-              </li>
-            )}
-            <li><a href="#nosotros" className="nav-link">Facultad</a></li>
-
-            {/* Botón móvil */}
-            <li className="mobile-only">
-              {usuario ? (
-                <button className="btn-login" onClick={() => { logout(); navigate('/'); setMobileMenuOpen(false); }}>
-                  Cerrar Sesión
-                </button>
-              ) : (
-                <button className="btn-login" onClick={() => { setShowLogin(true); setMobileMenuOpen(false); }}>
-                  Iniciar Sesión
-                </button>
-              )}
-            </li>
-          </ul>
-
           {/* Acciones del lado derecho */}
           <div className="navbar-actions">
             <div className="secure-badge">
               <div className="lock-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </div>
               <div className="badge-text">
@@ -134,7 +97,8 @@ const Header = () => {
                       <div style={{ fontSize: '0.78rem', color: '#aaa' }}>{usuario.email}</div>
                     </div>
                     <button onClick={() => { navigate('/perfil'); setShowUserMenu(false); }}
-                      style={{ width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
+                      style={{
+                        width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
                         textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
                         color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
                       }}
@@ -143,18 +107,47 @@ const Header = () => {
                     >
                       🎓 Mi Perfil
                     </button>
-                    <button onClick={() => { navigate('/cursos'); setShowUserMenu(false); }}
-                      style={{ width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
+                    {usuario?.rol === 'DOCENTE' ? (
+                      <>
+                        <button onClick={() => { navigate('/docente'); setShowUserMenu(false); }}
+                          style={{
+                            width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
+                            textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
+                            color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
+                          }}
+                          onMouseEnter={e => e.target.style.background = '#f5f7fa'}
+                          onMouseLeave={e => e.target.style.background = 'none'}
+                        >
+                          📊 Panel Docente
+                        </button>
+                      </>
+                    ) : (
+                      <button onClick={() => { navigate('/cursos'); setShowUserMenu(false); }}
+                        style={{
+                          width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
+                          textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
+                          color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
+                        }}
+                        onMouseEnter={e => e.target.style.background = '#f5f7fa'}
+                        onMouseLeave={e => e.target.style.background = 'none'}
+                      >
+                        📚 Catálogo de Cursos
+                      </button>
+                    )}
+                    <button onClick={() => { setShowPasswordModal(true); setShowUserMenu(false); }}
+                      style={{
+                        width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
                         textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
                         color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
                       }}
                       onMouseEnter={e => e.target.style.background = '#f5f7fa'}
                       onMouseLeave={e => e.target.style.background = 'none'}
                     >
-                      📚 Catálogo de Cursos
+                      🔐 Cambiar contrasena
                     </button>
                     <button onClick={() => { logout(); navigate('/'); setShowUserMenu(false); }}
-                      style={{ width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
+                      style={{
+                        width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
                         textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
                         color: '#dc2626', fontFamily: 'inherit', transition: 'background 0.2s',
                         marginTop: '0.25rem', borderTop: '1px solid #f0f2f5',
@@ -171,7 +164,7 @@ const Header = () => {
               <button className="btn-login desktop-only" onClick={() => setShowLogin(true)}>
                 <span>Iniciar Sesión</span>
                 <svg className="login-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                  <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </button>
             )}
@@ -185,6 +178,13 @@ const Header = () => {
           onLoginSuccess={() => setShowLogin(false)}
         />
       )}
+
+      <CambiarPasswordPanel
+        titulo="Cambiar contrasena"
+        renderTrigger={false}
+        open={showPasswordModal}
+        onOpenChange={setShowPasswordModal}
+      />
 
       <style>{`
         @keyframes fadeDown {

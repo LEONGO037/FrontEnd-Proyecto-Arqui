@@ -189,6 +189,7 @@
   animation: cardIn 0.45s ease both;
 }
 .perfil-curso-card:hover { transform: translateY(-6px); box-shadow: var(--sombra-hover); }
+.perfil-curso-card.finalizado { border: 2px solid rgba(140,198,63,0.5); box-shadow: 0 0 0 1px rgba(140,198,63,0.15), var(--sombra); }
 
 @keyframes cardIn {
   from { opacity:0; transform:translateY(18px); }
@@ -209,6 +210,14 @@
 .pccard-banner::after {
   content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.1);
 }
+.pccard-ribbon {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 3;
+  background: rgba(52, 101, 15, 0.88);
+  color: #fff; text-align: center;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; padding: 0.3rem 0;
+  backdrop-filter: blur(4px);
+}
 
 .pccard-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
 
@@ -222,6 +231,9 @@
   font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em;
   text-transform: uppercase; flex-shrink: 0;
   background: rgba(140,198,63,0.15); color: #5a8a1a;
+}
+.pccard-badge.finalizado {
+  background: rgba(100, 116, 139, 0.15); color: #334155;
 }
 
 .pccard-meta { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 1.25rem; }
@@ -304,3 +316,41 @@
   animation: spin 0.8s linear infinite; vertical-align: middle;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Estilos para perfil docente mejorado (mantienen el mismo lenguaje visual) ---------- */
+.perfil-docente-mejorado .perfil-usuario-card { align-items: center; gap: 1.25rem; }
+
+.perfil-avatar-docente {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--verde), #7ab332);
+  border: 3px solid rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 800; color: var(--azul);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+.docente-profile-card { display: flex; gap: 1rem; align-items: center; width: 100%; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); padding: 0.8rem 1rem; border-radius: 14px; border: 1px solid rgba(0,0,0,0.04); }
+.perfil-info-docente { display: flex; flex-direction: column; gap: 0.2rem; }
+.perfil-nombre { font-weight: 800; color: white; font-size: 1.05rem; }
+.perfil-email-primary { color: rgba(255,255,255,0.75); font-size: 0.95rem; }
+.perfil-telefono, .perfil-departamento { color: rgba(255,255,255,0.68); font-size: 0.9rem; }
+.perfil-bio { margin-top: 0.5rem; color: rgba(255,255,255,0.85); max-width: 460px; font-size: 0.95rem; }
+
+.perfil-stats-docente { display: flex; gap: 0.8rem; margin-left: auto; }
+.perfil-stats-docente .pstat { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 0.7rem 1rem; min-width: 76px; }
+
+.resumen-docente-grid { display:flex; gap:1rem; }
+.resumen-card { background: white; border-radius: 12px; padding: 1rem 1.2rem; box-shadow: var(--sombra); text-align:center; }
+.resumen-card h3 { margin:0; color: var(--azul); font-weight:800; }
+.resumen-card p { margin:0; color:#666; font-size:0.85rem; }
+
+.btn-primary { background: linear-gradient(135deg, var(--verde), #7ab332); color: var(--azul); padding: 0.6rem 1rem; border-radius: 10rem; border: none; font-weight:700; cursor: pointer; box-shadow: 0 6px 18px rgba(140,198,63,0.24); }
+.btn-outline { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 0.8rem; border-radius: 10rem; border:1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.9); background: transparent; text-decoration:none; }
+
+.btn-logout-small { background: rgba(255,255,255,0.12); border: none; padding: 0.45rem 0.8rem; border-radius: 10rem; color: white; font-weight:700; cursor:pointer; }
+
+/* Keep responsive adjustments consistent */
+@media (max-width: 768px) {
+  .docente-profile-card { flex-direction: column; align-items: flex-start; }
+  .perfil-stats-docente { width: 100%; justify-content: space-between; margin-left: 0; }
+}

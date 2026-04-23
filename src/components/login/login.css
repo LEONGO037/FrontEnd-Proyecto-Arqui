@@ -12,12 +12,19 @@
   justify-content: center;
   z-index: 2000;
   padding: 2rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* Contenedor principal */
@@ -28,7 +35,11 @@
   grid-template-columns: 1fr 1.2fr;
   max-width: 900px;
   width: 100%;
-  max-height: 90vh;
+  height: min(90dvh, calc(100dvh - 4rem));
+  max-height: min(90dvh, calc(100dvh - 4rem));
+  min-height: 0;
+  align-items: stretch;
+  grid-template-rows: 1fr;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.4s ease;
@@ -40,6 +51,7 @@
     opacity: 0;
     transform: translateY(30px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -115,6 +127,8 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
+  min-height: 0;
+  height: 100%;
 }
 
 .visual-content {
@@ -144,7 +158,7 @@
   margin-bottom: 0.5rem;
 }
 
-.visual-content > p {
+.visual-content>p {
   color: rgba(255, 255, 255, 0.7);
   margin-bottom: 3rem;
   font-size: 1.1rem;
@@ -215,8 +229,17 @@
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.1); opacity: 0.8; }
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
 }
 
 /* Lado del formulario */
@@ -224,8 +247,13 @@
   padding: 3rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  min-height: 0;
+  height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .form-header {
@@ -272,10 +300,13 @@
 .input-icon {
   position: absolute;
   left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   width: 20px;
   height: 20px;
   color: #8cc63f;
   pointer-events: none;
+  z-index: 2;
 }
 
 .input-wrapper input {
@@ -286,6 +317,21 @@
   font-size: 1rem;
   transition: all 0.3s ease;
   font-family: inherit;
+  box-sizing: border-box;
+  /* Asegura que el padding no rompa el ancho del 100% */
+}
+
+.login-form .input-wrapper .login-input {
+  padding-left: 3rem !important;
+  line-height: 1.2;
+}
+
+.input-wrapper.with-toggle input {
+  padding-right: 3rem;
+}
+
+.login-form .input-wrapper.with-toggle .login-input {
+  padding-right: 3rem !important;
 }
 
 .input-wrapper input:focus {
@@ -297,12 +343,15 @@
 .toggle-password {
   position: absolute;
   right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
   padding: 0.25rem;
   color: #999;
   transition: color 0.3s ease;
+  z-index: 2;
 }
 
 .toggle-password:hover {
@@ -312,6 +361,120 @@
 .toggle-password svg {
   width: 20px;
   height: 20px;
+}
+
+.field-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.field-hint-error {
+  color: #b91c1c;
+}
+
+.field-hint-success {
+  color: #166534;
+}
+
+.password-rules {
+  margin-top: 0.4rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.password-strength-wrapper {
+  margin-bottom: 0.55rem;
+}
+
+.password-strength-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.3rem;
+  font-size: 0.78rem;
+  color: #334155;
+}
+
+.password-strength-label {
+  font-weight: 700;
+}
+
+.password-strength-label.very-weak,
+.password-strength-fill.very-weak {
+  color: #b91c1c;
+  background: #ef4444;
+}
+
+.password-strength-label.weak,
+.password-strength-fill.weak {
+  color: #b45309;
+  background: #f59e0b;
+}
+
+.password-strength-label.medium,
+.password-strength-fill.medium {
+  color: #0369a1;
+  background: #0ea5e9;
+}
+
+.password-strength-label.strong,
+.password-strength-fill.strong {
+  color: #166534;
+  background: #22c55e;
+}
+
+.password-strength-track {
+  width: 100%;
+  height: 0.45rem;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.password-strength-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  transition: width 0.22s ease;
+}
+
+.password-rules-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  color: #334155;
+  font-weight: 600;
+}
+
+.password-rules-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.password-rule-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+}
+
+.password-rule-item.pending {
+  color: #64748b;
+}
+
+.password-rule-item.ok {
+  color: #166534;
+}
+
+.password-rule-icon {
+  width: 0.95rem;
+  text-align: center;
+  font-weight: 700;
 }
 
 /* Opciones del formulario */
@@ -389,7 +552,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .arrow-icon {
@@ -462,7 +627,8 @@
 
   .login-container {
     grid-template-columns: 1fr;
-    max-height: 95vh;
+    height: min(95dvh, calc(100dvh - 2rem));
+    max-height: min(95dvh, calc(100dvh - 2rem));
     border-radius: 20px 20px 0 0;
     animation: slideUpMobile 0.4s ease;
   }
@@ -471,6 +637,7 @@
     from {
       transform: translateY(100%);
     }
+
     to {
       transform: translateY(0);
     }
@@ -493,4 +660,17 @@
   .security-note {
     font-size: 0.75rem;
   }
+}
+
+/* Hide native browser password reveal/clear buttons so our single toggle is the only icon shown */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* WebKit-based browsers (Chrome, Safari) native reveal/credentials buttons */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-password-reveal-button,
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none !important;
 }
