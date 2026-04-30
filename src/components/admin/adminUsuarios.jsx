@@ -22,11 +22,7 @@ const AdminUsuarios = () => {
         nombre: '',
         apellido_paterno: '',
         apellido_materno: '',
-        ci_nit: '',
         email: '',
-        password: 'Docente#Ucb2026',
-        telefono: '',
-        direccion: ''
     });
 
     const fetchDocentes = async () => {
@@ -63,11 +59,7 @@ const AdminUsuarios = () => {
             nombre: docente.nombre || '',
             apellido_paterno: docente.apellido_paterno || '',
             apellido_materno: docente.apellido_materno || '',
-            ci_nit: docente.ci_nit || '',
             email: docente.email || '',
-            password: 'Docente#Ucb2026',
-            telefono: docente.telefono || '',
-            direccion: docente.direccion || ''
         });
         setShowEditModal(true);
     };
@@ -85,10 +77,7 @@ const AdminUsuarios = () => {
                 nombre: formData.nombre,
                 apellido_paterno: formData.apellido_paterno,
                 apellido_materno: formData.apellido_materno,
-                ci_nit: formData.ci_nit,
                 email: formData.email,
-                telefono: formData.telefono,
-                direccion: formData.direccion
             };
 
             const res = await fetch(`${API_BASE}/api/admin-docente-curso/docentes/${docenteEditId}`, {
@@ -112,11 +101,7 @@ const AdminUsuarios = () => {
                 nombre: '',
                 apellido_paterno: '',
                 apellido_materno: '',
-                ci_nit: '',
                 email: '',
-                password: 'Docente#Ucb2026',
-                telefono: '',
-                direccion: ''
             });
             fetchDocentes();
         } catch (err) {
@@ -154,9 +139,7 @@ const AdminUsuarios = () => {
                             <thead>
                                 <tr>
                                     <th>Docente</th>
-                                    <th>C.I. / NIT</th>
                                     <th>Correo Electrónico</th>
-                                    <th>Teléfono</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -176,9 +159,7 @@ const AdminUsuarios = () => {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>{docente.ci_nit}</td>
                                         <td>{docente.email}</td>
-                                        <td>{docente.telefono || 'Sin teléfono'}</td>
                                         <td>
                                             <button
                                                 className="btn-edit"
@@ -217,21 +198,9 @@ const AdminUsuarios = () => {
                                         <label>Apellido Materno</label>
                                         <input type="text" name="apellido_materno" value={formData.apellido_materno} onChange={handleChange} placeholder="Ej: Quispe" />
                                     </div>
-                                    <div className="form-group">
-                                        <label>C.I. / NIT</label>
-                                        <input type="text" name="ci_nit" value={formData.ci_nit} onChange={handleChange} required placeholder="Numero de documento" />
-                                    </div>
                                     <div className="form-group full-width">
                                         <label>Correo Institucional (@ucb.edu.bo)</label>
                                         <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="juan.perez@ucb.edu.bo" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Telefono de Contacto</label>
-                                        <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} placeholder="70000000" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Direccion</label>
-                                        <input type="text" name="direccion" value={formData.direccion} onChange={handleChange} placeholder="Calle, Av, Zona..." />
                                     </div>
 
                                     <div className="form-actions">

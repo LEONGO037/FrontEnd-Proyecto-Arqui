@@ -52,8 +52,19 @@ const HomeDocente = () => {
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
 
-  const estadoParaUI = (estado) => (estado === 'NO_ACTIVO' ? 'NO ACTIVO' : estado);
-  const estadoParaAPI = (estado) => (estado === 'NO ACTIVO' ? 'NO_ACTIVO' : estado);
+  const estadoParaUI = (estado) => {
+    if (!estado) return 'NO ACTIVO';
+    const e = estado.toUpperCase().trim();
+    if (e === 'NO_ACTIVO' || e === 'NO ACTIVO') return 'NO ACTIVO';
+    return e;
+  };
+ 
+  const estadoParaAPI = (estado) => {
+    if (!estado) return 'NO_ACTIVO';
+    const e = estado.toUpperCase().trim();
+    if (e === 'NO ACTIVO' || e === 'NO_ACTIVO') return 'NO_ACTIVO';
+    return e;
+  };
 
   useEffect(() => {
     const cargarDatos = async () => {
