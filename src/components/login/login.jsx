@@ -9,6 +9,7 @@ import {
   validateForm,
   validateInstitutionalEmail,
   getPasswordRequirements,
+  validateNombre,
 } from '../../utils/formValidators';
 import './Login.css';
 
@@ -17,7 +18,8 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
   const { login: authLogin } = useAuth();
 
   const [isLogin, setIsLogin] = useState(initialMode === 'login');
-  const [formData, setFormData] = useState({ email: '', password: '', name: '', confirmPassword: '' });
+  const [formData, setFormData] = useState({ email: '', password: '', nombre: '', apellido_paterno: '', apellido_materno: '', confirmPassword: '' });
+  const [nameErrors, setNameErrors] = useState({ nombre: '', apellido_paterno: '', apellido_materno: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -63,8 +65,23 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
     setError('');
+    if (name in nameErrors) {
+      setNameErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const NAME_LABELS = { nombre: 'El nombre', apellido_paterno: 'El apellido paterno', apellido_materno: 'El apellido materno' };
+
+  const handleNameBlur = (e) => {
+    const { name, value } = e.target;
+    if (!(name in nameErrors)) return;
+    const isOptional = name === 'apellido_materno';
+    if (isOptional && !value.trim()) return;
+    const err = validateNombre(value, NAME_LABELS[name]);
+    setNameErrors((prev) => ({ ...prev, [name]: err || '' }));
   };
 
   const handleSubmit = async (e) => {
@@ -72,6 +89,18 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
     const tipoFormulario = isLogin ? 'login' : 'register';
     const validacion = validateForm(tipoFormulario, formData);
     if (!validacion.isValid) { setError(validacion.firstError); return; }
+
+    if (!isLogin) {
+      const errs = {
+        nombre: validateNombre(formData.nombre, NAME_LABELS.nombre) || '',
+        apellido_paterno: validateNombre(formData.apellido_paterno, NAME_LABELS.apellido_paterno) || '',
+        apellido_materno: formData.apellido_materno.trim()
+          ? validateNombre(formData.apellido_materno, NAME_LABELS.apellido_materno) || ''
+          : '',
+      };
+      setNameErrors(errs);
+      if (Object.values(errs).some(Boolean)) return;
+    }
 
     setIsLoading(true);
     setError('');
@@ -96,12 +125,10 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
         onLoginSuccess?.();
         navigate(getRolePath(res.usuario?.rol));
       } else {
-        const parts = (formData.name || '').trim().split(/\s+/);
-        const nombre = parts.shift() || '';
-        const apellido_paterno = parts.shift() || '';
-        const apellido_materno = parts.join(' ') || '';
         await apiRegister({
-          nombre, apellido_paterno, apellido_materno,
+          nombre: formData.nombre,
+          apellido_paterno: formData.apellido_paterno,
+          apellido_materno: formData.apellido_materno,
           ci_nit: '', telefono: '', direccion: '',
           email: formData.email, password: formData.password,
         });
@@ -207,7 +234,7 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
-    setFormData({ email: '', password: '', name: '', confirmPassword: '' });
+    setFormData({ email: '', password: '', nombre: '', apellido_paterno: '', apellido_materno: '', confirmPassword: '' });
     setShowPassword(false);
     setShowConfirmPassword(false);
     setError('');
@@ -421,16 +448,41 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
 
           <form onSubmit={handleSubmit} className="login-form">
             {!isLogin && (
-              <div className="form-group">
-                <label>Nombre completo</label>
-                <div className="input-wrapper">
-                  <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-                  </svg>
-                  <input className="login-input" type="text" name="name" placeholder="Tu nombre completo"
-                    value={formData.name} onChange={handleChange} required={!isLogin} />
+              <>
+                <div className="form-group">
+                  <label>Nombre(s)</label>
+                  <div className="input-wrapper">
+                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <input className="login-input" type="text" name="nombre" placeholder="Ej: María"
+                      value={formData.nombre} onChange={handleChange} onBlur={handleNameBlur} required />
+                  </div>
+                  {nameErrors.nombre && <p className="field-hint field-hint-error">{nameErrors.nombre}</p>}
                 </div>
-              </div>
+                <div className="form-group">
+                  <label>Apellido Paterno</label>
+                  <div className="input-wrapper">
+                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <input className="login-input" type="text" name="apellido_paterno" placeholder="Ej: López"
+                      value={formData.apellido_paterno} onChange={handleChange} onBlur={handleNameBlur} required />
+                  </div>
+                  {nameErrors.apellido_paterno && <p className="field-hint field-hint-error">{nameErrors.apellido_paterno}</p>}
+                </div>
+                <div className="form-group">
+                  <label>Apellido Materno</label>
+                  <div className="input-wrapper">
+                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <input className="login-input" type="text" name="apellido_materno" placeholder="Ej: Quispe (opcional)"
+                      value={formData.apellido_materno} onChange={handleChange} onBlur={handleNameBlur} />
+                  </div>
+                  {nameErrors.apellido_materno && <p className="field-hint field-hint-error">{nameErrors.apellido_materno}</p>}
+                </div>
+              </>
             )}
 
             <div className="form-group">
@@ -551,14 +603,6 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                 {isLogin ? 'Regístrate aquí' : 'Inicia sesión'}
               </button>
             </p>
-          </div>
-
-          <div className="security-note">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            <span>Conexión segura SSL encriptada</span>
           </div>
         </div>
       </div>

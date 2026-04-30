@@ -37,6 +37,7 @@ export const removePermiso = (rolId, permisoId) =>
   request(`/api/rbac/roles/${rolId}/permisos/${permisoId}`, { method: 'DELETE' });
 export const getMatriz = () => request('/api/rbac/matriz');
 export const getUsuarios = () => request('/api/rbac/usuarios');
+export const createUser = (data) => request('/api/rbac/usuarios', { method: 'POST', body: JSON.stringify(data) });
 export const updateUserRole = (userId, rolId) =>
   request(`/api/rbac/usuarios/${userId}/rol`, { method: 'PUT', body: JSON.stringify({ rol_id: rolId }) });
 export const desbloquearUsuario = (userId) =>
@@ -46,5 +47,5 @@ export const deleteUser = (userId) =>
 
 export default {
   getRoles, getPermisos, createRole, updateRole, deleteRole,
-  assignPermiso, removePermiso, getMatriz, getUsuarios, updateUserRole, desbloquearUsuario, deleteUser,
+  assignPermiso, removePermiso, getMatriz, getUsuarios, createUser, updateUserRole, desbloquearUsuario, deleteUser,
 };
