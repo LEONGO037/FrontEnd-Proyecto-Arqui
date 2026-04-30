@@ -57,7 +57,7 @@ const ResetPassword = () => {
   const toggleBtn = { position: 'absolute', right: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '0.8rem' };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f7fa' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f7fa', padding: '1.5rem', boxSizing: 'border-box' }}>
       <div style={card}>
         {estado === 'ok' ? (
           <div style={{ textAlign: 'center' }}>

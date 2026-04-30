@@ -86,13 +86,14 @@ const VerificarEmail = () => {
   };
 
   const inputStyle = {
-    width: 44, height: 52, fontSize: '1.5rem', fontWeight: 700, textAlign: 'center',
-    border: '2px solid #cbd5e1', borderRadius: 10, outline: 'none',
-    transition: 'border-color 0.2s',
+    flex: 1, minWidth: 0, maxWidth: 44, height: 52, fontSize: '1.5rem',
+    fontWeight: 700, textAlign: 'center', border: '2px solid #cbd5e1',
+    borderRadius: 10, outline: 'none', transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f7fa' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f7fa', padding: '1.5rem', boxSizing: 'border-box' }}>
       <div style={card}>
         {estado === 'ok' ? (
           <>
@@ -128,7 +129,7 @@ const VerificarEmail = () => {
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: '1.25rem' }} onPaste={handlePaste}>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: '1.25rem', width: '100%' }} onPaste={handlePaste}>
                 {digitos.map((d, i) => (
                   <input
                     key={i}

@@ -132,7 +132,7 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
   if (showForgot) {
     return (
       <div className="login-overlay" onClick={onClose}>
-        <div className="login-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
+        <div className="login-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480, gridTemplateColumns: '1fr', height: 'auto', maxHeight: 'min(90dvh, calc(100dvh - 4rem))' }}>
           <button className="close-btn" onClick={onClose}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
           </button>
