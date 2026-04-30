@@ -62,6 +62,12 @@ export const solicitarReset = async (email) =>
     body: JSON.stringify({ email }),
   });
 
+export const verificarCodigoReset = async (email, codigo) =>
+  jsonRequest('/api/autenticacion/verificar-codigo-reset', {
+    method: 'POST',
+    body: JSON.stringify({ email, codigo }),
+  });
+
 export const resetPassword = async (token, nuevaPassword) =>
   jsonRequest('/api/autenticacion/reset-password', {
     method: 'POST',
@@ -77,4 +83,4 @@ export const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-export default { login, register, verificarCodigo, changePassword, solicitarReset, resetPassword, logout, getAuthHeaders };
+export default { login, register, verificarCodigo, changePassword, solicitarReset, verificarCodigoReset, resetPassword, logout, getAuthHeaders };
