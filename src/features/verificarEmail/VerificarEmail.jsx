@@ -69,10 +69,10 @@ const VerificarEmail = () => {
   const handleReenviar = async () => {
     if (!email) { setReenvioMsg('Ingresa tu correo primero.'); return; }
     try {
-      await fetch(`${API_BASE}/api/autenticacion/registrar`, {
+      await fetch(`${API_BASE}/api/autenticacion/reenviar-codigo`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ _reenvio: true, email }),
+        body: JSON.stringify({ email }),
       });
     } catch { /* ignore */ }
     setReenvioMsg('Si el correo existe en el sistema, se reenvió el código.');

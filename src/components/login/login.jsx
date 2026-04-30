@@ -109,7 +109,13 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
         navigate(`/verificar-email?email=${encodeURIComponent(formData.email)}`);
       }
     } catch (err) {
-      setError(err?.message || 'Error en autenticación. Intenta de nuevo.');
+      const errorMsg = err?.message || 'Error en autenticación. Intenta de nuevo.';
+      if (isLogin && errorMsg.includes('verificar')) {
+        onClose?.();
+        navigate(`/verificar-email?email=${encodeURIComponent(formData.email)}`);
+      } else {
+        setError(errorMsg);
+      }
     } finally {
       setIsLoading(false);
     }
