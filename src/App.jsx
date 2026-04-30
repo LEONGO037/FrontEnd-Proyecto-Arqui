@@ -57,18 +57,20 @@ function App() {
 }
 
 function AppContent() {
-  const { usuario } = useAuth();
+  const { usuario, modoAdmin } = useAuth();
   const rol = usuario?.rol;
-  const permisos = usuario?.permisos || [];
 
-  // Header selection for non-admin routes
+  // Header selection: modoAdmin overrides role-based selection for students/teachers
   let SelectedHeader = Header;
-  if (rol === ROLES.ESTUDIANTE) {
+  if (!usuario) {
+    SelectedHeader = Header;
+  } else if (modoAdmin) {
+    SelectedHeader = UserHeaderDynamic;
+  } else if (rol === ROLES.ESTUDIANTE) {
     SelectedHeader = HeaderEstudiante;
   } else if (rol === ROLES.DOCENTE) {
     SelectedHeader = HeaderDocente;
-  } else if (ADMIN_ROLES.includes(rol) || permisos.length > 0) {
-    // Any user with permissions (including custom roles) gets the dynamic admin header
+  } else {
     SelectedHeader = UserHeaderDynamic;
   }
 
@@ -96,7 +98,7 @@ function AppContent() {
         <Route
           path="/cursos"
           element={
-            <RoleProtectedRoute allowedRoles={[ROLES.ESTUDIANTE, ...ADMIN_ROLES]}>
+            <RoleProtectedRoute allowedRoles={[ROLES.ESTUDIANTE, ROLES.DOCENTE, ...ADMIN_ROLES]}>
               <div className="app-wrapper">
                 <SelectedHeader />
                 <main style={{ minHeight: '80vh' }}><Catalogo /></main>
@@ -122,7 +124,7 @@ function AppContent() {
         <Route
           path="/estudiante/pagos"
           element={
-            <RoleProtectedRoute allowedRoles={[ROLES.ESTUDIANTE, ...ADMIN_ROLES]}>
+            <RoleProtectedRoute allowedRoles={[ROLES.ESTUDIANTE, ROLES.DOCENTE, ...ADMIN_ROLES]}>
               <EstudiantePagos />
             </RoleProtectedRoute>
           }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { NAV_LINKS, tieneAcceso } from '../../utils/navConfig';
-import { ROLES } from '../../utils/roleUtils';
+import { ROLES, ADMIN_ROLES, getRolPath } from '../../utils/roleUtils';
 import CambiarPasswordPanel from '../auth/CambiarPasswordPanel';
 import './headerPrincipal.css';
 
@@ -20,7 +20,7 @@ const ROL_LABELS = {
 const UserHeaderDynamic = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { usuario, logout } = useAuth();
+  const { usuario, logout, toggleModoAdmin } = useAuth();
 
   const permisos = usuario?.permisos || [];
   const rol = usuario?.rol || '';
@@ -67,6 +67,9 @@ const UserHeaderDynamic = () => {
   };
 
   const nombreAdmin = usuario?.nombre || 'Administrador';
+  // ¿El usuario es estudiante/docente en modo admin (con permisos extra)?
+  const esRolPrincipal = rol === ROLES.ESTUDIANTE || rol === ROLES.DOCENTE;
+  const labelRolPrincipal = rol === ROLES.DOCENTE ? 'Docente' : 'Estudiante';
 
   return (
     <>
@@ -105,6 +108,17 @@ const UserHeaderDynamic = () => {
               </li>
             ))}
 
+            {esRolPrincipal && (
+              <li className="mobile-only">
+                <button
+                  className="btn-login"
+                  style={{ background: 'linear-gradient(135deg,#8cc63f,#7ab332)', color: '#003366' }}
+                  onClick={() => { toggleModoAdmin(); navigate(getRolPath(rol)); setMobileMenuOpen(false); }}
+                >
+                  ← Modo {labelRolPrincipal}
+                </button>
+              </li>
+            )}
             <li className="mobile-only">
               <button className="btn-login" onClick={handleLogout}>Cerrar Sesión</button>
             </li>
@@ -112,6 +126,24 @@ const UserHeaderDynamic = () => {
 
           {/* Right actions */}
           <div className="navbar-actions">
+            {/* Botón para volver a modo estudiante/docente */}
+            {esRolPrincipal && (
+              <button
+                className="desktop-only"
+                onClick={() => { toggleModoAdmin(); navigate(getRolPath(rol)); }}
+                style={{
+                  background: 'linear-gradient(135deg,#8cc63f,#7ab332)',
+                  color: '#003366', border: 'none', borderRadius: 20,
+                  padding: '0.35rem 0.85rem', fontSize: '0.78rem', fontWeight: 700,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem',
+                  boxShadow: '0 2px 8px rgba(140,198,63,0.35)', transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+              >
+                ← Modo {labelRolPrincipal}
+              </button>
+            )}
             <div className="secure-badge" title={`${permisos.length} permisos activos`}>
               <div className="lock-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

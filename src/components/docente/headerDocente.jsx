@@ -8,7 +8,7 @@ import '../layout/headerPrincipal.css';
 const HeaderDocente = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { usuario, logout } = useAuth();
+  const { usuario, logout, toggleModoAdmin } = useAuth();
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -89,6 +89,19 @@ const HeaderDocente = () => {
             </li>
           ))}
 
+          {/* Modo admin — móvil */}
+          {usuario?.permisos?.length > 0 && (
+            <li className="mobile-only">
+              <button
+                className="btn-login"
+                style={{ background: 'linear-gradient(135deg,#1d4ed8,#1e40af)', color: 'white' }}
+                onClick={() => { toggleModoAdmin(); handleNavigate('/admin'); }}
+              >
+                🔑 Modo Administrador
+              </button>
+            </li>
+          )}
+
           {/* Cerrar sesión en móvil */}
           <li className="mobile-only">
             <button className="btn-login" onClick={handleLogout}>
@@ -99,6 +112,25 @@ const HeaderDocente = () => {
 
         {/* Acciones del lado derecho */}
         <div className="navbar-actions">
+
+          {/* Toggle modo admin — desktop */}
+          {usuario?.permisos?.length > 0 && (
+            <button
+              className="desktop-only"
+              onClick={() => { toggleModoAdmin(); handleNavigate('/admin'); }}
+              style={{
+                background: 'linear-gradient(135deg,#1d4ed8,#1e40af)',
+                color: 'white', border: 'none', borderRadius: 20,
+                padding: '0.35rem 0.85rem', fontSize: '0.78rem', fontWeight: 700,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem',
+                boxShadow: '0 2px 8px rgba(29,78,216,0.35)', transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'none'}
+            >
+              🔑 Modo Admin
+            </button>
+          )}
 
           {/* Badge de rol */}
           <div className="secure-badge">
@@ -169,6 +201,18 @@ const HeaderDocente = () => {
                   🏠 Mi Panel Docente
                 </button>
 
+                {usuario?.permisos?.length > 0 && (
+                  <button
+                    onClick={() => { toggleModoAdmin(); handleNavigate('/admin'); }}
+                    style={{
+                      width: '100%', background: 'linear-gradient(135deg,#eff6ff,#dbeafe)', border: 'none', padding: '0.6rem 1rem',
+                      textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
+                      color: '#1d4ed8', fontFamily: 'inherit', fontWeight: 600, transition: 'background 0.2s',
+                    }}
+                  >
+                    🔑 Activar modo administrador
+                  </button>
+                )}
                 <button
                   onClick={() => { setShowPasswordModal(true); setShowUserMenu(false); }}
                   style={{

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { setToken, getToken, clearToken, decodePayload } from '../utils/tokenStore';
+import { ADMIN_ROLES } from '../utils/roleUtils';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -20,8 +21,16 @@ const initUsuario = () => {
   };
 };
 
+const initModoAdmin = () => {
+  const payload = decodePayload();
+  if (!payload) return false;
+  if (ADMIN_ROLES.includes(payload.rol)) return true;
+  return sessionStorage.getItem('modo_admin') === 'true';
+};
+
 export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(initUsuario);
+  const [modoAdmin, setModoAdmin] = useState(initModoAdmin);
   const [cursosInscritos, setCursosInscritos] = useState([]);
   const [inscripcionesDetalle, setInscripcionesDetalle] = useState({});
   const [cargando, setCargando] = useState(false);
@@ -73,20 +82,35 @@ export const AuthProvider = ({ children }) => {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const toggleModoAdmin = () => {
+    setModoAdmin((prev) => {
+      const next = !prev;
+      sessionStorage.setItem('modo_admin', String(next));
+      return next;
+    });
+  };
+
   const login = (datosUsuario, tokenJwt) => {
     setToken(tokenJwt);
     const payload = decodePayload();
-    setUsuario({
+    const nuevoUsuario = {
       ...datosUsuario,
       permisos: payload?.permisos || [],
       debe_cambiar_password: !!payload?.debe_cambiar_password,
-    });
+    };
+    setUsuario(nuevoUsuario);
+    // Admins always start in admin mode; students/teachers start in their own mode
+    const esAdmin = ADMIN_ROLES.includes(nuevoUsuario.rol);
+    setModoAdmin(esAdmin);
+    sessionStorage.setItem('modo_admin', String(esAdmin));
     fetchInscripciones();
   };
 
   const logout = () => {
     clearToken(); // wipes cookie + localStorage + sessionStorage
     setUsuario(null);
+    setModoAdmin(false);
+    sessionStorage.removeItem('modo_admin');
     setCursosInscritos([]);
     setInscripcionesDetalle({});
   };
@@ -131,6 +155,8 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{
       usuario,
+      modoAdmin,
+      toggleModoAdmin,
       cursosInscritos,
       inscripcionesDetalle,
       cargando,
