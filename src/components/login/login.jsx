@@ -438,7 +438,7 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                   value={formData.email} onChange={handleChange} required />
               </div>
               {isRegisterMode && emailWasTyped && !isEmailValid && (
-                <p className="field-hint field-hint-error">Formato esperado: usuario@ucb.edu.bo</p>
+                <p className="field-hint field-hint-error">Formato esperado: nombre.apellido@ucb.edu.bo</p>
               )}
               {isRegisterMode && emailWasTyped && isEmailValid && (
                 <p className="field-hint field-hint-success">Correo institucional válido</p>
