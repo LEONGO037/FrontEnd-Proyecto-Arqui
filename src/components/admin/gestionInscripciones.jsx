@@ -1,12 +1,12 @@
 // gestionInscripciones.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
-// Importamos los componentes de layout tal como en administrarCursos.jsx
-import HeaderAdmin from '../layout/headerAdmin';
+import UserHeaderDynamic from '../layout/UserHeaderDynamic';
 import Footer from '../layout/footerPrincipal';
+import { getToken } from '../../utils/tokenStore';
 import './gestionInscripciones.css';
 
-const API_BASE = 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // --- Iconos ---
 const IconSearch = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
@@ -40,7 +40,7 @@ const GestionInscripciones = () => {
       setErrorFetch(null); 
       
       try {
-        const token = localStorage.getItem('token'); 
+        const token = getToken();
         
         const response = await fetch(`${API_BASE}/api/inscripciones/resumen`, {
           method: 'GET',
@@ -132,7 +132,7 @@ const GestionInscripciones = () => {
   return (
     <div className="gestion-inscripciones-page">
       {/* 1. SE AGREGA EL HEADER ADMIN */}
-      <HeaderAdmin />
+      <UserHeaderDynamic />
 
       {/* 2. ENVOLVEMOS EL CONTENIDO EN UN MAIN */}
       <main>

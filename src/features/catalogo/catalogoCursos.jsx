@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ModalPago from '../../components/pago/ModalPago';
 import CursoDetalle from '../../components/cursoDetalle/CursoDetalle';
+import { getToken } from '../../utils/tokenStore';
 import './catalogoCursos.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -223,7 +224,7 @@ const CatalogoCursos = () => {
 
   try {
 
-    const token = localStorage.getItem("token");
+    const token = getToken();
 
     const res = await fetch(
       `${API_BASE}/api/cursos/validar-inscripcion/${curso.id}`,

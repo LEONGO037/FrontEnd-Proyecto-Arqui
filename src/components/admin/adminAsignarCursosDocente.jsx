@@ -1,11 +1,12 @@
 // adminAsignarCursosDocente.jsx — Asignación de docentes a cursos
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import AdminHeader from '../layout/headerAdmin';
+import UserHeaderDynamic from '../layout/UserHeaderDynamic';
 import Footer from '../layout/footerPrincipal';
+import { getToken } from '../../utils/tokenStore';
 import './adminAsignarCursosDocente.css';
 
-const API_BASE = 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const AdminAsignarCursosDocente = () => {
     const { cursoId } = useParams();
@@ -23,7 +24,7 @@ const AdminAsignarCursosDocente = () => {
         const fetchData = async () => {
             setCargando(true);
             try {
-                const token = localStorage.getItem('token');
+                const token = getToken();
 
                 const resCurso = await fetch(`${API_BASE}/api/cursos`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -56,7 +57,7 @@ const AdminAsignarCursosDocente = () => {
         setEnviando(true);
         setError(null);
         setExito(null);
-        const token = localStorage.getItem('token');
+        const token = getToken();
 
         try {
             const res = await fetch(`${API_BASE}/api/admin-docente-curso/asignar-curso`, {
@@ -106,7 +107,7 @@ const AdminAsignarCursosDocente = () => {
 
     return (
         <div className="admin-asignar-page">
-            <AdminHeader />
+            <UserHeaderDynamic />
 
             <main className="admin-asignar-main">
                 <div className="admin-asignar-header">

@@ -1,5 +1,5 @@
 const EMAIL_UCB_REGEX = /^[A-Z0-9._%+-]+@ucb\.edu\.bo$/i;
-const PASSWORD_STRONG_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+const PASSWORD_STRONG_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{12,}$/;
 
 const normalizeValue = (value) => (typeof value === 'string' ? value.trim() : value);
 
@@ -28,7 +28,7 @@ const rules = {
   strongPassword: (value, message) => {
     const normalized = String(value || '');
     if (!PASSWORD_STRONG_REGEX.test(normalized)) {
-      return message || 'La contraseña debe tener al menos 8 caracteres, mayúscula, minúscula, número y carácter especial';
+      return message || 'La contraseña debe tener mínimo 12 caracteres, mayúscula, minúscula, número y carácter especial (@$!%*?&_-#)';
     }
     return null;
   },
@@ -225,8 +225,8 @@ export const getPasswordRequirements = (password) => {
   const checks = [
     {
       key: 'length',
-      label: 'Mínimo 8 caracteres',
-      valid: passwordValue.length >= 8,
+      label: 'Mínimo 12 caracteres',
+      valid: passwordValue.length >= 12,
     },
     {
       key: 'uppercase',
@@ -245,8 +245,8 @@ export const getPasswordRequirements = (password) => {
     },
     {
       key: 'special',
-      label: 'Al menos un carácter especial',
-      valid: /[^A-Za-z\d]/.test(passwordValue),
+      label: 'Al menos un carácter especial (@$!%*?&_-#)',
+      valid: /[@$!%*?&_\-#]/.test(passwordValue),
     },
   ];
 

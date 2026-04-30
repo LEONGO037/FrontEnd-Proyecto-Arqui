@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { ROLES } from '../../utils/roleUtils';
 import CursoDetalle from '../../components/cursoDetalle/CursoDetalle';
 import { obtenerMisCursos } from '../../services/docenteApi';
 import './perfilEstudiante.css';
@@ -101,7 +102,7 @@ const PerfilEstudiante = () => {
     let mounted = true;
 
     // Docentes don't need the public catalog on their profile
-    if (usuario?.rol === 'DOCENTE') {
+    if (usuario?.rol === ROLES.DOCENTE) {
       setCursosCatalogo([]);
       setCargandoCursos(false);
       return () => { mounted = false; };
@@ -177,7 +178,7 @@ const PerfilEstudiante = () => {
     : '?';
 
   // If the current user is a docente, render an enhanced profile (personal data + quick stats)
-  if (usuario?.rol === 'DOCENTE') {
+  if (usuario?.rol === ROLES.DOCENTE) {
     // fetch docente courses for metrics (small request)
     useEffect(() => {
       let mounted = true;

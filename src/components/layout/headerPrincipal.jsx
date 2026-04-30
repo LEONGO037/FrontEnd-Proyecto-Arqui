@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { ROLES } from '../../utils/roleUtils';
 import './headerPrincipal.css';
 import Login from '../login/login';
 import CambiarPasswordPanel from '../auth/CambiarPasswordPanel';
@@ -107,7 +108,7 @@ const Header = () => {
                     >
                       🎓 Mi Perfil
                     </button>
-                    {usuario?.rol === 'DOCENTE' ? (
+                    {usuario?.rol === ROLES.DOCENTE ? (
                       <>
                         <button onClick={() => { navigate('/docente'); setShowUserMenu(false); }}
                           style={{

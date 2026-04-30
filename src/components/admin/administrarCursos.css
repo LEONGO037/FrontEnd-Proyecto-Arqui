@@ -313,6 +313,8 @@
     border: 1.5px solid #e2e8f0;
     font-family: inherit;
     font-size: 0.95rem;
+    background: #ffffff;
+    color: #1e293b;
     transition: all 0.2s;
 }
 
@@ -423,6 +425,55 @@
     border-radius: 12px;
     margin-bottom: 2rem;
     font-weight: 500;
+}
+
+/* ── Search ───────────────────────────────────────── */
+.ac-search {
+    padding: 0.7rem 1rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: #fff;
+    color: #1e293b;
+    min-width: 200px;
+    transition: border-color 0.2s;
+}
+
+.ac-search:focus {
+    outline: none;
+    border-color: #003366;
+    box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.08);
+}
+
+/* ── Badges ───────────────────────────────────────── */
+.ac-badge {
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ac-badge-docente { background: #dbeafe; color: #1e40af; }
+.ac-badge-sin     { background: #fef3c7; color: #92400e; }
+.ac-badge-prereq  { background: #ede9fe; color: #5b21b6; }
+
+/* ── Delete button ────────────────────────────────── */
+.btn-delete-curso {
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid #fecaca;
+    background: #fff1f2;
+    color: #dc2626;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-delete-curso:hover {
+    background: #fee2e2;
+    border-color: #dc2626;
 }
 
 /* ── Responsive ───────────────────────────────────── */

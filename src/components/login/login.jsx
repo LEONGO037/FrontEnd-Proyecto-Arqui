@@ -3,11 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import loginApi from '../../services/loginApi';
-const { login: apiLogin, register: apiRegister } = loginApi;
+const { login: apiLogin, register: apiRegister, solicitarReset } = loginApi;
 import { getRolePath } from '../../utils/roleUtils';
 import {
   validateForm,
-  validationPatterns,
   validateInstitutionalEmail,
   getPasswordRequirements,
 } from '../../utils/formValidators';
@@ -24,6 +23,12 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
 
+  // Flujo "olvidé contraseña"
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotMsg, setForgotMsg] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+
   const isRegisterMode = !isLogin;
   const emailValue = formData.email || '';
   const emailWasTyped = emailValue.trim().length > 0;
@@ -36,29 +41,16 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
 
   let passwordStrengthLabel = 'Muy debil';
   let passwordStrengthClass = 'very-weak';
+  if (passwordScore >= 5) { passwordStrengthLabel = 'Fuerte'; passwordStrengthClass = 'strong'; }
+  else if (passwordScore >= 4) { passwordStrengthLabel = 'Media'; passwordStrengthClass = 'medium'; }
+  else if (passwordScore >= 2) { passwordStrengthLabel = 'Debil'; passwordStrengthClass = 'weak'; }
 
-  if (passwordScore >= 5) {
-    passwordStrengthLabel = 'Fuerte';
-    passwordStrengthClass = 'strong';
-  } else if (passwordScore >= 4) {
-    passwordStrengthLabel = 'Media';
-    passwordStrengthClass = 'medium';
-  } else if (passwordScore >= 2) {
-    passwordStrengthLabel = 'Debil';
-    passwordStrengthClass = 'weak';
-  }
-
-  useEffect(() => {
-    setIsLogin(initialMode === 'login');
-  }, [initialMode]);
+  useEffect(() => { setIsLogin(initialMode === 'login'); }, [initialMode]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
+    return () => { document.body.style.overflow = previousOverflow; };
   }, []);
 
   const handleChange = (e) => {
@@ -68,22 +60,28 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const tipoFormulario = isLogin ? 'login' : 'register';
     const validacion = validateForm(tipoFormulario, formData);
-    if (!validacion.isValid) {
-      setError(validacion.firstError);
-      return;
-    }
+    if (!validacion.isValid) { setError(validacion.firstError); return; }
 
     setIsLoading(true);
     setError('');
     try {
       if (isLogin) {
         const res = await apiLogin(formData.email, formData.password);
-        if (res.usuario) {
-          localStorage.setItem('user', JSON.stringify(res.usuario));
-          authLogin(res.usuario);
+
+        // Contraseña vencida o debe cambiar (docente nuevo)
+        if (res?.debe_cambiar || res?.expirada) {
+          if (res.token && res.usuario) {
+            authLogin(res.usuario, res.token);
+          }
+          onClose?.();
+          navigate('/cambiar-password', { state: { forzado: true } });
+          return;
+        }
+
+        if (res?.usuario) {
+          authLogin(res.usuario, res.token);
         }
         onClose?.();
         onLoginSuccess?.();
@@ -98,19 +96,28 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
           ci_nit: '', telefono: '', direccion: '',
           email: formData.email, password: formData.password,
         });
-        const res = await apiLogin(formData.email, formData.password);
-        if (res.usuario) {
-          localStorage.setItem('user', JSON.stringify(res.usuario));
-          authLogin(res.usuario);
-        }
         onClose?.();
-        onLoginSuccess?.();
-        navigate(getRolePath(res.usuario?.rol));
+        navigate(`/verificar-email?email=${encodeURIComponent(formData.email)}`);
       }
     } catch (err) {
       setError(err?.message || 'Error en autenticación. Intenta de nuevo.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setForgotLoading(true);
+    setForgotMsg('');
+    try {
+      const data = await solicitarReset(forgotEmail);
+      setForgotMsg(data.mensaje || 'Revisa tu correo para continuar.');
+    } catch {
+      setForgotMsg('Revisa tu correo para continuar.');
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -121,6 +128,51 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
     setShowConfirmPassword(false);
     setError('');
   };
+
+  if (showForgot) {
+    return (
+      <div className="login-overlay" onClick={onClose}>
+        <div className="login-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
+          <button className="close-btn" onClick={onClose}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+          <div className="login-form-section" style={{ width: '100%' }}>
+            <div className="form-header">
+              <h3>¿Olvidaste tu contraseña?</h3>
+              <p>Ingresa tu correo y te enviaremos instrucciones para restablecerla.</p>
+            </div>
+
+            {forgotMsg && (
+              <div style={{ background: 'rgba(34,197,94,0.08)', border: '1.5px solid rgba(34,197,94,0.3)', color: '#166534', padding: '0.75rem 1rem', borderRadius: 10, fontSize: '0.875rem', marginBottom: '1rem' }}>
+                {forgotMsg}
+              </div>
+            )}
+
+            <form onSubmit={handleForgotSubmit} className="login-form">
+              <div className="form-group">
+                <label>Correo institucional</label>
+                <div className="input-wrapper">
+                  <input className="login-input" type="email" placeholder="nombre@ucb.edu.bo"
+                    value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required />
+                </div>
+              </div>
+              <button type="submit" className={`submit-btn ${forgotLoading ? 'loading' : ''}`} disabled={forgotLoading}>
+                {forgotLoading ? <div className="spinner" /> : <span>Enviar instrucciones</span>}
+              </button>
+            </form>
+
+            <div className="toggle-section">
+              <p className="toggle-text">
+                <button type="button" className="toggle-btn" onClick={() => setShowForgot(false)}>
+                  Volver al inicio de sesión
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="login-overlay" onClick={onClose}>
@@ -156,11 +208,7 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
           </div>
 
           {error && (
-            <div style={{
-              background: 'rgba(239,68,68,0.08)', border: '1.5px solid rgba(239,68,68,0.3)',
-              color: '#dc2626', padding: '0.75rem 1rem', borderRadius: '10px',
-              fontSize: '0.875rem', fontWeight: 500, marginBottom: '1rem',
-            }}>
+            <div style={{ background: 'rgba(239,68,68,0.08)', border: '1.5px solid rgba(239,68,68,0.3)', color: '#dc2626', padding: '0.75rem 1rem', borderRadius: '10px', fontSize: '0.875rem', fontWeight: 500, marginBottom: '1rem' }}>
               ⚠️ {error}
             </div>
           )}
@@ -187,15 +235,13 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
                 <input className="login-input" type="email" name="email" placeholder="nombre@ucb.edu.bo"
-                  value={formData.email} onChange={handleChange} required pattern={validationPatterns.emailUcb.source} />
+                  value={formData.email} onChange={handleChange} required />
               </div>
               {isRegisterMode && emailWasTyped && !isEmailValid && (
-                <p className="field-hint field-hint-error">
-                  Formato esperado: usuario@ucb.edu.bo
-                </p>
+                <p className="field-hint field-hint-error">Formato esperado: usuario@ucb.edu.bo</p>
               )}
               {isRegisterMode && emailWasTyped && isEmailValid && (
-                <p className="field-hint field-hint-success">Correo institucional valido</p>
+                <p className="field-hint field-hint-success">Correo institucional válido</p>
               )}
             </div>
 
@@ -207,13 +253,8 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
                 <input className="login-input" type={showPassword ? 'text' : 'password'} name="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  minLength={isLogin ? undefined : 8}
-                  pattern={isLogin ? undefined : validationPatterns.strongPassword.source}
-                />
+                  placeholder="••••••••" value={formData.password} onChange={handleChange} required
+                  minLength={isLogin ? undefined : 12} />
                 <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword
                     ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
@@ -232,20 +273,13 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                       </strong>
                     </div>
                     <div className="password-strength-track" role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow={passwordScore}>
-                      <span
-                        className={`password-strength-fill ${passwordStrengthClass}`}
-                        style={{ width: `${(passwordScore / 5) * 100}%` }}
-                      />
+                      <span className={`password-strength-fill ${passwordStrengthClass}`} style={{ width: `${(passwordScore / 5) * 100}%` }} />
                     </div>
                   </div>
-
                   <p className="password-rules-title">La contraseña debe cumplir:</p>
                   <ul className="password-rules-list">
                     {passwordRules.checks.map((rule) => (
-                      <li
-                        key={rule.key}
-                        className={`password-rule-item ${rule.valid ? 'ok' : 'pending'}`}
-                      >
+                      <li key={rule.key} className={`password-rule-item ${rule.valid ? 'ok' : 'pending'}`}>
                         <span className="password-rule-icon">{rule.valid ? '✓' : '○'}</span>
                         <span>{rule.label}</span>
                       </li>
@@ -267,8 +301,7 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
                   <input className="login-input" type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword"
-                    placeholder="••••••••" value={formData.confirmPassword}
-                    onChange={handleChange} required={!isLogin} />
+                    placeholder="••••••••" value={formData.confirmPassword} onChange={handleChange} required={!isLogin} />
                   <button type="button" className="toggle-password" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
                     {showConfirmPassword
                       ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
@@ -276,12 +309,8 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                     }
                   </button>
                 </div>
-                {confirmWasTyped && !passwordsMatch && (
-                  <p className="field-hint field-hint-error">Las contraseñas no coinciden</p>
-                )}
-                {confirmWasTyped && passwordsMatch && (
-                  <p className="field-hint field-hint-success">Las contraseñas coinciden</p>
-                )}
+                {confirmWasTyped && !passwordsMatch && <p className="field-hint field-hint-error">Las contraseñas no coinciden</p>}
+                {confirmWasTyped && passwordsMatch && <p className="field-hint field-hint-success">Las contraseñas coinciden</p>}
               </div>
             )}
 
@@ -290,7 +319,10 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                 <label className="remember-me">
                   <input type="checkbox" /><span>Recordarme</span>
                 </label>
-                <a href="#" className="forgot-password">¿Olvidaste tu contraseña?</a>
+                <button type="button" className="forgot-password" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#003366', fontSize: '0.875rem', textDecoration: 'underline' }}
+                  onClick={() => { setShowForgot(true); setError(''); }}>
+                  ¿Olvidaste tu contraseña?
+                </button>
               </div>
             )}
 

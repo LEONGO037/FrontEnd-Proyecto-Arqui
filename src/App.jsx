@@ -1,26 +1,32 @@
 // App.jsx
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
+import PermisoProtectedRoute from './components/auth/PermisoProtectedRoute';
 import CambioContraseña from './components/auth/CambioContraseña';
 
 import Header from './components/layout/headerPrincipal';
 import Footer from './components/layout/footerPrincipal';
+import UserHeaderDynamic from './components/layout/UserHeaderDynamic';
 import Home from './features/home/homePrincipal';
 import Catalogo from './features/catalogo/catalogoCursos';
 import Perfil from './features/perfil/perfilEstudiante';
+import VerificarEmail from './features/verificarEmail/VerificarEmail';
+import ResetPassword from './features/resetPassword/ResetPassword';
 
-import AdminHeader from './components/layout/headerAdmin';
 import AdminMenu from './components/admin/adminMenu';
 import AdministrarCursos from './components/admin/administrarCursos';
 import AdminAsignarCursosDocente from './components/admin/adminAsignarCursosDocente';
 import AdminPagos from './components/admin/adminPagos';
 import AdminPerfil from './components/admin/AdminPerfil';
 import AdminUsuarios from './components/admin/adminUsuarios';
+import AdminGestionUsuarios from './components/admin/AdminGestionUsuarios';
 import GestionInscripciones from './components/admin/gestionInscripciones';
 import AdminReportes from './components/admin/adminReportes';
 import AdminAuditoria from './components/admin/adminAuditoria';
+import GestionRoles from './components/admin/seguridad/GestionRoles';
+import CrearCuentas from './components/admin/cuentas/CrearCuentas';
 
 import EstudiantePagos from './components/estudiante/estudiantePagos';
 import HeaderEstudiante from './components/estudiante/headerEstudiante';
@@ -28,7 +34,19 @@ import HeaderEstudiante from './components/estudiante/headerEstudiante';
 import HeaderDocente from './components/docente/headerDocente';
 import DocenteMenu from './components/docente/docenteMenu';
 
+import { ROLES, ADMIN_ROLES, PERMISSIONS } from './utils/roleUtils';
 import './App.css';
+
+// Redirige a /cambiar-password si el JWT contiene debe_cambiar_password=true
+function PasswordChangeGuard({ children }) {
+  const { usuario } = useAuth();
+  const location = useLocation();
+  const exempt = ['/cambiar-password', '/verificar-email', '/reset-password', '/'];
+  if (usuario?.debe_cambiar_password && !exempt.includes(location.pathname)) {
+    return <Navigate to="/cambiar-password" state={{ forzado: true }} replace />;
+  }
+  return children;
+}
 
 function App() {
   return (
@@ -40,45 +58,48 @@ function App() {
 
 function AppContent() {
   const { usuario } = useAuth();
+  const rol = usuario?.rol;
+  const permisos = usuario?.permisos || [];
 
+  // Header selection for non-admin routes
   let SelectedHeader = Header;
-
-  if (usuario?.rol === 'ESTUDIANTE') {
+  if (rol === ROLES.ESTUDIANTE) {
     SelectedHeader = HeaderEstudiante;
-  } else if (usuario?.rol === 'ADMINISTRADOR') {
-    SelectedHeader = AdminHeader;
-  } else if (usuario?.rol === 'DOCENTE') {
+  } else if (rol === ROLES.DOCENTE) {
     SelectedHeader = HeaderDocente;
+  } else if (ADMIN_ROLES.includes(rol) || permisos.length > 0) {
+    // Any user with permissions (including custom roles) gets the dynamic admin header
+    SelectedHeader = UserHeaderDynamic;
   }
 
   return (
     <Router>
+      <PasswordChangeGuard>
       <Routes>
 
-        {/* Ruta pública */}
+        {/* Rutas públicas */}
         <Route
           path="/"
           element={
             <div className="app-wrapper">
               <SelectedHeader />
-              <main style={{ minHeight: '80vh' }}>
-                <Home />
-              </main>
+              <main style={{ minHeight: '80vh' }}><Home /></main>
               <Footer />
             </div>
           }
         />
 
-        {/* Rutas protegidas */}
+        <Route path="/verificar-email" element={<VerificarEmail />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
+        {/* Rutas protegidas estudiante */}
         <Route
           path="/cursos"
           element={
-            <RoleProtectedRoute allowedRoles={["ESTUDIANTE","ADMINISTRADOR"]}>
+            <RoleProtectedRoute allowedRoles={[ROLES.ESTUDIANTE, ...ADMIN_ROLES]}>
               <div className="app-wrapper">
                 <SelectedHeader />
-                <main style={{ minHeight: '80vh' }}>
-                  <Catalogo />
-                </main>
+                <main style={{ minHeight: '80vh' }}><Catalogo /></main>
                 <Footer />
               </div>
             </RoleProtectedRoute>
@@ -91,104 +112,138 @@ function AppContent() {
             <ProtectedRoute>
               <div className="app-wrapper">
                 <SelectedHeader />
-                <main style={{ minHeight: '80vh' }}>
-                  <Perfil />
-                </main>
+                <main style={{ minHeight: '80vh' }}><Perfil /></main>
                 <Footer />
               </div>
             </ProtectedRoute>
           }
         />
 
-        {/* Pagos estudiante */}
         <Route
           path="/estudiante/pagos"
           element={
-            <RoleProtectedRoute allowedRoles={['ESTUDIANTE', 'ADMINISTRADOR']}>
+            <RoleProtectedRoute allowedRoles={[ROLES.ESTUDIANTE, ...ADMIN_ROLES]}>
               <EstudiantePagos />
             </RoleProtectedRoute>
           }
         />
 
-        {/* ── ADMIN ── */}
+        <Route
+          path="/cambiar-password"
+          element={
+            <ProtectedRoute>
+              <CambioContraseña />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ── ADMIN — permission-based guards ── */}
+        {/* Dashboard: any authenticated user with ≥1 permission */}
         <Route
           path="/admin"
           element={
-            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+            <PermisoProtectedRoute permiso={null}>
               <AdminMenu />
-            </RoleProtectedRoute>
+            </PermisoProtectedRoute>
           }
         />
 
         <Route
           path="/admin/perfil"
           element={
-            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+            <PermisoProtectedRoute permiso={null}>
               <AdminPerfil />
-            </RoleProtectedRoute>
+            </PermisoProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/cuentas"
+          element={
+            <PermisoProtectedRoute permiso={PERMISSIONS.USUARIOS_GESTIONAR}>
+              <CrearCuentas />
+            </PermisoProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/gestion-usuarios"
+          element={
+            <PermisoProtectedRoute permiso={PERMISSIONS.USUARIOS_GESTIONAR}>
+              <AdminGestionUsuarios />
+            </PermisoProtectedRoute>
           }
         />
 
         <Route
           path="/admin/usuarios"
           element={
-            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+            <PermisoProtectedRoute permiso={PERMISSIONS.CURSOS_GESTIONAR}>
               <AdminUsuarios />
-            </RoleProtectedRoute>
+            </PermisoProtectedRoute>
           }
         />
 
         <Route
           path="/admin/cursos"
           element={
-            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+            <PermisoProtectedRoute permiso={PERMISSIONS.CURSOS_GESTIONAR}>
               <AdministrarCursos />
-            </RoleProtectedRoute>
+            </PermisoProtectedRoute>
           }
         />
 
         <Route
           path="/admin/asignar-docente/:cursoId"
           element={
-            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+            <PermisoProtectedRoute permiso={PERMISSIONS.CURSOS_GESTIONAR}>
               <AdminAsignarCursosDocente />
-            </RoleProtectedRoute>
+            </PermisoProtectedRoute>
           }
         />
 
         <Route
           path="/admin/pagos"
           element={
-            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+            <PermisoProtectedRoute permiso={PERMISSIONS.PAGOS_VER}>
               <AdminPagos />
-            </RoleProtectedRoute>
+            </PermisoProtectedRoute>
           }
         />
 
         <Route
           path="/admin/inscripciones"
           element={
-            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+            <PermisoProtectedRoute permiso={PERMISSIONS.INSCRIPCIONES_GESTIONAR}>
               <GestionInscripciones />
-            </RoleProtectedRoute>
+            </PermisoProtectedRoute>
           }
         />
 
         <Route
           path="/admin/reportes"
           element={
-            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+            <PermisoProtectedRoute permiso={PERMISSIONS.REPORTES_VER}>
               <AdminReportes />
-            </RoleProtectedRoute>
+            </PermisoProtectedRoute>
           }
         />
 
         <Route
           path="/admin/auditoria"
           element={
-            <RoleProtectedRoute allowedRoles={['ADMINISTRADOR']}>
+            <PermisoProtectedRoute permiso={PERMISSIONS.AUDITORIA_VER}>
               <AdminAuditoria />
-            </RoleProtectedRoute>
+            </PermisoProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/seguridad/roles"
+          element={
+            <PermisoProtectedRoute permiso={PERMISSIONS.ROLES_GESTIONAR}>
+              <GestionRoles />
+            </PermisoProtectedRoute>
           }
         />
 
@@ -196,13 +251,11 @@ function AppContent() {
         <Route
           path="/docente/*"
           element={
-            <RoleProtectedRoute allowedRoles={['DOCENTE']}>
+            <RoleProtectedRoute allowedRoles={[ROLES.DOCENTE]}>
               <div className="app-wrapper">
                 <CambioContraseña />
                 <HeaderDocente />
-                <main style={{ minHeight: '80vh' }}>
-                  <DocenteMenu />
-                </main>
+                <main style={{ minHeight: '80vh' }}><DocenteMenu /></main>
                 <Footer />
               </div>
             </RoleProtectedRoute>
@@ -210,6 +263,7 @@ function AppContent() {
         />
 
       </Routes>
+      </PasswordChangeGuard>
     </Router>
   );
 }

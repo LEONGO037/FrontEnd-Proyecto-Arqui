@@ -1,7 +1,7 @@
 // AdminPerfil.jsx — Perfil simplificado para administradores
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import AdminHeader from '../layout/headerAdmin';
+import UserHeaderDynamic from '../layout/UserHeaderDynamic';
 import Footer from '../layout/footerPrincipal';
 import './adminMenu.css'; // Reutilizamos estilos de layout
 
@@ -14,7 +14,7 @@ const AdminPerfil = () => {
 
     return (
         <div className="admin-page">
-            <AdminHeader />
+            <UserHeaderDynamic />
 
             <main className="admin-main">
                 <section className="admin-hero" style={{ minHeight: 'auto', padding: '4rem 2rem' }}>
