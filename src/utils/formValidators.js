@@ -1,6 +1,6 @@
 const EMAIL_UCB_REGEX = /^[A-Z0-9._%+-]+@ucb\.edu\.bo$/i;
 const NOMBRE_REGEX = /^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ ]{3,}$/;
-const PASSWORD_STRONG_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{12,}$/;
+const PASSWORD_STRONG_REGEX = /^(?=.*[a-zñáéíóú])(?=.*[A-ZÑÁÉÍÓÚ])(?=.*\d)(?=.*[@$!%*?&_\-#]).{12,}$/;
 
 const normalizeValue = (value) => (typeof value === 'string' ? value.trim() : value);
 
