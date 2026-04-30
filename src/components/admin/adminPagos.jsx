@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import AdminHeader from '../layout/headerAdmin';
+import UserHeaderDynamic from '../layout/UserHeaderDynamic';
 import Footer from '../layout/footerPrincipal';
 import { getAllPagos } from '../../services/pagosApi';
 import './adminPagos.css';
@@ -50,7 +50,7 @@ const AdminPagos = () => {
     if (loading) {
         return (
             <div className="admin-page">
-                <AdminHeader />
+                <UserHeaderDynamic />
                 <main className="admin-main">
                     <div className="spinner-container">
                         <div className="spinner"></div>
@@ -63,7 +63,7 @@ const AdminPagos = () => {
 
     return (
         <div className="admin-page">
-            <AdminHeader />
+            <UserHeaderDynamic />
 
             <main className="admin-main">
                 <div className="admin-pagos-container">

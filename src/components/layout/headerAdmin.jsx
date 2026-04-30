@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { NAV_LINKS, tieneAcceso } from '../../utils/navConfig';
 import './headerPrincipal.css';
 import CambiarPasswordPanel from '../auth/CambiarPasswordPanel';
 
@@ -9,48 +10,37 @@ const HeaderAdmin = () => {
   const location = useLocation();
   const { usuario, logout } = useAuth();
 
+  const permisos = usuario?.permisos || [];
+
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
-  // Efecto para cambiar estilo al hacer scroll
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Cerrar menú de usuario al hacer click fuera
   useEffect(() => {
     const handler = () => setShowUserMenu(false);
     if (showUserMenu) document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
   }, [showUserMenu]);
 
-  // Definición de los enlaces de administración
-  const adminLinks = [
-    { path: '/admin', label: 'Inicio', exact: true },
-    { path: '/admin/usuarios', label: 'Docentes' },
-    { path: '/admin/cursos', label: 'Cursos' },
-    { path: '/admin/inscripciones', label: 'Inscripciones' },
-    { path: '/admin/pagos', label: 'Pagos' },
-    { path: '/admin/reportes', label: 'Reportes' },
-    { path: '/admin/auditoria', label: 'Auditoria' },
-  ];
+  // Filter nav links by the user's actual permissions
+  const visibleLinks = NAV_LINKS.filter((link) => tieneAcceso(permisos, link.permiso));
 
-  // Función para determinar si un enlace está activo
-  const isActive = (link) => {
-    if (link.exact) return location.pathname === link.path;
-    return location.pathname.startsWith(link.path);
-  };
+  const isActive = (link) =>
+    link.exact
+      ? location.pathname === link.path
+      : location.pathname === link.path || location.pathname.startsWith(link.path + '/');
 
-  // Iniciales del usuario para el avatar
-  const iniciales = usuario
-    ? usuario.nombre.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase()
-    : 'AD'; // Fallback por si no hay usuario (no debería pasar)
+  const iniciales = usuario?.nombre
+    ? usuario.nombre.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase()
+    : 'AD';
 
-  // Manejar cierre de sesión
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -58,7 +48,6 @@ const HeaderAdmin = () => {
     setMobileMenuOpen(false);
   };
 
-  // Navegar y cerrar menú móvil
   const handleNavigate = (path) => {
     navigate(path);
     setMobileMenuOpen(false);
@@ -68,13 +57,13 @@ const HeaderAdmin = () => {
   return (
     <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="navbar-container">
-        {/* Logo - lleva al inicio público (o se puede cambiar a /admin si se prefiere) */}
-        <div className="navbar-logo" style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
+        {/* Logo */}
+        <div className="navbar-logo" style={{ cursor: 'pointer' }} onClick={() => navigate('/admin')}>
           <div className="logo-icon">X</div>
           <span className="logo-text">College <span className="highlight">Nexus</span></span>
         </div>
 
-        {/* Toggle móvil */}
+        {/* Mobile toggle */}
         <button
           className={`mobile-toggle ${mobileMenuOpen ? 'active' : ''}`}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -83,24 +72,20 @@ const HeaderAdmin = () => {
           <span /><span /><span />
         </button>
 
-        {/* Links de navegación para admin */}
+        {/* Nav links — driven purely by permisos[] */}
         <ul className={`navbar-links ${mobileMenuOpen ? 'active' : ''}`}>
-          {adminLinks.map((link) => (
-            <li key={link.path}>
+          {visibleLinks.map((link) => (
+            <li key={link.id}>
               <a
                 href={link.path}
                 className={`nav-link ${isActive(link) ? 'active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavigate(link.path);
-                }}
+                onClick={(e) => { e.preventDefault(); handleNavigate(link.path); }}
               >
                 {link.label}
               </a>
             </li>
           ))}
 
-          {/* Opción adicional para móvil: Cerrar sesión */}
           <li className="mobile-only">
             <button className="btn-login" onClick={handleLogout}>
               Cerrar Sesión
@@ -108,10 +93,10 @@ const HeaderAdmin = () => {
           </li>
         </ul>
 
-        {/* Acciones del lado derecho */}
+        {/* Right-side actions */}
         <div className="navbar-actions">
-          {/* Badge de seguridad (opcional, se puede mantener o quitar) */}
-          <div className="secure-badge">
+          {/* Permission count badge */}
+          <div className="secure-badge" title={`${permisos.length} permisos activos`}>
             <div className="lock-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -119,12 +104,12 @@ const HeaderAdmin = () => {
               </svg>
             </div>
             <div className="badge-text">
-              <span className="badge-label">Admin</span>
-              <span className="badge-status">Privado</span>
+              <span className="badge-label">{usuario?.rol || 'Admin'}</span>
+              <span className="badge-status">{permisos.length} permisos</span>
             </div>
           </div>
 
-          {/* Avatar con menú desplegable (solo escritorio) */}
+          {/* Avatar dropdown (desktop only) */}
           <div style={{ position: 'relative' }} className="desktop-only">
             <button
               onClick={(e) => { e.stopPropagation(); setShowUserMenu(!showUserMenu); }}
@@ -146,69 +131,59 @@ const HeaderAdmin = () => {
                 background: 'white', border: '1px solid #e8edf3',
                 borderRadius: 14, padding: '0.5rem',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-                minWidth: 220, zIndex: 2000,
+                minWidth: 240, zIndex: 2000,
                 animation: 'fadeDown 0.2s ease',
               }}>
+                {/* User info */}
                 <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #f0f2f5', marginBottom: '0.25rem' }}>
-                  <div style={{ fontWeight: 700, color: '#003366', fontSize: '0.95rem' }}>{usuario?.nombre || 'Admin'}</div>
-                  <div style={{ fontSize: '0.78rem', color: '#aaa' }}>{usuario?.email || 'admin@sistema.com'}</div>
+                  <div style={{ fontWeight: 700, color: '#003366', fontSize: '0.95rem' }}>
+                    {usuario?.nombre || 'Admin'}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#aaa' }}>{usuario?.email}</div>
+                  <div style={{
+                    marginTop: '0.4rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                    background: '#eff6ff', color: '#1d4ed8',
+                    padding: '0.15rem 0.55rem', borderRadius: 20, fontSize: '0.72rem', fontWeight: 600,
+                  }}>
+                    {usuario?.rol}
+                  </div>
                 </div>
-                <button
-                  onClick={() => handleNavigate('/admin/perfil')}
-                  style={{
-                    width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
-                    textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
-                    color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
-                  }}
-                  onMouseEnter={e => e.target.style.background = '#f5f7fa'}
-                  onMouseLeave={e => e.target.style.background = 'none'}
-                >
-                  🛠️ Mi Perfil (Admin)
-                </button>
-                <button
-                  onClick={() => handleNavigate('/admin')}
-                  style={{
-                    width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
-                    textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
-                    color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
-                  }}
-                  onMouseEnter={e => e.target.style.background = '#f5f7fa'}
-                  onMouseLeave={e => e.target.style.background = 'none'}
-                >
+
+                {/* Permission pills */}
+                {permisos.length > 0 && (
+                  <div style={{ padding: '0.6rem 1rem', borderBottom: '1px solid #f0f2f5', marginBottom: '0.25rem' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#9ca3af', fontWeight: 600, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Permisos activos
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                      {permisos.map((p) => (
+                        <span key={p} style={{
+                          background: '#dcfce7', color: '#166534',
+                          padding: '0.1rem 0.45rem', borderRadius: 20,
+                          fontSize: '0.68rem', fontWeight: 600,
+                        }}>
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <DropdownBtn onClick={() => handleNavigate('/admin')}>
                   📊 Panel de Control
-                </button>
-                <button
-                  onClick={() => { setShowPasswordModal(true); setShowUserMenu(false); }}
-                  style={{
-                    width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
-                    textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
-                    color: '#333', fontFamily: 'inherit', transition: 'background 0.2s',
-                  }}
-                  onMouseEnter={e => e.target.style.background = '#f5f7fa'}
-                  onMouseLeave={e => e.target.style.background = 'none'}
-                >
-                  🔐 Cambiar contrasena
-                </button>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    width: '100%', background: 'none', border: 'none', padding: '0.6rem 1rem',
-                    textAlign: 'left', cursor: 'pointer', borderRadius: 8, fontSize: '0.9rem',
-                    color: '#dc2626', fontFamily: 'inherit', transition: 'background 0.2s',
-                    marginTop: '0.25rem', borderTop: '1px solid #f0f2f5',
-                  }}
-                  onMouseEnter={e => e.target.style.background = '#fef2f2'}
-                  onMouseLeave={e => e.target.style.background = 'none'}
-                >
+                </DropdownBtn>
+                <DropdownBtn onClick={() => { setShowPasswordModal(true); setShowUserMenu(false); }}>
+                  🔐 Cambiar contraseña
+                </DropdownBtn>
+                <DropdownBtn onClick={handleLogout} danger>
                   🚪 Cerrar sesión
-                </button>
+                </DropdownBtn>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Animación para el menú desplegable (misma que en headerPrincipal) */}
       <style>{`
         @keyframes fadeDown {
           from { opacity:0; transform:translateY(-8px); }
@@ -217,7 +192,7 @@ const HeaderAdmin = () => {
       `}</style>
 
       <CambiarPasswordPanel
-        titulo="Cambiar contrasena"
+        titulo="Cambiar contraseña"
         renderTrigger={false}
         open={showPasswordModal}
         onOpenChange={setShowPasswordModal}
@@ -225,5 +200,24 @@ const HeaderAdmin = () => {
     </nav>
   );
 };
+
+// Small helper so we don't repeat inline-style button boilerplate
+const DropdownBtn = ({ onClick, children, danger }) => (
+  <button
+    onClick={onClick}
+    style={{
+      width: '100%', background: 'none', border: 'none',
+      padding: '0.6rem 1rem', textAlign: 'left', cursor: 'pointer',
+      borderRadius: 8, fontSize: '0.9rem', fontFamily: 'inherit',
+      color: danger ? '#dc2626' : '#333',
+      transition: 'background 0.15s',
+      ...(danger ? { marginTop: '0.25rem', borderTop: '1px solid #f0f2f5' } : {}),
+    }}
+    onMouseEnter={(e) => { e.currentTarget.style.background = danger ? '#fef2f2' : '#f5f7fa'; }}
+    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+  >
+    {children}
+  </button>
+);
 
 export default HeaderAdmin;

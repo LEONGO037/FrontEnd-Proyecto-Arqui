@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminHeader from '../layout/headerAdmin';
+import UserHeaderDynamic from '../layout/UserHeaderDynamic';
 import Footer from '../layout/footerPrincipal';
 import { getRegistrosAuditoria } from '../../services/auditoriaApi';
 import './adminAuditoria.css';
@@ -116,7 +116,7 @@ const AdminAuditoria = () => {
 
     return (
         <div className="admin-page">
-            <AdminHeader />
+            <UserHeaderDynamic />
 
             <main className="admin-main">
                 <div className="admin-auditoria-container">

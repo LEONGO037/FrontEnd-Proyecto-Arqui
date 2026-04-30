@@ -1,0 +1,291 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ── Page shell ─────────────────────────────────────── */
+.gr-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+  background: #f0f4f8;
+}
+.gr-main { flex: 1; padding: 70px 0 4rem; }
+
+/* ── Banner ─────────────────────────────────────────── */
+.gr-banner {
+  background: linear-gradient(135deg, #003366 0%, #004d99 50%, #0066cc 100%);
+  padding: 2.25rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.gr-banner::after {
+  content: '';
+  position: absolute;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(140,198,63,0.15) 0%, transparent 70%);
+  right: -60px; top: -100px;
+  pointer-events: none;
+}
+.gr-breadcrumb { font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 0.5rem; }
+.gr-breadcrumb a { color: rgba(255,255,255,0.6); text-decoration: none; }
+.gr-breadcrumb a:hover { color: #fff; }
+.gr-breadcrumb .sep { margin: 0 0.4rem; }
+.gr-banner h1 { font-size: 1.75rem; font-weight: 800; color: #fff; margin: 0 0 0.35rem; }
+.gr-banner h1 span { color: #8cc63f; }
+.gr-banner p { font-size: 0.875rem; color: rgba(255,255,255,0.7); margin: 0; }
+
+/* ── Body ───────────────────────────────────────────── */
+.gr-body { max-width: 1300px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+/* ── Alerts ─────────────────────────────────────────── */
+.gr-error {
+  background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626;
+  padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.875rem;
+}
+.gr-success {
+  background: #f0fdf4; border: 1px solid #86efac; color: #166534;
+  padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; font-size: 0.875rem;
+}
+
+/* ── Tabs ───────────────────────────────────────────── */
+.gr-tabs { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 1.75rem; }
+.gr-tab {
+  padding: 0.7rem 1.5rem; border: none; background: none; cursor: pointer;
+  font-size: 0.9rem; font-weight: 600; color: #6b7280;
+  border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s;
+}
+.gr-tab:hover { color: #003366; }
+.gr-tab.active { color: #003366; border-bottom-color: #003366; }
+
+/* ── Section header ─────────────────────────────────── */
+.gr-section-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;
+}
+.gr-section-header h2 { font-size: 1.05rem; font-weight: 700; color: #374151; margin: 0; }
+
+/* ── Buttons ────────────────────────────────────────── */
+.gr-btn-primary {
+  background: #003366; color: white; border: none; border-radius: 8px;
+  padding: 0.55rem 1.2rem; cursor: pointer; font-weight: 600; font-size: 0.875rem;
+  transition: background 0.15s; display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.gr-btn-primary:hover { background: #002244; }
+.gr-btn-save {
+  background: #166534; color: white; border: none; border-radius: 8px;
+  padding: 0.6rem 1.4rem; cursor: pointer; font-weight: 700; font-size: 0.875rem;
+  transition: background 0.15s; display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.gr-btn-save:hover { background: #14532d; }
+.gr-btn-save:disabled { background: #9ca3af; cursor: not-allowed; }
+.gr-btn-cancel {
+  background: white; color: #374151; border: 1.5px solid #d1d5db; border-radius: 8px;
+  padding: 0.6rem 1.2rem; cursor: pointer; font-weight: 600; font-size: 0.875rem;
+  transition: all 0.15s;
+}
+.gr-btn-cancel:hover { border-color: #9ca3af; background: #f9fafb; }
+.gr-btn-danger {
+  background: none; color: #dc2626; border: 1px solid #fca5a5; border-radius: 6px;
+  padding: 0.3rem 0.7rem; cursor: pointer; font-size: 0.78rem; font-weight: 600; transition: all 0.15s;
+}
+.gr-btn-danger:hover { background: #fef2f2; }
+.gr-btn-ghost {
+  background: #6b7280; color: white; border: none; border-radius: 6px;
+  padding: 0.5rem 1rem; cursor: pointer; font-size: 0.875rem;
+}
+.gr-btn-unlock {
+  background: #fef9c3; color: #854d0e; border: 1px solid #fde047;
+  border-radius: 6px; padding: 0.3rem 0.7rem; cursor: pointer; font-size: 0.8rem; font-weight: 600;
+}
+.gr-btn-unlock:hover { background: #fef08a; }
+.gr-btn-detail {
+  background: #eff6ff; color: #1d4ed8; border: 1.5px solid #bfdbfe;
+  border-radius: 8px; padding: 0.4rem 0.9rem; cursor: pointer; font-size: 0.8rem;
+  font-weight: 600; transition: all 0.15s; display: inline-flex; align-items: center; gap: 0.3rem;
+}
+.gr-btn-detail:hover { background: #dbeafe; border-color: #93c5fd; }
+.gr-btn-detail.active { background: #003366; color: white; border-color: #003366; }
+
+/* ── New-role form ──────────────────────────────────── */
+.gr-new-role-form {
+  background: #f9fafb; border: 1.5px dashed #d1d5db; border-radius: 12px;
+  padding: 1rem 1.5rem; margin-bottom: 1.5rem;
+  display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;
+}
+.gr-input {
+  flex: 1; min-width: 140px; padding: 0.5rem 0.75rem; border-radius: 7px;
+  border: 1px solid #d1d5db; font-size: 0.875rem; outline: none;
+  background: #ffffff; color: #374151;
+}
+.gr-input:focus { border-color: #003366; box-shadow: 0 0 0 2px rgba(0,51,102,0.1); }
+
+/* ── Split layout ───────────────────────────────────── */
+.gr-split { display: grid; gap: 1.5rem; align-items: start; }
+.gr-split.with-editor { grid-template-columns: 1fr 440px; }
+.gr-split.no-editor   { grid-template-columns: 1fr; }
+
+/* ── Role list ──────────────────────────────────────── */
+.gr-role-card {
+  background: white; border: 1.5px solid #e5e7eb; border-radius: 14px;
+  padding: 1.25rem 1.5rem; margin-bottom: 0.85rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05); transition: all 0.2s; cursor: default;
+}
+.gr-role-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.09); border-color: #c7d2fe; }
+.gr-role-card.selected { border-color: #003366; box-shadow: 0 0 0 3px rgba(0,51,102,0.1); }
+
+.gr-role-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 0.85rem; gap: 0.75rem;
+}
+.gr-role-title { display: flex; align-items: center; gap: 0.6rem; flex: 1; min-width: 0; }
+.gr-role-name { font-weight: 700; color: #003366; font-size: 0.95rem; white-space: nowrap; }
+.gr-role-desc { font-size: 0.8rem; color: #6b7280; margin-top: 0.2rem; line-height: 1.4; }
+.gr-role-actions { display: flex; gap: 0.5rem; flex-shrink: 0; align-items: center; }
+
+/* Permission bar */
+.gr-perm-bar-wrap { margin-bottom: 0.75rem; }
+.gr-perm-bar-info {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.75rem; color: #6b7280; margin-bottom: 0.35rem;
+}
+.gr-perm-bar-track {
+  height: 5px; background: #e5e7eb; border-radius: 99px; overflow: hidden;
+}
+.gr-perm-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #003366, #0066cc);
+  border-radius: 99px; transition: width 0.3s ease;
+}
+
+/* Group tags on role card */
+.gr-group-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.gr-group-tag {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.55rem;
+  border-radius: 20px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;
+}
+.gr-group-tag.has-perms { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+
+/* ── Role editor panel ──────────────────────────────── */
+.gr-editor {
+  background: white; border: 1.5px solid #e5e7eb; border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+  position: sticky; top: 80px;
+  animation: slideIn 0.2s ease;
+  overflow: hidden;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.gr-editor-header {
+  background: linear-gradient(135deg, #003366, #0055aa);
+  padding: 1.1rem 1.4rem;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;
+}
+.gr-editor-title { color: white; font-weight: 800; font-size: 1rem; margin: 0 0 0.2rem; }
+.gr-editor-subtitle { color: rgba(255,255,255,0.65); font-size: 0.78rem; }
+.gr-editor-close {
+  background: rgba(255,255,255,0.15); border: none; color: white;
+  width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;
+  transition: background 0.15s;
+}
+.gr-editor-close:hover { background: rgba(255,255,255,0.25); }
+
+.gr-dirty-banner {
+  background: #fffbeb; border-bottom: 1px solid #fde68a;
+  padding: 0.5rem 1.4rem; font-size: 0.78rem; color: #92400e; font-weight: 600;
+  display: flex; align-items: center; gap: 0.4rem;
+}
+
+.gr-editor-body { padding: 1rem 1.4rem; max-height: 60vh; overflow-y: auto; }
+
+/* ── Permission groups ──────────────────────────────── */
+.gr-group {
+  border: 1.5px solid #e5e7eb; border-radius: 10px; margin-bottom: 0.75rem; overflow: hidden;
+}
+.gr-group-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.65rem 0.9rem; background: #f8fafc; cursor: pointer;
+  transition: background 0.15s; user-select: none;
+}
+.gr-group-header:hover { background: #f1f5f9; }
+.gr-group-header-left { display: flex; align-items: center; gap: 0.5rem; }
+.gr-group-icon { font-size: 1rem; }
+.gr-group-label { font-size: 0.875rem; font-weight: 700; color: #1e293b; }
+.gr-group-count {
+  font-size: 0.72rem; font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 20px;
+  background: #dbeafe; color: #1e40af;
+}
+.gr-group-count.full { background: #dcfce7; color: #166534; }
+.gr-group-count.none { background: #f1f5f9; color: #94a3b8; }
+.gr-group-toggle-all {
+  font-size: 0.72rem; background: none; border: 1px solid #d1d5db; border-radius: 5px;
+  padding: 0.15rem 0.5rem; cursor: pointer; color: #6b7280; transition: all 0.15s;
+}
+.gr-group-toggle-all:hover { border-color: #003366; color: #003366; }
+
+.gr-perms-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 0.25rem 0.5rem 0.75rem;
+}
+.gr-perm-row {
+  display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem;
+  border-radius: 7px; cursor: pointer; transition: background 0.1s;
+}
+.gr-perm-row:hover { background: #f8fafc; }
+.gr-perm-row input[type="checkbox"] {
+  width: 15px; height: 15px; accent-color: #003366; cursor: pointer; flex-shrink: 0;
+}
+.gr-perm-row-label { font-size: 0.8rem; color: #374151; cursor: pointer; user-select: none; }
+.gr-perm-row.changed .gr-perm-row-label { color: #1d4ed8; font-weight: 600; }
+.gr-perm-row.changed { background: #eff6ff; border-radius: 7px; }
+
+/* ── Editor footer ──────────────────────────────────── */
+.gr-editor-footer {
+  padding: 0.9rem 1.4rem; border-top: 1px solid #f0f2f5;
+  display: flex; justify-content: flex-end; gap: 0.6rem; background: white;
+}
+
+/* ── Matrix ─────────────────────────────────────────── */
+.gr-matrix-wrap { overflow-x: auto; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.gr-matrix { border-collapse: collapse; font-size: 0.78rem; min-width: 600px; width: 100%; background: white; }
+.gr-matrix thead th { background: #003366; color: white; padding: 0.5rem 0.6rem; text-align: center; white-space: nowrap; }
+.gr-matrix thead th:first-child { text-align: left; padding-left: 1rem; position: sticky; left: 0; z-index: 1; }
+.gr-matrix thead th:not(:first-child) { writing-mode: vertical-rl; transform: rotate(180deg); min-width: 50px; font-size: 0.7rem; }
+.gr-matrix tbody td { padding: 0.45rem 0.6rem; text-align: center; border-bottom: 1px solid #f3f4f6; }
+.gr-matrix tbody td:first-child { text-align: left; padding-left: 1rem; font-weight: 600; color: #003366; white-space: nowrap; position: sticky; left: 0; }
+.gr-matrix tbody tr:nth-child(even) td { background: #f9fafb; }
+.gr-matrix tbody tr:nth-child(odd) td:first-child { background: white; }
+.gr-cell-on { color: #166534; font-weight: 700; font-size: 0.95rem; }
+.gr-cell-off { color: #d1d5db; font-size: 0.95rem; }
+
+/* ── Users table ─────────────────────────────────────── */
+.gr-search {
+  padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid #d1d5db;
+  font-size: 0.875rem; max-width: 300px; width: 100%; outline: none;
+  background: #ffffff; color: #374151;
+}
+.gr-search:focus { border-color: #003366; box-shadow: 0 0 0 2px rgba(0,51,102,0.1); }
+.gr-table-wrap { overflow-x: auto; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.gr-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; background: white; }
+.gr-table thead th { background: #f3f4f6; padding: 0.7rem 0.85rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; white-space: nowrap; }
+.gr-table tbody td { padding: 0.65rem 0.85rem; border-bottom: 1px solid #f3f4f6; color: #374151; }
+.gr-table tbody tr:hover td { background: #f8fafc; }
+.gr-badge-rol { background: #dbeafe; color: #1d4ed8; padding: 0.2rem 0.65rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+.gr-select-rol { padding: 0.35rem 0.55rem; border-radius: 6px; border: 1px solid #d1d5db; font-size: 0.85rem; background: #ffffff; color: #374151; cursor: pointer; }
+.gr-active-label { color: #166534; font-size: 0.85rem; font-weight: 600; }
+
+/* ── Loading ─────────────────────────────────────────── */
+.gr-loading { text-align: center; padding: 3rem; color: #6b7280; font-size: 0.9rem; }
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 900px) {
+  .gr-split.with-editor { grid-template-columns: 1fr; }
+  .gr-editor { position: static; }
+}
+@media (max-width: 768px) {
+  .gr-banner { padding: 1.75rem 1.25rem; }
+  .gr-body { padding: 1.25rem 1rem; }
+  .gr-tab { padding: 0.6rem 0.9rem; font-size: 0.82rem; }
+  .gr-banner h1 { font-size: 1.35rem; }
+  .gr-perms-grid { grid-template-columns: 1fr; }
+}

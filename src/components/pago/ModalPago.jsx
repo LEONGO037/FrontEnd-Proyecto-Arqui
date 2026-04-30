@@ -1,6 +1,7 @@
 // ModalPago.jsx - Versión actualizada con consumo de API de Facturas
 import React, { useState, useEffect } from 'react';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
+import { getToken as getStoredToken } from '../../utils/tokenStore';
 import './ModalPago.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -31,15 +32,6 @@ const ModalPago = ({ cursos, total: totalProp, onClose, onPagoExitoso }) => {
     nit: '',
   });
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        // Lógica de decodificación si es necesaria
-      } catch (e) {}
-    }
-  }, []);
-
   const cursosArray = Array.isArray(cursos) ? cursos : [cursos];
   const cursoPrincipal = cursosArray[0];
 
@@ -50,7 +42,7 @@ const ModalPago = ({ cursos, total: totalProp, onClose, onPagoExitoso }) => {
   const visual = VISUAL_MAP[cursoPrincipal?.id] || { icono: '📚' };
 
   const getToken = () => {
-    const token = localStorage.getItem('token');
+    const token = getStoredToken();
     if (!token) throw new Error('No hay sesión activa. Por favor, inicia sesión nuevamente.');
     return token;
   };

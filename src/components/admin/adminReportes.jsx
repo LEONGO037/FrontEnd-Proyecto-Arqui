@@ -1,7 +1,7 @@
 // adminReportes.jsx — Generación de Reportes (Admin)
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminHeader from '../layout/headerAdmin';
+import UserHeaderDynamic from '../layout/UserHeaderDynamic';
 import Footer from '../layout/footerPrincipal';
 import {
     getResumenReportes,
@@ -112,7 +112,7 @@ const AdminReportes = () => {
     // ─── Render ───────────────────────────────────────────────────────────────
     return (
         <div className="reportes-page">
-            <AdminHeader />
+            <UserHeaderDynamic />
 
             <main className="reportes-main">
 

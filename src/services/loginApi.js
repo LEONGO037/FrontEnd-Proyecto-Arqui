@@ -1,4 +1,5 @@
-// src/services/loginApi.js
+import { getToken, clearToken } from '../utils/tokenStore';
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const jsonRequest = async (path, options = {}) => {
@@ -6,7 +7,7 @@ const jsonRequest = async (path, options = {}) => {
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   const text = await res.text();
   let data = null;
-  try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
   if (!res.ok) {
     const err = (data && data.error) || (data && data.message) || res.statusText;
     const e = new Error(err || 'API error');
@@ -18,54 +19,62 @@ const jsonRequest = async (path, options = {}) => {
 };
 
 export const login = async (email, password) => {
-  const data = await jsonRequest('/api/autenticacion/login', {
+  const res = await fetch(`${API_BASE}/api/autenticacion/login`, {
     method: 'POST',
-    body: JSON.stringify({ email, password })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
   });
-  if (data.token) {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.usuario || null));
-  }
-  return data;
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+  // Devolvemos el payload aunque sea debe_cambiar o expirada, para que el frontend actue
+  if (res.ok || (data?.debe_cambiar) || (data?.expirada)) return data;
+
+  const e = new Error((data && data.error) || res.statusText || 'Error de autenticación');
+  e.status = res.status;
+  e.payload = data;
+  throw e;
 };
 
-export const register = async (payload) => {
-  const data = await jsonRequest('/api/autenticacion/registrar', {
+export const register = async (payload) =>
+  jsonRequest('/api/autenticacion/registrar', { method: 'POST', body: JSON.stringify(payload) });
+
+export const verificarCodigo = async (email, codigo) =>
+  jsonRequest('/api/autenticacion/verificar-codigo', {
     method: 'POST',
-    body: JSON.stringify(payload)
+    body: JSON.stringify({ email, codigo }),
   });
-  return data;
-};
 
 export const changePassword = async (passwordActual, nuevaPassword) => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    throw new Error('No autenticado');
-  }
-
-  const data = await jsonRequest('/api/autenticacion/cambiar-password', {
+  const token = getToken();
+  if (!token) throw new Error('No autenticado');
+  return jsonRequest('/api/autenticacion/cambiar-password', {
     method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      password_actual: passwordActual,
-      nueva_password: nuevaPassword,
-    }),
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ password_actual: passwordActual, nueva_password: nuevaPassword }),
   });
-
-  return data;
 };
 
+export const solicitarReset = async (email) =>
+  jsonRequest('/api/autenticacion/solicitar-reset', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+
+export const resetPassword = async (token, nuevaPassword) =>
+  jsonRequest('/api/autenticacion/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, nueva_password: nuevaPassword }),
+  });
+
 export const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  sessionStorage.removeItem('role');
+  clearToken();
 };
 
 export const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-export default { login, register, changePassword, logout, getAuthHeaders };
+export default { login, register, verificarCodigo, changePassword, solicitarReset, resetPassword, logout, getAuthHeaders };

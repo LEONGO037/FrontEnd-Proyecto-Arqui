@@ -1,0 +1,94 @@
+// navConfig.js — Single source of truth for admin navigation.
+import { PERMISSIONS } from './roleUtils';
+
+export const NAV_LINKS = [
+  { id: 'inicio',           path: '/admin',                  label: 'Inicio',           exact: true, permiso: null },
+  { id: 'gestion-usuarios', path: '/admin/gestion-usuarios', label: 'Usuarios',                      permiso: PERMISSIONS.USUARIOS_GESTIONAR },
+  { id: 'cuentas',          path: '/admin/cuentas',          label: 'Crear Cuenta',                  permiso: PERMISSIONS.USUARIOS_GESTIONAR },
+  { id: 'roles',            path: '/admin/seguridad/roles',  label: 'Roles y Permisos',              permiso: PERMISSIONS.ROLES_GESTIONAR },
+  { id: 'cursos',           path: '/admin/cursos',           label: 'Cursos',                        permiso: PERMISSIONS.CURSOS_GESTIONAR },
+  { id: 'inscripciones',    path: '/admin/inscripciones',    label: 'Inscripciones',                 permiso: PERMISSIONS.INSCRIPCIONES_GESTIONAR },
+  { id: 'pagos',            path: '/admin/pagos',            label: 'Pagos',                         permiso: PERMISSIONS.PAGOS_VER },
+  { id: 'reportes',         path: '/admin/reportes',         label: 'Reportes',                      permiso: PERMISSIONS.REPORTES_VER },
+  { id: 'auditoria',        path: '/admin/auditoria',        label: 'Auditoría',                     permiso: PERMISSIONS.AUDITORIA_VER },
+];
+
+export const MENU_CARDS = [
+  {
+    id: 'cuentas',
+    path: '/admin/cuentas',
+    icon: '👤',
+    title: 'Crear Cuenta',
+    desc: 'Registra cuentas para estudiantes y docentes.',
+    color: '#0ea5e9',
+    permiso: PERMISSIONS.USUARIOS_GESTIONAR,
+  },
+  {
+    id: 'gestion-usuarios',
+    path: '/admin/gestion-usuarios',
+    icon: '👥',
+    title: 'Gestión de Usuarios',
+    desc: 'Lista, edita, desbloquea, cambia roles y elimina usuarios.',
+    color: '#4f46e5',
+    permiso: PERMISSIONS.USUARIOS_GESTIONAR,
+  },
+  {
+    id: 'roles',
+    path: '/admin/seguridad/roles',
+    icon: '🔐',
+    title: 'Roles y Permisos',
+    desc: 'Gestiona roles y controla el acceso por función.',
+    color: '#dc2626',
+    permiso: PERMISSIONS.ROLES_GESTIONAR,
+  },
+  {
+    id: 'cursos',
+    path: '/admin/cursos',
+    icon: '📚',
+    title: 'Gestión de Cursos',
+    desc: 'Crea, edita y asigna docentes a cursos.',
+    color: '#0891b2',
+    permiso: PERMISSIONS.CURSOS_GESTIONAR,
+  },
+  {
+    id: 'inscripciones',
+    path: '/admin/inscripciones',
+    icon: '📋',
+    title: 'Inscripciones',
+    desc: 'Monitorea inscripciones y estado académico.',
+    color: '#f59e0b',
+    permiso: PERMISSIONS.INSCRIPCIONES_GESTIONAR,
+  },
+  {
+    id: 'pagos',
+    path: '/admin/pagos',
+    icon: '💳',
+    title: 'Pagos',
+    desc: 'Consulta historial de pagos y comprobantes.',
+    color: '#8b5cf6',
+    permiso: PERMISSIONS.PAGOS_VER,
+  },
+  {
+    id: 'reportes',
+    path: '/admin/reportes',
+    icon: '📊',
+    title: 'Reportes',
+    desc: 'Genera y descarga reportes del sistema.',
+    color: '#ef4444',
+    permiso: PERMISSIONS.REPORTES_VER,
+  },
+  {
+    id: 'auditoria',
+    path: '/admin/auditoria',
+    icon: '🧾',
+    title: 'Auditoría',
+    desc: 'Consulta el registro de actividad del sistema.',
+    color: '#0f766e',
+    permiso: PERMISSIONS.AUDITORIA_VER,
+  },
+];
+
+// Returns true if the user's permissions include the required one.
+// permiso === null means "always visible to any authenticated user".
+export const tieneAcceso = (permisos, permiso) =>
+  permiso === null || (Array.isArray(permisos) && permisos.includes(permiso));

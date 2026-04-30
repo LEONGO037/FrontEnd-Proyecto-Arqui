@@ -1,8 +1,10 @@
 // src/services/docenteApi.js
+import { getToken } from '../utils/tokenStore';
+
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token = getToken();
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {})

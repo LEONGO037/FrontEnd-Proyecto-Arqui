@@ -236,6 +236,8 @@
     border: 1.5px solid #e2e8f0;
     border-radius: 10px;
     font-size: 0.95rem;
+    background: #ffffff;
+    color: #1e293b;
     transition: all 0.2s;
 }
 
