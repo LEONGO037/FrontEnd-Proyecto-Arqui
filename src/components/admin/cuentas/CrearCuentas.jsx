@@ -13,10 +13,7 @@ const camposVacios = {
   nombre: '',
   apellido_paterno: '',
   apellido_materno: '',
-  ci_nit: '',
   email: '',
-  telefono: '',
-  direccion: '',
 };
 
 const CrearCuentas = () => {
@@ -48,7 +45,7 @@ const CrearCuentas = () => {
         body = { ...form, usuario_id: usuario?.id };
       } else {
         url = `${API_BASE}/api/admin-docente-curso/crear-docente`;
-        body = { ...form, password: 'Docente#Ucb2026' };
+        body = { ...form };
       }
 
       const res = await fetch(url, {
@@ -65,9 +62,7 @@ const CrearCuentas = () => {
 
       const nombreCompleto = `${form.nombre} ${form.apellido_paterno}`;
       setExito(
-        tipo === TIPO.ESTUDIANTE
-          ? `Estudiante "${nombreCompleto}" registrado correctamente.`
-          : `Docente "${nombreCompleto}" registrado. Contraseña inicial: Docente#Ucb2026`
+        `Cuenta de ${tipo} para "${nombreCompleto}" registrada. La contraseña se envió a su correo institucional.`
       );
       setForm(camposVacios);
     } catch (err) {
@@ -156,42 +151,21 @@ const CrearCuentas = () => {
             <Campo label="Apellido Materno" name="apellido_materno" value={form.apellido_materno}
               onChange={handleChange} placeholder="Ej: Quispe" />
 
-            <Campo label="C.I. / NIT" name="ci_nit" value={form.ci_nit}
-              onChange={handleChange} required placeholder="Número de documento" />
-
             <div style={{ gridColumn: '1 / -1' }}>
               <Campo label="Correo Institucional (@ucb.edu.bo)" name="email" type="email"
                 value={form.email} onChange={handleChange} required
                 placeholder={tipo === TIPO.DOCENTE ? 'docente@ucb.edu.bo' : 'estudiante@ucb.edu.bo'} />
             </div>
 
-            <Campo label="Teléfono" name="telefono" value={form.telefono}
-              onChange={handleChange} placeholder="70000000" />
-
-            <Campo label="Dirección" name="direccion" value={form.direccion}
-              onChange={handleChange} placeholder="Calle, Av, Zona..." />
-
           </div>
 
-          {tipo === TIPO.DOCENTE && (
-            <div style={{
-              marginTop: '1rem', padding: '0.75rem 1rem',
-              background: '#fffbeb', border: '1px solid #fde68a',
-              borderRadius: 8, fontSize: '0.82rem', color: '#92400e',
-            }}>
-              La contraseña inicial del docente será <strong>Docente#Ucb2026</strong>. Se recomienda cambiarla en el primer ingreso.
-            </div>
-          )}
-
-          {tipo === TIPO.ESTUDIANTE && (
-            <div style={{
-              marginTop: '1rem', padding: '0.75rem 1rem',
-              background: '#eff6ff', border: '1px solid #bfdbfe',
-              borderRadius: 8, fontSize: '0.82rem', color: '#1e40af',
-            }}>
-              La contraseña se genera automáticamente como <strong>nombre.apellido.ci_nit</strong> (todo en minúsculas).
-            </div>
-          )}
+          <div style={{
+            marginTop: '1rem', padding: '0.75rem 1rem',
+            background: '#eff6ff', border: '1px solid #bfdbfe',
+            borderRadius: 8, fontSize: '0.82rem', color: '#1e40af',
+          }}>
+            La contraseña se generará aleatoriamente (12 caracteres con mayúsculas, números y símbolos) y se enviará automáticamente al correo del usuario.
+          </div>
 
           <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
             <button

@@ -253,7 +253,6 @@ function AppContent() {
           element={
             <RoleProtectedRoute allowedRoles={[ROLES.DOCENTE]}>
               <div className="app-wrapper">
-                <CambioContraseña />
                 <HeaderDocente />
                 <main style={{ minHeight: '80vh' }}><DocenteMenu /></main>
                 <Footer />
