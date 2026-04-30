@@ -1,76 +1,84 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserHeaderDynamic from '../../layout/UserHeaderDynamic';
 import Footer from '../../layout/footerPrincipal';
-import { useAuth } from '../../../context/AuthContext';
-import { getToken } from '../../../utils/tokenStore';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
-const TIPO = { ESTUDIANTE: 'estudiante', DOCENTE: 'docente' };
+import { getRoles, createUser } from '../../../services/rbacApi';
+import { validateNombre } from '../../../utils/formValidators';
 
 const camposVacios = {
   nombre: '',
   apellido_paterno: '',
   apellido_materno: '',
   email: '',
+  rol_id: '',
 };
 
 const CrearCuentas = () => {
   const navigate = useNavigate();
-  const { usuario } = useAuth();
-  const [tipo, setTipo] = useState(TIPO.ESTUDIANTE);
+  const [roles, setRoles] = useState([]);
   const [form, setForm] = useState(camposVacios);
+  const [nameErrors, setNameErrors] = useState({ nombre: '', apellido_paterno: '', apellido_materno: '' });
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
   const [exito, setExito] = useState('');
 
+  const NAME_LABELS = { nombre: 'El nombre', apellido_paterno: 'El apellido paterno', apellido_materno: 'El apellido materno' };
+
+  const handleNameBlur = (e) => {
+    const { name, value } = e.target;
+    if (!(name in nameErrors)) return;
+    const isOptional = name === 'apellido_materno';
+    if (isOptional && !value.trim()) return;
+    const err = validateNombre(value, NAME_LABELS[name]);
+    setNameErrors((prev) => ({ ...prev, [name]: err || '' }));
+  };
+
+  useEffect(() => {
+    getRoles()
+      .then((r) => {
+        setRoles(r);
+        if (r.length > 0) setForm((prev) => ({ ...prev, rol_id: String(r[0].id) }));
+      })
+      .catch(() => {});
+  }, []);
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
     setError('');
     setExito('');
+    if (name in nameErrors) setNameErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const errs = {
+      nombre:           validateNombre(form.nombre,           NAME_LABELS.nombre) || '',
+      apellido_paterno: validateNombre(form.apellido_paterno, NAME_LABELS.apellido_paterno) || '',
+      apellido_materno: form.apellido_materno.trim()
+        ? validateNombre(form.apellido_materno, NAME_LABELS.apellido_materno) || ''
+        : '',
+    };
+    setNameErrors(errs);
+    if (Object.values(errs).some(Boolean)) return;
+
     setCargando(true);
     setError('');
     setExito('');
 
     try {
-      let url, body;
-
-      if (tipo === TIPO.ESTUDIANTE) {
-        url = `${API_BASE}/api/estudiante/registrar`;
-        body = { ...form, usuario_id: usuario?.id };
-      } else {
-        url = `${API_BASE}/api/admin-docente-curso/crear-docente`;
-        body = { ...form };
-      }
-
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`,
-        },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al registrar cuenta');
-
+      await createUser(form);
       const nombreCompleto = `${form.nombre} ${form.apellido_paterno}`;
-      setExito(
-        `Cuenta de ${tipo} para "${nombreCompleto}" registrada. La contraseña se envió a su correo institucional.`
-      );
-      setForm(camposVacios);
+      setExito(`Cuenta para "${nombreCompleto}" registrada. La contraseña se envió a su correo.`);
+      setForm((prev) => ({ ...camposVacios, rol_id: prev.rol_id }));
     } catch (err) {
       setError(err.message);
     } finally {
       setCargando(false);
     }
   };
+
+  const rolSeleccionado = roles.find((r) => String(r.id) === String(form.rol_id));
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#f5f7fa' }}>
@@ -90,33 +98,8 @@ const CrearCuentas = () => {
 
         <h1 style={{ color: '#003366', marginBottom: '0.25rem' }}>Registrar Nueva Cuenta</h1>
         <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
-          Crea cuentas de estudiante o docente. Los datos quedan registrados de inmediato.
+          Crea cuentas para cualquier rol del sistema. Los datos quedan registrados de inmediato.
         </p>
-
-        {/* Selector de tipo */}
-        <div style={{
-          display: 'flex', gap: '0.75rem', marginBottom: '1.5rem',
-        }}>
-          {[
-            { value: TIPO.ESTUDIANTE, label: 'Estudiante', icon: '🎓' },
-            { value: TIPO.DOCENTE,    label: 'Docente',    icon: '👨‍🏫' },
-          ].map(({ value, label, icon }) => (
-            <button
-              key={value}
-              onClick={() => { setTipo(value); setForm(camposVacios); setError(''); setExito(''); }}
-              style={{
-                flex: 1, padding: '0.85rem', borderRadius: 10, cursor: 'pointer',
-                border: tipo === value ? '2px solid #003366' : '2px solid #e5e7eb',
-                background: tipo === value ? '#eff6ff' : 'white',
-                color: tipo === value ? '#003366' : '#6b7280',
-                fontWeight: tipo === value ? 700 : 500,
-                fontSize: '0.95rem', transition: 'all 0.15s',
-              }}
-            >
-              {icon} {label}
-            </button>
-          ))}
-        </div>
 
         {error && (
           <div style={{
@@ -143,18 +126,47 @@ const CrearCuentas = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
 
             <Campo label="Nombre(s)" name="nombre" value={form.nombre}
-              onChange={handleChange} required placeholder="Ej: María" />
+              onChange={handleChange} onBlur={handleNameBlur} required placeholder="Ej: María"
+              error={nameErrors.nombre} />
 
             <Campo label="Apellido Paterno" name="apellido_paterno" value={form.apellido_paterno}
-              onChange={handleChange} required placeholder="Ej: López" />
+              onChange={handleChange} onBlur={handleNameBlur} required placeholder="Ej: López"
+              error={nameErrors.apellido_paterno} />
 
             <Campo label="Apellido Materno" name="apellido_materno" value={form.apellido_materno}
-              onChange={handleChange} placeholder="Ej: Quispe" />
+              onChange={handleChange} onBlur={handleNameBlur} placeholder="Ej: Quispe"
+              error={nameErrors.apellido_materno} />
+
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '0.35rem' }}>
+                Rol <span style={{ color: '#dc2626' }}>*</span>
+              </label>
+              <select
+                name="rol_id"
+                value={form.rol_id}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%', padding: '0.55rem 0.75rem', borderRadius: 7,
+                  border: '1px solid #d1d5db', fontSize: '0.9rem',
+                  boxSizing: 'border-box', outline: 'none', background: 'white',
+                }}
+              >
+                {roles.map((r) => (
+                  <option key={r.id} value={r.id}>{r.nombre}</option>
+                ))}
+              </select>
+              {rolSeleccionado?.descripcion && (
+                <p style={{ margin: '0.3rem 0 0', fontSize: '0.78rem', color: '#6b7280' }}>
+                  {rolSeleccionado.descripcion}
+                </p>
+              )}
+            </div>
 
             <div style={{ gridColumn: '1 / -1' }}>
-              <Campo label="Correo Institucional (@ucb.edu.bo)" name="email" type="email"
+              <Campo label="Correo Electrónico" name="email" type="email"
                 value={form.email} onChange={handleChange} required
-                placeholder={tipo === TIPO.DOCENTE ? 'docente@ucb.edu.bo' : 'estudiante@ucb.edu.bo'} />
+                placeholder="usuario@ucb.edu.bo" />
             </div>
 
           </div>
@@ -170,7 +182,7 @@ const CrearCuentas = () => {
           <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
             <button
               type="button"
-              onClick={() => { setForm(camposVacios); setError(''); setExito(''); }}
+              onClick={() => { setForm((prev) => ({ ...camposVacios, rol_id: prev.rol_id })); setError(''); setExito(''); }}
               style={{
                 padding: '0.7rem 1.5rem', borderRadius: 8,
                 border: '1px solid #d1d5db', background: 'white',
@@ -189,7 +201,7 @@ const CrearCuentas = () => {
                 fontWeight: 700, fontSize: '0.95rem',
               }}
             >
-              {cargando ? 'Registrando...' : `Registrar ${tipo === TIPO.DOCENTE ? 'Docente' : 'Estudiante'}`}
+              {cargando ? 'Registrando...' : 'Registrar usuario'}
             </button>
           </div>
         </form>
@@ -200,7 +212,7 @@ const CrearCuentas = () => {
   );
 };
 
-const Campo = ({ label, name, value, onChange, required, placeholder, type = 'text' }) => (
+const Campo = ({ label, name, value, onChange, onBlur, required, placeholder, type = 'text', error }) => (
   <div>
     <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '0.35rem' }}>
       {label}{required && <span style={{ color: '#dc2626' }}> *</span>}
@@ -210,14 +222,16 @@ const Campo = ({ label, name, value, onChange, required, placeholder, type = 'te
       name={name}
       value={value}
       onChange={onChange}
+      onBlur={onBlur}
       required={required}
       placeholder={placeholder}
       style={{
         width: '100%', padding: '0.55rem 0.75rem', borderRadius: 7,
-        border: '1px solid #d1d5db', fontSize: '0.9rem',
+        border: `1px solid ${error ? '#ef4444' : '#d1d5db'}`, fontSize: '0.9rem',
         boxSizing: 'border-box', outline: 'none',
       }}
     />
+    {error && <p style={{ margin: '0.25rem 0 0', fontSize: '0.78rem', color: '#dc2626' }}>{error}</p>}
   </div>
 );
 

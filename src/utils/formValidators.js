@@ -1,4 +1,5 @@
 const EMAIL_UCB_REGEX = /^[A-Z0-9._%+-]+@ucb\.edu\.bo$/i;
+const NOMBRE_REGEX = /^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]{3,}$/;
 const PASSWORD_STRONG_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{12,}$/;
 
 const normalizeValue = (value) => (typeof value === 'string' ? value.trim() : value);
@@ -90,10 +91,15 @@ const schemas = {
 
   register: [
     {
-      field: 'name',
+      field: 'nombre',
       validators: [
-        (value) => rules.required(value, 'El nombre completo es obligatorio'),
-        (value) => rules.minLength(value, 5, 'Ingresa tu nombre y apellido'),
+        (value) => rules.required(value, 'El nombre es obligatorio'),
+      ],
+    },
+    {
+      field: 'apellido_paterno',
+      validators: [
+        (value) => rules.required(value, 'El apellido paterno es obligatorio'),
       ],
     },
     {
@@ -212,6 +218,16 @@ export const validateNotas = (notas = []) => {
 export const validationPatterns = {
   emailUcb: EMAIL_UCB_REGEX,
   strongPassword: PASSWORD_STRONG_REGEX,
+};
+
+export const validateNombre = (value, label = 'Este campo') => {
+  const v = (value || '').trim();
+  if (!v) return `${label} es obligatorio`;
+  if (v.length < 3) return `${label} debe tener al menos 3 caracteres`;
+  if (/\d/.test(v)) return `${label} no puede contener números`;
+  if (/\s/.test(v)) return `${label} no puede contener espacios`;
+  if (!NOMBRE_REGEX.test(v)) return `${label} solo puede contener letras`;
+  return null;
 };
 
 export const validateInstitutionalEmail = (email) => {
