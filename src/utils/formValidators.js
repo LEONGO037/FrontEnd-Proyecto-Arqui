@@ -1,5 +1,6 @@
 const EMAIL_UCB_REGEX = /^[A-Z0-9._%+-]+@ucb\.edu\.bo$/i;
-const PASSWORD_STRONG_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+const NOMBRE_REGEX = /^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ ]{3,}$/;
+const PASSWORD_STRONG_REGEX = /^(?=.*[a-zñáéíóú])(?=.*[A-ZÑÁÉÍÓÚ])(?=.*\d)(?=.*[@$!%*?&_\-#]).{12,}$/;
 
 const normalizeValue = (value) => (typeof value === 'string' ? value.trim() : value);
 
@@ -28,7 +29,7 @@ const rules = {
   strongPassword: (value, message) => {
     const normalized = String(value || '');
     if (!PASSWORD_STRONG_REGEX.test(normalized)) {
-      return message || 'La contraseña debe tener al menos 8 caracteres, mayúscula, minúscula, número y carácter especial';
+      return message || 'La contraseña debe tener mínimo 12 caracteres, mayúscula, minúscula, número y carácter especial (@$!%*?&_-#)';
     }
     return null;
   },
@@ -90,10 +91,15 @@ const schemas = {
 
   register: [
     {
-      field: 'name',
+      field: 'nombre',
       validators: [
-        (value) => rules.required(value, 'El nombre completo es obligatorio'),
-        (value) => rules.minLength(value, 5, 'Ingresa tu nombre y apellido'),
+        (value) => rules.required(value, 'El nombre es obligatorio'),
+      ],
+    },
+    {
+      field: 'apellido_paterno',
+      validators: [
+        (value) => rules.required(value, 'El apellido paterno es obligatorio'),
       ],
     },
     {
@@ -214,6 +220,15 @@ export const validationPatterns = {
   strongPassword: PASSWORD_STRONG_REGEX,
 };
 
+export const validateNombre = (value, label = 'Este campo') => {
+  const v = (value || '').trim();
+  if (!v) return `${label} es obligatorio`;
+  if (v.length < 3) return `${label} debe tener al menos 3 caracteres`;
+  if (/\d/.test(v)) return `${label} no puede contener números`;
+  if (!NOMBRE_REGEX.test(v)) return `${label} solo puede contener letras y espacios`;
+  return null;
+};
+
 export const validateInstitutionalEmail = (email) => {
   const normalized = normalizeValue(email || '');
   return EMAIL_UCB_REGEX.test(normalized);
@@ -225,8 +240,8 @@ export const getPasswordRequirements = (password) => {
   const checks = [
     {
       key: 'length',
-      label: 'Mínimo 8 caracteres',
-      valid: passwordValue.length >= 8,
+      label: 'Mínimo 12 caracteres',
+      valid: passwordValue.length >= 12,
     },
     {
       key: 'uppercase',
@@ -245,8 +260,8 @@ export const getPasswordRequirements = (password) => {
     },
     {
       key: 'special',
-      label: 'Al menos un carácter especial',
-      valid: /[^A-Za-z\d]/.test(passwordValue),
+      label: 'Al menos un carácter especial (@$!%*?&_-#)',
+      valid: /[@$!%*?&_\-#]/.test(passwordValue),
     },
   ];
 

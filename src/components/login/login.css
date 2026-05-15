@@ -318,7 +318,8 @@
   transition: all 0.3s ease;
   font-family: inherit;
   box-sizing: border-box;
-  /* Asegura que el padding no rompa el ancho del 100% */
+  background: #ffffff;
+  color: #1e293b;
 }
 
 .login-form .input-wrapper .login-input {

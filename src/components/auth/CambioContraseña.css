@@ -9,6 +9,8 @@
   justify-content: center;
   z-index: 9999; /* Super high to block everything */
   padding: 2rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   animation: fadeIn 0.4s ease;
 }
 
@@ -22,6 +24,8 @@
               0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   border: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
+  max-height: calc(100dvh - 4rem);
+  overflow-y: auto;
   animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -243,12 +247,23 @@
 }
 
 @media (max-width: 640px) {
-  .password-modal-container {
-    padding: 2rem 1.5rem;
-    border-radius: 20px;
+  .password-modal-overlay {
+    padding: 1rem;
+    align-items: flex-start;
   }
-  
+
+  .password-modal-container {
+    padding: 2rem 1.25rem;
+    border-radius: 20px;
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
+  }
+
   .requirements-note ul {
     grid-template-columns: 1fr;
+  }
+
+  .password-modal-header h2 {
+    font-size: 1.4rem;
   }
 }
