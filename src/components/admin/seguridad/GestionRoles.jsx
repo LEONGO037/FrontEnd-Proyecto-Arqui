@@ -88,6 +88,10 @@ const PERMISO_LABEL = {
   [PERMISSIONS.USUARIO_DOCENTE]:         'Acceso completo de docente',
 };
 
+const rolEstadoBadgeStyle = (activo) => activo
+  ? { background: '#dcfce7', color: '#166534' }
+  : { background: '#e2e8f0', color: '#475569' };
+
 const accionLabel = (permiso) => PERMISO_LABEL[permiso] || permiso;
 
 // How many permissions a role has in a given group
@@ -130,7 +134,7 @@ const GestionRoles = () => {
         rbacApi.getRoles(),
         rbacApi.getPermisos(),
         rbacApi.getMatriz(),
-        rbacApi.getUsuarios(),
+        rbacApi.getUsuarios({ includeInactive: true }),
       ]);
       setRoles(r);
       setPermisos(p);
@@ -356,7 +360,12 @@ const GestionRoles = () => {
                         <div className="gr-role-top">
                           <div className="gr-role-title">
                             <div>
-                              <div className="gr-role-name">{rol.nombre}</div>
+                              <div className="gr-role-name-row">
+                                <div className="gr-role-name">{rol.nombre}</div>
+                                <span className="gr-role-state" style={rolEstadoBadgeStyle(rol.activo !== false)}>
+                                  {rol.activo === false ? 'Inactivo' : 'Activo'}
+                                </span>
+                              </div>
                               {rol.descripcion && (
                                 <div className="gr-role-desc">{rol.descripcion}</div>
                               )}
@@ -372,8 +381,9 @@ const GestionRoles = () => {
                             <button
                               className="gr-btn-danger"
                               onClick={() => handleEliminarRol(rol.id, rol.nombre)}
+                              disabled={rol.activo === false}
                             >
-                              Eliminar
+                              {rol.activo === false ? 'Inactivo' : 'Eliminar'}
                             </button>
                           </div>
                         </div>
@@ -579,7 +589,9 @@ const GestionRoles = () => {
                             </select>
                           </td>
                           <td>
-                            {bloqueado ? (
+                            {!u.activo ? (
+                              <span className="gr-inactive-label">⏸ Inactivo</span>
+                            ) : bloqueado ? (
                               <button
                                 className="gr-btn-unlock"
                                 onClick={() => handleDesbloquear(u.id)}

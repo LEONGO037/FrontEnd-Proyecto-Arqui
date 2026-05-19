@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserHeaderDynamic from '../layout/UserHeaderDynamic';
 import Footer from '../layout/footerPrincipal';
-import { getUsuarios, desbloquearUsuario, deleteUser } from '../../services/rbacApi';
+import { getUsuarios, getUsuarioDetalle, desbloquearUsuario, deleteUser } from '../../services/rbacApi';
 import { useAuth } from '../../context/AuthContext';
 import { ROLES } from '../../utils/roleUtils';
 import './adminUsuarios.css';
@@ -24,6 +24,10 @@ const rolBadgeStyle = (nombre) => {
   return { background: s.bg, color: s.color, padding: '0.25rem 0.75rem', borderRadius: 999, fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap' };
 };
 
+const estadoBadgeStyle = (activo) => activo
+  ? { background: '#dcfce7', color: '#166534' }
+  : { background: '#fee2e2', color: '#991b1b' };
+
 const isBloqueado = (hasta) => hasta && new Date(hasta) > new Date();
 
 export default function AdminGestionUsuarios() {
@@ -39,7 +43,9 @@ export default function AdminGestionUsuarios() {
 
   // Modal de confirmación de eliminación
   const [modalEliminar, setModalEliminar] = useState(null);
+  const [modalDetalle, setModalDetalle] = useState(null);
   const [submittingDel, setSubmittingDel] = useState(false);
+  const [loadingDetalle, setLoadingDetalle] = useState(false);
 
   const cargar = useCallback(async () => {
     setLoading(true);
@@ -79,6 +85,20 @@ export default function AdminGestionUsuarios() {
       setError(err.message || 'Error al eliminar usuario');
     } finally {
       setSubmittingDel(false);
+    }
+  };
+
+  const handleVerDetalle = async (u) => {
+    setError('');
+    setSuccess('');
+    setLoadingDetalle(true);
+    try {
+      const detalle = await getUsuarioDetalle(u.id);
+      setModalDetalle(detalle);
+    } catch (err) {
+      setError(err.message || 'Error al cargar el detalle del usuario');
+    } finally {
+      setLoadingDetalle(false);
     }
   };
 
@@ -158,17 +178,32 @@ export default function AdminGestionUsuarios() {
                 ) : filtrados.length === 0 ? (
                   <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>No se encontraron usuarios.</td></tr>
                 ) : filtrados.map(u => {
-                  const bloqueado = isBloqueado(u.bloqueado_hasta);
+                      const bloqueado = isBloqueado(u.bloqueado_hasta);
+                      const inactivo = u.activo === false;
                   const esSelf = self && String(u.id) === String(self.id);
                   return (
                     <tr key={u.id}>
                       <td>
                         <div className="docente-avatar-cell">
-                          <div className="mini-avatar" style={{ background: esSelf ? '#fef3c7' : '#eef2ff', color: esSelf ? '#92400e' : '#4f46e5' }}>
+                          <button
+                            type="button"
+                            className="mini-avatar mini-avatar-button"
+                            style={{ background: esSelf ? '#fef3c7' : '#eef2ff', color: esSelf ? '#92400e' : '#4f46e5' }}
+                            onClick={() => handleVerDetalle(u)}
+                            title="Ver detalle"
+                            disabled={loadingDetalle}
+                          >
                             {u.nombre?.charAt(0)?.toUpperCase()}
-                          </div>
+                          </button>
                           <div>
-                            <div style={{ fontWeight: 700 }}>{u.nombre} {u.apellido_paterno}</div>
+                            <button
+                              type="button"
+                              className="gu-user-name-link"
+                              onClick={() => handleVerDetalle(u)}
+                              disabled={loadingDetalle}
+                            >
+                              {u.nombre} {u.apellido_paterno}
+                            </button>
                             {esSelf && <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>(tú)</div>}
                           </div>
                         </div>
@@ -182,19 +217,24 @@ export default function AdminGestionUsuarios() {
                       </td>
                       <td><span style={rolBadgeStyle(u.rol_nombre)}>{u.rol_nombre || '—'}</span></td>
                       <td>
-                        {bloqueado
-                          ? <span className="gu-badge-blocked">Bloqueado</span>
-                          : <span className="gu-badge-active">Activo</span>
+                        {inactivo
+                          ? <span className="gu-badge-inactive">Inactivo</span>
+                          : bloqueado
+                            ? <span className="gu-badge-blocked">Bloqueado</span>
+                            : <span className="gu-badge-active">Activo</span>
                         }
                       </td>
                       <td>
                         <div className="gu-actions">
-                          {bloqueado && (
+                          <button className="gu-btn gu-btn-role" onClick={() => handleVerDetalle(u)} title="Ver detalle">
+                            👁 Detalle
+                          </button>
+                          {bloqueado && !inactivo && (
                             <button className="gu-btn gu-btn-unlock" onClick={() => handleDesbloquear(u)} title="Desbloquear">
                               🔓 Desbloquear
                             </button>
                           )}
-                          {!esSelf && (
+                          {!esSelf && !inactivo && (
                             <button className="gu-btn gu-btn-delete" onClick={() => setModalEliminar(u)} title="Eliminar">
                               🗑
                             </button>
@@ -234,6 +274,61 @@ export default function AdminGestionUsuarios() {
                 >
                   {submittingDel ? 'Eliminando...' : 'Eliminar'}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modalDetalle && (
+        <div className="modal-overlay" onClick={() => setModalDetalle(null)}>
+          <div className="modal-content user-detail-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Perfil detallado de usuario</h2>
+              <button type="button" className="close-modal" onClick={() => setModalDetalle(null)}>&times;</button>
+            </div>
+            <div className="user-detail-body">
+              <div className="user-detail-hero">
+                <div className="user-detail-avatar">
+                  {modalDetalle.nombre?.charAt(0)?.toUpperCase()}
+                </div>
+                <div>
+                  <div className="user-detail-name">{modalDetalle.nombre} {modalDetalle.apellido_paterno}</div>
+                  <div className="user-detail-email">{modalDetalle.email}</div>
+                </div>
+              </div>
+
+              <div className="user-detail-grid">
+                <div className="user-detail-item">
+                  <span>Rol</span>
+                  <strong>{modalDetalle.rol_nombre || '—'}</strong>
+                </div>
+                <div className="user-detail-item">
+                  <span>Estado</span>
+                  <strong>
+                    {modalDetalle.activo === false ? 'Inactivo' : 'Activo'}
+                  </strong>
+                </div>
+                <div className="user-detail-item">
+                  <span>Email verificado</span>
+                  <strong>{modalDetalle.email_verificado ? 'Sí' : 'No'}</strong>
+                </div>
+                <div className="user-detail-item">
+                  <span>Fecha de creación</span>
+                  <strong>{modalDetalle.fecha_creacion ? new Date(modalDetalle.fecha_creacion).toLocaleString() : '—'}</strong>
+                </div>
+                <div className="user-detail-item">
+                  <span>Intentos fallidos</span>
+                  <strong>{modalDetalle.intentos_fallidos ?? 0}</strong>
+                </div>
+                <div className="user-detail-item">
+                  <span>Bloqueado hasta</span>
+                  <strong>{modalDetalle.bloqueado_hasta ? new Date(modalDetalle.bloqueado_hasta).toLocaleString() : '—'}</strong>
+                </div>
+              </div>
+
+              <div className="form-actions user-detail-actions">
+                <button type="button" className="btn-cancel" onClick={() => setModalDetalle(null)}>Cerrar</button>
               </div>
             </div>
           </div>
