@@ -138,61 +138,7 @@ const AdministrarCursos = () => {
   // Todos los cursos disponibles como prerrequisito (excluye el que se está editando)
   const opcionesPrerreq = cursos.filter(c => c.id !== cursoEditando?.id);
 
-  const FormCurso = ({ onSubmit, titulo, onClose }) => (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" style={{ maxWidth: 680, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>{titulo}</h2>
-          <button className="close-modal" onClick={onClose}>&times;</button>
-        </div>
-        <form onSubmit={onSubmit} className="curso-form">
-          {error && <div className="admin-error-box" style={{ marginBottom: '1rem' }}>{error}</div>}
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Nombre del Curso</label>
-              <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required placeholder="Ej: Arquitectura de Software" />
-            </div>
-            <div className="form-grid-2">
-              <div className="form-group">
-                <label>Costo (Bs.)</label>
-                <input type="number" step="0.01" name="costo" value={formData.costo} onChange={handleChange} required placeholder="0.00" />
-              </div>
-              <div className="form-group">
-                <label>Cupo Máximo</label>
-                <input type="number" name="cupo_maximo" value={formData.cupo_maximo} onChange={handleChange} required placeholder="0" />
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Mínimo de Estudiantes</label>
-              <input type="number" min="1" name="minimo_estudiantes" value={formData.minimo_estudiantes} onChange={handleChange}
-                placeholder={formData.cupo_maximo ? `Ej: ${Math.ceil(Number(formData.cupo_maximo) * 0.3)}` : '1'} />
-            </div>
-            <div className="form-group">
-              <label>Descripción</label>
-              <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} required rows="3" placeholder="Describe brevemente el curso..." />
-            </div>
-            {opcionesPrerreq.length > 0 && (
-              <div className="form-group">
-                <label>Prerrequisitos</label>
-                <div className="prerrequisitos-list">
-                  {opcionesPrerreq.map(c => (
-                    <label key={c.id} className={`prerrequisito-item ${formData.prerrequisitos.includes(c.id) ? 'selected' : ''}`}>
-                      <input type="checkbox" checked={formData.prerrequisitos.includes(c.id)} onChange={() => togglePrerrequisito(c.id)} />
-                      <span>{c.nombre}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="form-actions">
-            <button type="button" className="btn-cancel" onClick={onClose}>Cancelar</button>
-            <button type="submit" className="btn-submit" disabled={submitting}>{submitting ? 'Guardando...' : 'Guardar'}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+  
 
   return (
     <div className="admin-cursos-page">
@@ -274,15 +220,41 @@ const AdministrarCursos = () => {
         </div>
       </main>
 
-      {modalCrear && <FormCurso titulo="Crear Nuevo Curso" onSubmit={handleCrear} onClose={() => { setModalCrear(false); setError(''); }} />}
-      {modalEditar && <FormCurso titulo={`Editar: ${cursoEditando?.nombre}`} onSubmit={handleEditar} onClose={() => { setModalEditar(false); setError(''); }} />}
+      {modalCrear && (
+        <FormCurso
+          visible={modalCrear}
+          titulo="Crear Nuevo Curso"
+          onSubmit={handleCrear}
+          onClose={() => { setModalCrear(false); setError(''); }}
+          formData={formData}
+          handleChange={handleChange}
+          togglePrerrequisito={togglePrerrequisito}
+          opcionesPrerreq={opcionesPrerreq}
+          submitting={submitting}
+          error={error}
+        />
+      )}
+      {modalEditar && (
+        <FormCurso
+          visible={modalEditar}
+          titulo={`Editar: ${cursoEditando?.nombre}`}
+          onSubmit={handleEditar}
+          onClose={() => { setModalEditar(false); setError(''); }}
+          formData={formData}
+          handleChange={handleChange}
+          togglePrerrequisito={togglePrerrequisito}
+          opcionesPrerreq={opcionesPrerreq}
+          submitting={submitting}
+          error={error}
+        />
+      )}
 
       {modalEliminar && (
         <div className="modal-overlay" onClick={() => setModalEliminar(null)}>
           <div className="modal-content" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Eliminar Curso</h2>
-              <button className="close-modal" onClick={() => setModalEliminar(null)}>&times;</button>
+                <button type="button" className="close-modal" onClick={() => setModalEliminar(null)}>&times;</button>
             </div>
             <div style={{ padding: '1.75rem 2rem' }}>
               {error && <div className="admin-error-box" style={{ marginBottom: '1rem' }}>{error}</div>}
@@ -307,3 +279,67 @@ const AdministrarCursos = () => {
 };
 
 export default AdministrarCursos;
+
+// Hoisted form component to avoid remounts on parent re-render
+function FormCurso({ visible, onSubmit, titulo, onClose, formData, handleChange, togglePrerrequisito, opcionesPrerreq, submitting, error }) {
+  if (!visible) return null;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" style={{ maxWidth: 780, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{titulo}</h2>
+          <button type="button" className="close-modal" onClick={onClose}>&times;</button>
+        </div>
+        <form
+          onSubmit={onSubmit}
+          onKeyDown={(e) => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') e.preventDefault(); }}
+          className="curso-form"
+        >
+          {error && <div className="admin-error-box" style={{ marginBottom: '1rem' }}>{error}</div>}
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Nombre del Curso</label>
+              <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required placeholder="Ej: Arquitectura de Software" />
+            </div>
+            <div className="form-grid-2">
+              <div className="form-group">
+                <label>Costo (Bs.)</label>
+                <input type="number" step="0.01" name="costo" value={formData.costo} onChange={handleChange} required placeholder="0.00" />
+              </div>
+              <div className="form-group">
+                <label>Cupo Máximo</label>
+                <input type="number" name="cupo_maximo" value={formData.cupo_maximo} onChange={handleChange} required placeholder="0" />
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Mínimo de Estudiantes</label>
+              <input type="number" min="1" name="minimo_estudiantes" value={formData.minimo_estudiantes} onChange={handleChange}
+                placeholder={formData.cupo_maximo ? `Ej: ${Math.ceil(Number(formData.cupo_maximo) * 0.3)}` : '1'} />
+            </div>
+            <div className="form-group">
+              <label>Descripción</label>
+              <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} required rows="6" placeholder="Describe brevemente el curso..." />
+            </div>
+            {opcionesPrerreq.length > 0 && (
+              <div className="form-group">
+                <label>Prerrequisitos</label>
+                <div className="prerrequisitos-list">
+                  {opcionesPrerreq.map(c => (
+                    <label key={c.id} className={`prerrequisito-item ${formData.prerrequisitos.includes(c.id) ? 'selected' : ''}`}>
+                      <input type="checkbox" checked={formData.prerrequisitos.includes(c.id)} onChange={() => togglePrerrequisito(c.id)} />
+                      <span>{c.nombre}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="form-actions">
+            <button type="button" className="btn-cancel" onClick={onClose}>Cancelar</button>
+            <button type="submit" className="btn-submit" disabled={submitting}>{submitting ? 'Guardando...' : 'Guardar'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

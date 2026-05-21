@@ -1,6 +1,6 @@
 const EMAIL_UCB_REGEX = /^[A-Z0-9._%+-]+@ucb\.edu\.bo$/i;
-const NOMBRE_REGEX = /^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]{3,}$/;
-const PASSWORD_STRONG_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{12,}$/;
+const NOMBRE_REGEX = /^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ ]{3,}$/;
+const PASSWORD_STRONG_REGEX = /^(?=.*[a-zñáéíóú])(?=.*[A-ZÑÁÉÍÓÚ])(?=.*\d)(?=.*[@$!%*?&_\-#]).{12,}$/;
 
 const normalizeValue = (value) => (typeof value === 'string' ? value.trim() : value);
 
@@ -225,8 +225,7 @@ export const validateNombre = (value, label = 'Este campo') => {
   if (!v) return `${label} es obligatorio`;
   if (v.length < 3) return `${label} debe tener al menos 3 caracteres`;
   if (/\d/.test(v)) return `${label} no puede contener números`;
-  if (/\s/.test(v)) return `${label} no puede contener espacios`;
-  if (!NOMBRE_REGEX.test(v)) return `${label} solo puede contener letras`;
+  if (!NOMBRE_REGEX.test(v)) return `${label} solo puede contener letras y espacios`;
   return null;
 };
 

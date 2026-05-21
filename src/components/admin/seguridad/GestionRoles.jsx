@@ -88,6 +88,10 @@ const PERMISO_LABEL = {
   [PERMISSIONS.USUARIO_DOCENTE]:         'Acceso completo de docente',
 };
 
+const rolEstadoBadgeStyle = (activo) => activo
+  ? { background: '#dcfce7', color: '#166534' }
+  : { background: '#e2e8f0', color: '#475569' };
+
 const accionLabel = (permiso) => PERMISO_LABEL[permiso] || permiso;
 
 // How many permissions a role has in a given group
@@ -105,7 +109,6 @@ const GestionRoles = () => {
   const [permisos, setPermisos] = useState([]);   // all permission objects {id, nombre}
   const [matriz, setMatriz] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
-  const [errorUsuarios, setErrorUsuarios] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
@@ -126,28 +129,22 @@ const GestionRoles = () => {
   const cargar = useCallback(async () => {
     setCargando(true);
     setError('');
-    setErrorUsuarios('');
     try {
-      const [r, p, m] = await Promise.all([
+      const [r, p, m, u] = await Promise.all([
         rbacApi.getRoles(),
         rbacApi.getPermisos(),
         rbacApi.getMatriz(),
+        rbacApi.getUsuarios({ includeInactive: true }),
       ]);
       setRoles(r);
       setPermisos(p);
       setMatriz(m);
+      setUsuarios(u);
     } catch (e) {
       setError(e.message);
     } finally {
       setCargando(false);
     }
-    // Usuarios se carga por separado; un 403 aquí no rompe las otras tabs
-    rbacApi.getUsuarios()
-      .then(setUsuarios)
-      .catch((e) => setErrorUsuarios(e.status === 403
-        ? 'Tu rol no tiene el permiso "usuarios:gestionar". Asígnalo desde la tab Roles y Permisos.'
-        : e.message
-      ));
   }, []);
 
   useEffect(() => { cargar(); }, [cargar]);
@@ -363,7 +360,12 @@ const GestionRoles = () => {
                         <div className="gr-role-top">
                           <div className="gr-role-title">
                             <div>
-                              <div className="gr-role-name">{rol.nombre}</div>
+                              <div className="gr-role-name-row">
+                                <div className="gr-role-name">{rol.nombre}</div>
+                                <span className="gr-role-state" style={rolEstadoBadgeStyle(rol.activo !== false)}>
+                                  {rol.activo === false ? 'Inactivo' : 'Activo'}
+                                </span>
+                              </div>
                               {rol.descripcion && (
                                 <div className="gr-role-desc">{rol.descripcion}</div>
                               )}
@@ -379,8 +381,9 @@ const GestionRoles = () => {
                             <button
                               className="gr-btn-danger"
                               onClick={() => handleEliminarRol(rol.id, rol.nombre)}
+                              disabled={rol.activo === false}
                             >
-                              Eliminar
+                              {rol.activo === false ? 'Inactivo' : 'Eliminar'}
                             </button>
                           </div>
                         </div>
@@ -555,7 +558,6 @@ const GestionRoles = () => {
                   onChange={(e) => setBusqueda(e.target.value)}
                 />
               </div>
-              {errorUsuarios && <div className="gr-error">{errorUsuarios}</div>}
               <div className="gr-table-wrap">
                 <table className="gr-table">
                   <thead>
@@ -587,7 +589,9 @@ const GestionRoles = () => {
                             </select>
                           </td>
                           <td>
-                            {bloqueado ? (
+                            {!u.activo ? (
+                              <span className="gr-inactive-label">⏸ Inactivo</span>
+                            ) : bloqueado ? (
                               <button
                                 className="gr-btn-unlock"
                                 onClick={() => handleDesbloquear(u.id)}

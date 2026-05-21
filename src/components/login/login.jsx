@@ -11,7 +11,7 @@ import {
   getPasswordRequirements,
   validateNombre,
 } from '../../utils/formValidators';
-import './Login.css';
+import './login.css';
 
 const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
   const navigate = useNavigate();
