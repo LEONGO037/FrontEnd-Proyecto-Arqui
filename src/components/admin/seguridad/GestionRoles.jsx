@@ -105,6 +105,7 @@ const GestionRoles = () => {
   const [permisos, setPermisos] = useState([]);   // all permission objects {id, nombre}
   const [matriz, setMatriz] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
+  const [errorUsuarios, setErrorUsuarios] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
@@ -125,22 +126,28 @@ const GestionRoles = () => {
   const cargar = useCallback(async () => {
     setCargando(true);
     setError('');
+    setErrorUsuarios('');
     try {
-      const [r, p, m, u] = await Promise.all([
+      const [r, p, m] = await Promise.all([
         rbacApi.getRoles(),
         rbacApi.getPermisos(),
         rbacApi.getMatriz(),
-        rbacApi.getUsuarios(),
       ]);
       setRoles(r);
       setPermisos(p);
       setMatriz(m);
-      setUsuarios(u);
     } catch (e) {
       setError(e.message);
     } finally {
       setCargando(false);
     }
+    // Usuarios se carga por separado; un 403 aquí no rompe las otras tabs
+    rbacApi.getUsuarios()
+      .then(setUsuarios)
+      .catch((e) => setErrorUsuarios(e.status === 403
+        ? 'Tu rol no tiene el permiso "usuarios:gestionar". Asígnalo desde la tab Roles y Permisos.'
+        : e.message
+      ));
   }, []);
 
   useEffect(() => { cargar(); }, [cargar]);
@@ -548,6 +555,7 @@ const GestionRoles = () => {
                   onChange={(e) => setBusqueda(e.target.value)}
                 />
               </div>
+              {errorUsuarios && <div className="gr-error">{errorUsuarios}</div>}
               <div className="gr-table-wrap">
                 <table className="gr-table">
                   <thead>
