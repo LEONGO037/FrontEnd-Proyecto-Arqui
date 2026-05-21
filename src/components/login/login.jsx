@@ -129,7 +129,6 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
           nombre: formData.nombre,
           apellido_paterno: formData.apellido_paterno,
           apellido_materno: formData.apellido_materno,
-          ci_nit: '', telefono: '', direccion: '',
           email: formData.email, password: formData.password,
         });
         onClose?.();
