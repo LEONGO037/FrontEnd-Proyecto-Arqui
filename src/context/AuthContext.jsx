@@ -164,6 +164,7 @@ export const AuthProvider = ({ children }) => {
       logout,
       getRol,
       getToken,
+      refreshPermisos,
       inscribirCurso,
       desinscribirCurso,
       estaInscrito,

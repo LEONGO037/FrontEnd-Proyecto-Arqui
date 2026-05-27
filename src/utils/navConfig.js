@@ -10,7 +10,8 @@ export const NAV_LINKS = [
   { id: 'inscripciones',    path: '/admin/inscripciones',    label: 'Inscripciones',                 permiso: PERMISSIONS.INSCRIPCIONES_GESTIONAR },
   { id: 'pagos',            path: '/admin/pagos',            label: 'Pagos',                         permiso: PERMISSIONS.PAGOS_VER },
   { id: 'reportes',         path: '/admin/reportes',         label: 'Reportes',                      permiso: PERMISSIONS.REPORTES_VER },
-  { id: 'auditoria',        path: '/admin/auditoria',        label: 'Auditoría',                     permiso: PERMISSIONS.AUDITORIA_VER },
+  { id: 'auditoria',        path: '/admin/auditoria',        label: 'Logs de Aplicación',            permiso: PERMISSIONS.AUDITORIA_VER },
+  { id: 'logs-seguridad',   path: '/admin/logs-seguridad',   label: 'Logs de Seguridad',             permiso: PERMISSIONS.LOGS_SEGURIDAD },
   { id: 'riesgos',          path: '/admin/riesgos',          label: 'Gestión de Riesgos',            permiso: PERMISSIONS.RIESGOS_VER },
 ];
 
@@ -82,10 +83,19 @@ export const MENU_CARDS = [
     id: 'auditoria',
     path: '/admin/auditoria',
     icon: '🧾',
-    title: 'Auditoría',
-    desc: 'Consulta el registro de actividad del sistema.',
+    title: 'Logs de Aplicación',
+    desc: 'Eventos funcionales del sistema: módulos, errores, IP de origen.',
     color: '#0f766e',
     permiso: PERMISSIONS.AUDITORIA_VER,
+  },
+  {
+    id: 'logs-seguridad',
+    path: '/admin/logs-seguridad',
+    icon: '🔒',
+    title: 'Logs de Seguridad',
+    desc: 'Inicios de sesión, bloqueos, tokens inválidos y accesos denegados.',
+    color: '#dc2626',
+    permiso: PERMISSIONS.LOGS_SEGURIDAD,
   },
   {
     id: 'riesgos',

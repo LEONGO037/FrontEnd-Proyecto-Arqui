@@ -2,20 +2,34 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserHeaderDynamic from '../layout/UserHeaderDynamic';
 import Footer from '../layout/footerPrincipal';
-import { getLogsAplicacion } from '../../services/auditoriaApi';
+import { getLogsSeguridad } from '../../services/auditoriaApi';
 import './adminAuditoria.css';
 
-const NIVELES = ['', 'INFO', 'WARN', 'ERROR'];
-
-const NIVEL_COLORS = {
-    INFO:  { background: '#dbeafe', color: '#1d4ed8' },
-    WARN:  { background: '#fef3c7', color: '#92400e' },
-    ERROR: { background: '#fee2e2', color: '#991b1b' },
+const EVENTO_LABELS = {
+    LOGIN_EXITOSO:             'Inicio de sesión exitoso',
+    LOGIN_FALLIDO:             'Intento de login fallido',
+    LOGIN_BLOQUEADO:           'Login bloqueado',
+    CUENTA_BLOQUEADA:          'Cuenta bloqueada',
+    CUENTA_DESBLOQUEADA:       'Cuenta desbloqueada',
+    CIERRE_SESION:             'Cierre de sesión',
+    TOKEN_INVALIDO:            'Token inválido',
+    TOKEN_EXPIRADO:            'Token expirado',
+    ACCESO_DENEGADO:           'Acceso denegado',
+    PERMISO_DENEGADO:          'Permiso denegado',
+    PERMISO_DENEGADO_FRONTEND: 'Acceso denegado (frontend)',
+    CAMBIO_PASSWORD:           'Cambio de contraseña',
+    RESET_PASSWORD_SOLICITADO: 'Reset de contraseña solicitado',
+    ACTIVIDAD_SOSPECHOSA:      'Actividad sospechosa',
 };
+
+const EXITO_FILTROS = [
+    { value: '', label: 'Todos' },
+    { value: 'true', label: 'Exitosos' },
+    { value: 'false', label: 'Fallidos / Denegados' },
+];
 
 const formatDate = (value) => {
     if (!value) return '-';
-    // PostgreSQL format: "2026-05-26 21:57:00.863+00" — normalize to ISO 8601
     const normalized = String(value)
         .replace(' ', 'T')
         .replace(/\+00$/, '+00:00');
@@ -38,6 +52,8 @@ const simplificarNavegador = (ua) => {
     return ua.slice(0, 28);
 };
 
+const etiquetarEvento = (evento) => EVENTO_LABELS[evento] || evento;
+
 const tieneDetalle = (detalle) =>
     detalle && typeof detalle === 'object' && Object.keys(detalle).length > 0;
 
@@ -45,26 +61,38 @@ const exportarJSON = (registros) => {
     const exportData = registros.map((r) => ({
         id: r.id,
         fecha: r.fecha,
-        nivel: r.nivel,
-        modulo: r.modulo,
         evento: r.evento,
-        mensaje: r.mensaje,
-        usuario: r.usuario_nombre || 'Sistema',
-        email: r.usuario_email || null,
+        descripcion_evento: etiquetarEvento(r.evento),
+        resultado: r.exito ? 'Exitoso' : 'Fallido',
+        usuario: r.usuario_nombre || null,
+        email: r.email || null,
         ip: r.ip || null,
         navegador: r.user_agent || null,
+        ruta: r.ruta || null,
+        metodo_http: r.metodo || null,
         detalle: r.detalle,
     }));
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `logs_aplicacion_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `logs_seguridad_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
 };
 
-const AdminAuditoria = () => {
+const ResultadoBadge = ({ exito }) => (
+    <span
+        className="auditoria-badge"
+        style={exito
+            ? { background: '#dcfce7', color: '#166534' }
+            : { background: '#fee2e2', color: '#991b1b' }}
+    >
+        {exito ? 'Exitoso' : 'Fallido'}
+    </span>
+);
+
+const AdminLogsSeguridad = () => {
     const navigate = useNavigate();
 
     const [registros, setRegistros] = useState([]);
@@ -72,23 +100,25 @@ const AdminAuditoria = () => {
     const [error, setError] = useState('');
     const [expandido, setExpandido] = useState(null);
 
-    const [filtroNivel, setFiltroNivel] = useState('');
-    const [filtroModulo, setFiltroModulo] = useState('');
     const [filtroEvento, setFiltroEvento] = useState('');
+    const [filtroExito, setFiltroExito] = useState('');
+    const [filtroEmail, setFiltroEmail] = useState('');
+    const [filtroIp, setFiltroIp] = useState('');
 
     const fetchLogs = async () => {
         try {
             setLoading(true);
             setError('');
-            const response = await getLogsAplicacion({
-                nivel: filtroNivel || undefined,
-                modulo: filtroModulo.trim() || undefined,
+            const response = await getLogsSeguridad({
                 evento: filtroEvento.trim() || undefined,
+                exito: filtroExito !== '' ? filtroExito : undefined,
+                email: filtroEmail.trim() || undefined,
+                ip: filtroIp.trim() || undefined,
                 limite: 150,
             });
             setRegistros(response?.datos || []);
         } catch (err) {
-            setError(err.message || 'No se pudieron cargar los logs.');
+            setError(err.message || 'No se pudieron cargar los logs de seguridad.');
         } finally {
             setLoading(false);
         }
@@ -112,9 +142,9 @@ const AdminAuditoria = () => {
                             {'<'}
                         </button>
                         <div>
-                            <h1 className="admin-auditoria-title">Logs de Aplicación</h1>
+                            <h1 className="admin-auditoria-title">Logs de Seguridad</h1>
                             <p className="admin-auditoria-subtitle">
-                                Eventos funcionales del sistema: módulos, acciones, errores e IP de origen.
+                                Eventos de autenticación, bloqueos, tokens y accesos denegados — con IP y navegador.
                             </p>
                         </div>
                         <button
@@ -124,7 +154,7 @@ const AdminAuditoria = () => {
                             style={{
                                 marginLeft: 'auto',
                                 padding: '0.5rem 1rem',
-                                background: '#0f766e',
+                                background: '#dc2626',
                                 color: '#fff',
                                 border: 'none',
                                 borderRadius: 8,
@@ -140,25 +170,31 @@ const AdminAuditoria = () => {
                     </header>
 
                     <form className="auditoria-filtros" onSubmit={onSubmitFiltros}>
-                        <select
-                            value={filtroNivel}
-                            onChange={(e) => setFiltroNivel(e.target.value)}
-                        >
-                            {NIVELES.map((n) => (
-                                <option key={n} value={n}>{n || 'Todos los niveles'}</option>
-                            ))}
-                        </select>
-                        <input
-                            type="text"
-                            value={filtroModulo}
-                            onChange={(e) => setFiltroModulo(e.target.value)}
-                            placeholder="Filtrar por módulo"
-                        />
                         <input
                             type="text"
                             value={filtroEvento}
                             onChange={(e) => setFiltroEvento(e.target.value)}
-                            placeholder="Filtrar por evento"
+                            placeholder="Tipo de evento (ej: LOGIN)"
+                        />
+                        <select
+                            value={filtroExito}
+                            onChange={(e) => setFiltroExito(e.target.value)}
+                        >
+                            {EXITO_FILTROS.map((f) => (
+                                <option key={f.value} value={f.value}>{f.label}</option>
+                            ))}
+                        </select>
+                        <input
+                            type="text"
+                            value={filtroEmail}
+                            onChange={(e) => setFiltroEmail(e.target.value)}
+                            placeholder="Filtrar por email"
+                        />
+                        <input
+                            type="text"
+                            value={filtroIp}
+                            onChange={(e) => setFiltroIp(e.target.value)}
+                            placeholder="Filtrar por IP"
                         />
                         <button type="submit">Buscar</button>
                         <button type="button" onClick={fetchLogs}>Refrescar</button>
@@ -170,25 +206,25 @@ const AdminAuditoria = () => {
                         <div className="spinner-container"><div className="spinner" /></div>
                     ) : (
                         <section className="admin-table-wrapper">
-                            <table className="admin-pagos-table logs-app-table">
+                            <table className="admin-pagos-table logs-seg-table">
                                 <colgroup>
                                     <col />{/* Fecha */}
-                                    <col />{/* Nivel */}
-                                    <col />{/* Módulo/Evento */}
-                                    <col />{/* Mensaje */}
-                                    <col />{/* Usuario */}
+                                    <col />{/* Evento */}
+                                    <col />{/* Resultado */}
+                                    <col />{/* Email/Usuario */}
                                     <col />{/* IP */}
+                                    <col />{/* Ruta */}
                                     <col />{/* Navegador */}
                                     <col />{/* Detalle */}
                                 </colgroup>
                                 <thead>
                                     <tr>
                                         <th>Fecha</th>
-                                        <th>Nivel</th>
-                                        <th>Módulo / Evento</th>
-                                        <th>Mensaje</th>
-                                        <th>Usuario</th>
+                                        <th>Evento</th>
+                                        <th>Resultado</th>
+                                        <th>Email / Usuario</th>
                                         <th>IP</th>
+                                        <th>Ruta</th>
                                         <th>Navegador</th>
                                         <th>Detalle</th>
                                     </tr>
@@ -197,7 +233,7 @@ const AdminAuditoria = () => {
                                     {registros.length === 0 ? (
                                         <tr>
                                             <td colSpan="8" style={{ textAlign: 'center', padding: '2rem' }}>
-                                                No se encontraron registros.
+                                                No se encontraron eventos de seguridad.
                                             </td>
                                         </tr>
                                     ) : (
@@ -208,41 +244,36 @@ const AdminAuditoria = () => {
                                                         {formatDate(item.fecha)}
                                                     </td>
                                                     <td>
-                                                        {(() => {
-                                                            const nv = (item.nivel || '').trim().toUpperCase();
-                                                            return (
-                                                                <span
-                                                                    className="auditoria-badge"
-                                                                    style={NIVEL_COLORS[nv] || { background: '#e2e8f0', color: '#475569' }}
-                                                                >
-                                                                    {nv || '-'}
-                                                                </span>
-                                                            );
-                                                        })()}
+                                                        <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>
+                                                            {etiquetarEvento(item.evento)}
+                                                        </div>
+                                                        <div style={{ color: '#94a3b8', fontSize: '0.72rem', marginTop: 2 }}>
+                                                            {item.evento}
+                                                        </div>
                                                     </td>
                                                     <td>
-                                                        <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>
-                                                            {item.modulo || '-'}
-                                                        </div>
-                                                        <div style={{ color: '#64748b', fontSize: '0.74rem', marginTop: 2 }}>
-                                                            {item.evento || '-'}
-                                                        </div>
-                                                    </td>
-                                                    <td style={{ fontSize: '0.82rem' }}>
-                                                        {item.mensaje || '-'}
+                                                        <ResultadoBadge exito={item.exito} />
                                                     </td>
                                                     <td>
                                                         <div className="auditoria-usuario">
-                                                            {item.usuario_nombre || 'Sistema'}
+                                                            {item.usuario_nombre || item.email || 'Desconocido'}
                                                         </div>
-                                                        <div className="auditoria-email">
-                                                            {item.usuario_email || '-'}
-                                                        </div>
+                                                        {item.usuario_nombre && item.email && (
+                                                            <div className="auditoria-email">{item.email}</div>
+                                                        )}
                                                     </td>
                                                     <td>
-                                                        <code style={{ fontSize: '0.78rem', color: '#0f766e' }}>
+                                                        <code style={{ fontSize: '0.78rem', color: '#dc2626' }}>
                                                             {item.ip || '-'}
                                                         </code>
+                                                    </td>
+                                                    <td style={{ fontSize: '0.78rem', color: '#475569' }}>
+                                                        {item.metodo && (
+                                                            <strong style={{ marginRight: 4 }}>{item.metodo}</strong>
+                                                        )}
+                                                        {item.ruta
+                                                            ? <span title={item.ruta}>{item.ruta.length > 35 ? item.ruta.slice(0, 35) + '…' : item.ruta}</span>
+                                                            : '-'}
                                                     </td>
                                                     <td style={{ fontSize: '0.78rem', color: '#64748b' }}>
                                                         {simplificarNavegador(item.user_agent)}
@@ -272,7 +303,7 @@ const AdminAuditoria = () => {
                                                 {expandido === item.id && (
                                                     <tr className="auditoria-detalle-row">
                                                         <td colSpan="8">
-                                                            <div className="auditoria-detalle-inner" style={{ background: '#f8fafc' }}>
+                                                            <div className="auditoria-detalle-inner" style={{ background: '#fef2f2' }}>
                                                                 <pre>
                                                                     {JSON.stringify(item.detalle, null, 2)}
                                                                 </pre>
@@ -295,4 +326,4 @@ const AdminAuditoria = () => {
     );
 };
 
-export default AdminAuditoria;
+export default AdminLogsSeguridad;

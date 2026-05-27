@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import UserHeaderDynamic from '../../layout/UserHeaderDynamic';
 import Footer from '../../layout/footerPrincipal';
 import rbacApi from '../../../services/rbacApi';
+import { useAuth } from '../../../context/AuthContext';
 import './GestionRoles.css';
 
 const TAB = { ROLES: 0, MATRIZ: 1, USUARIOS: 2 };
@@ -55,9 +56,16 @@ const GRUPOS = [
   {
     key: 'auditoria',
     icon: '🧾',
-    label: 'Auditoría',
-    desc: 'Consultar el registro de actividad del sistema (solo lectura)',
+    label: 'Logs de Aplicación',
+    desc: 'Ver eventos funcionales del sistema: módulos, acciones y errores (solo lectura)',
     permisos: [PERMISSIONS.AUDITORIA_VER],
+  },
+  {
+    key: 'logs-seguridad',
+    icon: '🔒',
+    label: 'Logs de Seguridad',
+    desc: 'Ver logins, bloqueos, tokens inválidos y accesos denegados (solo lectura)',
+    permisos: [PERMISSIONS.LOGS_SEGURIDAD],
   },
   {
     key: 'estudiante',
@@ -83,7 +91,8 @@ const PERMISO_LABEL = {
   [PERMISSIONS.INSCRIPCIONES_GESTIONAR]: 'Gestión de inscripciones',
   [PERMISSIONS.PAGOS_VER]:               'Ver pagos (solo lectura)',
   [PERMISSIONS.REPORTES_VER]:            'Ver y descargar reportes',
-  [PERMISSIONS.AUDITORIA_VER]:           'Ver auditoría (solo lectura)',
+  [PERMISSIONS.AUDITORIA_VER]:           'Ver logs de aplicación (solo lectura)',
+  [PERMISSIONS.LOGS_SEGURIDAD]:          'Ver logs de seguridad (solo lectura)',
   [PERMISSIONS.USUARIO_ESTUDIANTE]:      'Acceso completo de estudiante',
   [PERMISSIONS.USUARIO_DOCENTE]:         'Acceso completo de docente',
 };
@@ -104,6 +113,7 @@ const TOTAL_PERMISOS = GRUPOS.reduce((s, g) => s + g.permisos.length, 0);
 // ─────────────────────────────────────────────────────────────────────────────
 
 const GestionRoles = () => {
+  const { refreshPermisos } = useAuth();
   const [tab, setTab] = useState(TAB.ROLES);
   const [roles, setRoles] = useState([]);
   const [permisos, setPermisos] = useState([]);   // all permission objects {id, nombre}
@@ -130,16 +140,17 @@ const GestionRoles = () => {
     setCargando(true);
     setError('');
     try {
-      const [r, p, m, u] = await Promise.all([
+      const [r, p, m, u] = await Promise.allSettled([
         rbacApi.getRoles(),
         rbacApi.getPermisos(),
         rbacApi.getMatriz(),
         rbacApi.getUsuarios({ includeInactive: true }),
       ]);
-      setRoles(r);
-      setPermisos(p);
-      setMatriz(m);
-      setUsuarios(u);
+      if (r.status === 'fulfilled') setRoles(r.value);
+      else setError(r.reason?.message || 'Error cargando roles');
+      if (p.status === 'fulfilled') setPermisos(p.value);
+      if (m.status === 'fulfilled') setMatriz(m.value);
+      if (u.status === 'fulfilled') setUsuarios(u.value);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -192,27 +203,34 @@ const GestionRoles = () => {
     setSaving(true);
     setSaveError('');
     try {
-      const findId = (name) => permisos.find((p) => p.nombre === name)?.id;
-
       const toAdd    = localPermisos.filter((p) => !originalPermisos.includes(p));
       const toRemove = originalPermisos.filter((p) => !localPermisos.includes(p));
 
+      if (toAdd.length === 0 && toRemove.length === 0) {
+        closeEditor();
+        return;
+      }
+
+      // Always fetch fresh permission list so IDs are never stale/empty
+      const freshPermisos = await rbacApi.getPermisos();
+      const findId = (name) => freshPermisos.find((p) => p.nombre === name)?.id;
+
+      const missing = [...toAdd, ...toRemove].filter((name) => !findId(name));
+      if (missing.length > 0) {
+        throw new Error(`Permisos no encontrados en DB: ${missing.join(', ')}`);
+      }
+
       await Promise.all([
-        ...toAdd.map((name) => {
-          const id = findId(name);
-          return id ? rbacApi.assignPermiso(selectedRol.id, id) : Promise.resolve();
-        }),
-        ...toRemove.map((name) => {
-          const id = findId(name);
-          return id ? rbacApi.removePermiso(selectedRol.id, id) : Promise.resolve();
-        }),
+        ...toAdd.map((name)    => rbacApi.assignPermiso(selectedRol.id, findId(name))),
+        ...toRemove.map((name) => rbacApi.removePermiso(selectedRol.id, findId(name))),
       ]);
 
+      setPermisos(freshPermisos);
       setOriginalPermisos([...localPermisos]);
       setMsgExito(`Permisos de "${selectedRol.nombre}" guardados correctamente.`);
       setTimeout(() => setMsgExito(''), 4000);
-      // Refresh roles list silently (no spinner)
       rbacApi.getRoles().then(setRoles).catch(() => {});
+      refreshPermisos?.().catch(() => {});
       closeEditor();
     } catch (e) {
       setSaveError(e.message);

@@ -29,6 +29,7 @@ import GestionRoles from './components/admin/seguridad/GestionRoles';
 import CrearCuentas from './components/admin/cuentas/CrearCuentas';
 import RiesgosDashboard from './components/admin/riesgos/RiesgosDashboard';
 import RiesgoDetalle from './components/admin/riesgos/RiesgoDetalle';
+import AdminLogsSeguridad from './components/admin/adminLogsSeguridad';
 
 import EstudiantePagos from './components/estudiante/estudiantePagos';
 import HeaderEstudiante from './components/estudiante/headerEstudiante';
@@ -247,6 +248,15 @@ function AppContent() {
           element={
             <PermisoProtectedRoute permiso={PERMISSIONS.ROLES_GESTIONAR}>
               <GestionRoles />
+            </PermisoProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/logs-seguridad"
+          element={
+            <PermisoProtectedRoute permiso={PERMISSIONS.LOGS_SEGURIDAD}>
+              <AdminLogsSeguridad />
             </PermisoProtectedRoute>
           }
         />
