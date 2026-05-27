@@ -13,6 +13,7 @@ export const NAV_LINKS = [
   { id: 'logs-aplicacion',  path: '/admin/logs-aplicacion',  label: 'Logs Aplicación',               permiso: PERMISSIONS.LOGS_APLICACION_VER },
   { id: 'logs-seguridad',   path: '/admin/logs-seguridad',   label: 'Logs Seguridad',                permiso: PERMISSIONS.LOGS_SEGURIDAD_VER },
   { id: 'riesgos',          path: '/admin/riesgos',          label: 'Gestión de Riesgos',            permiso: PERMISSIONS.RIESGOS_VER },
+  { id: 'matriz-riesgos',   path: '/admin/matriz-riesgos',   label: 'Matriz de Riesgos',             permiso: PERMISSIONS.RIESGOS_VER },
 ];
 
 export const MENU_CARDS = [
@@ -104,6 +105,15 @@ export const MENU_CARDS = [
     title: 'Gestión de Riesgos',
     desc: 'Detecta incidentes de seguridad, gestiona planes de mitigación.',
     color: '#b91c1c',
+    permiso: PERMISSIONS.RIESGOS_VER,
+  },
+  {
+    id: 'matriz-riesgos',
+    path: '/admin/matriz-riesgos',
+    icon: '📊',
+    title: 'Matriz de Riesgos',
+    desc: 'Efectúa el análisis, mitigación y control del riesgo residual.',
+    color: '#8bc63f',
     permiso: PERMISSIONS.RIESGOS_VER,
   },
 ];
