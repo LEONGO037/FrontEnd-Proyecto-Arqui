@@ -75,6 +75,19 @@ export const actualizarPlanAccion = (planId, data) =>
 export const ejecutarDeteccion = () =>
     request('/api/riesgos/deteccion/ejecutar', { method: 'POST' });
 
+// ───── Matriz de Análisis de Riesgos ───────────────────────────────────────
+export const getMatrizRiesgos = () =>
+    request('/api/riesgos/matriz');
+
+export const crearItemMatriz = (data) =>
+    request('/api/riesgos/matriz', { method: 'POST', body: JSON.stringify(data) });
+
+export const actualizarItemMatriz = (id, data) =>
+    request(`/api/riesgos/matriz/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+
+export const eliminarItemMatriz = (id) =>
+    request(`/api/riesgos/matriz/${id}`, { method: 'DELETE' });
+
 export default {
     getCatalogo,
     getResumen,
@@ -85,4 +98,8 @@ export default {
     crearPlanAccion,
     actualizarPlanAccion,
     ejecutarDeteccion,
+    getMatrizRiesgos,
+    crearItemMatriz,
+    actualizarItemMatriz,
+    eliminarItemMatriz,
 };
