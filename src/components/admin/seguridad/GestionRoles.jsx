@@ -53,11 +53,18 @@ const GRUPOS = [
     permisos: [PERMISSIONS.REPORTES_VER],
   },
   {
-    key: 'auditoria',
-    icon: '🧾',
-    label: 'Auditoría',
-    desc: 'Consultar el registro de actividad del sistema (solo lectura)',
-    permisos: [PERMISSIONS.AUDITORIA_VER],
+    key: 'logs_aplicacion',
+    icon: '📊',
+    label: 'Logs de Aplicación',
+    desc: 'Consultar eventos de funcionalidades críticas (solo lectura)',
+    permisos: [PERMISSIONS.LOGS_APLICACION_VER],
+  },
+  {
+    key: 'logs_seguridad',
+    icon: '🛡️',
+    label: 'Logs de Seguridad',
+    desc: 'Consultar inicios de sesión, intentos fallidos y bloqueos (solo lectura)',
+    permisos: [PERMISSIONS.LOGS_SEGURIDAD_VER],
   },
   {
     key: 'estudiante',
@@ -83,7 +90,8 @@ const PERMISO_LABEL = {
   [PERMISSIONS.INSCRIPCIONES_GESTIONAR]: 'Gestión de inscripciones',
   [PERMISSIONS.PAGOS_VER]:               'Ver pagos (solo lectura)',
   [PERMISSIONS.REPORTES_VER]:            'Ver y descargar reportes',
-  [PERMISSIONS.AUDITORIA_VER]:           'Ver auditoría (solo lectura)',
+  [PERMISSIONS.LOGS_APLICACION_VER]:     'Ver logs de aplicación',
+  [PERMISSIONS.LOGS_SEGURIDAD_VER]:      'Ver logs de seguridad',
   [PERMISSIONS.USUARIO_ESTUDIANTE]:      'Acceso completo de estudiante',
   [PERMISSIONS.USUARIO_DOCENTE]:         'Acceso completo de docente',
 };
