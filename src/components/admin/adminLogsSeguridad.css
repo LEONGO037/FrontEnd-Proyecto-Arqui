@@ -2,7 +2,7 @@
 
 .admin-logs-container.security-theme {
     padding: 2rem;
-    max-width: 1500px;
+    max-width: 1300px;
     margin: 0 auto;
     background: radial-gradient(1200px circle at 50% 200px, rgba(245, 158, 11, 0.04), transparent 80%),
                 radial-gradient(800px circle at 10% 300px, rgba(239, 68, 68, 0.03), transparent 60%);
@@ -83,10 +83,7 @@
     font-family: 'Fira Code', monospace;
     font-size: 0.8rem;
     color: #475569;
-    display: inline-block;
+    display: flex;
+    align-items: center;
     margin-top: 0.25rem;
-    word-break: break-all;
-    white-space: normal;
-    line-height: 1.4;
-    max-width: 320px;
 }
