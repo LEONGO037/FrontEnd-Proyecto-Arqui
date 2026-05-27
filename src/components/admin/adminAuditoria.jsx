@@ -51,6 +51,10 @@ const explicarDetalle = (item) => {
     }
 
     if (accion === 'UPDATE') {
+        if (data?.cambios && Array.isArray(data.cambios)) {
+            const listado = data.cambios.map(c => `[${c.campo}]: "${c.anterior !== null && c.anterior !== undefined ? c.anterior : ''}" -> "${c.nuevo !== null && c.nuevo !== undefined ? c.nuevo : ''}"`).join(', ');
+            return `Se actualizaron campos en ${tabla}: ${listado || 'Ninguno'}.`;
+        }
         if (data && Object.keys(data).length) {
             const campos = Object.keys(data).join(', ');
             return `Se actualizaron los campos [${campos}] en ${tabla}.`;

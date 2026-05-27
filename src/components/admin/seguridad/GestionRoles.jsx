@@ -121,6 +121,7 @@ const GestionRoles = () => {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
   const [msgExito, setMsgExito] = useState('');
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
 
   // New-role form
   const [showNuevoRol, setShowNuevoRol] = useState(false);
@@ -139,8 +140,8 @@ const GestionRoles = () => {
     setError('');
     try {
       const [r, p, m, u] = await Promise.all([
-        rbacApi.getRoles(),
-        rbacApi.getPermisos(),
+        rbacApi.getRoles({ includeInactive: mostrarInactivos }),
+        rbacApi.getPermisos({ includeInactive: mostrarInactivos }),
         rbacApi.getMatriz(),
         rbacApi.getUsuarios({ includeInactive: true }),
       ]);
@@ -153,7 +154,7 @@ const GestionRoles = () => {
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [mostrarInactivos]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
@@ -325,9 +326,19 @@ const GestionRoles = () => {
               {/* Header + New Role button */}
               <div className="gr-section-header">
                 <h2>Roles ({roles.length})</h2>
-                <button className="gr-btn-primary" onClick={() => setShowNuevoRol(!showNuevoRol)}>
-                  {showNuevoRol ? '✕ Cancelar' : '+ Nuevo Rol'}
-                </button>
+                <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={mostrarInactivos}
+                      onChange={(e) => setMostrarInactivos(e.target.checked)}
+                    />
+                    Mostrar inactivos
+                  </label>
+                  <button className="gr-btn-primary" onClick={() => setShowNuevoRol(!showNuevoRol)}>
+                    {showNuevoRol ? '✕ Cancelar' : '+ Nuevo Rol'}
+                  </button>
+                </div>
               </div>
 
               {showNuevoRol && (

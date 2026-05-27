@@ -40,6 +40,7 @@ export default function AdminGestionUsuarios() {
   const [success, setSuccess] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [filtroRol, setFiltroRol] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('activos');
 
   // Modal de confirmación de eliminación
   const [modalEliminar, setModalEliminar] = useState(null);
@@ -51,7 +52,7 @@ export default function AdminGestionUsuarios() {
     setLoading(true);
     setError('');
     try {
-      const u = await getUsuarios();
+      const u = await getUsuarios({ includeInactive: true });
       setUsuarios(u);
     } catch (err) {
       setError(err.message || 'Error al cargar usuarios');
@@ -109,7 +110,20 @@ export default function AdminGestionUsuarios() {
       u.apellido_paterno?.toLowerCase().includes(texto) ||
       u.email?.toLowerCase().includes(texto);
     const coincideRol = !filtroRol || u.rol_nombre === filtroRol;
-    return coincideTexto && coincideRol;
+
+    const bloqueado = isBloqueado(u.bloqueado_hasta);
+    const inactivo = u.activo === false;
+    let coincideEstado = true;
+
+    if (filtroEstado === 'activos') {
+      coincideEstado = !inactivo && !bloqueado;
+    } else if (filtroEstado === 'inactivos') {
+      coincideEstado = inactivo;
+    } else if (filtroEstado === 'bloqueados') {
+      coincideEstado = bloqueado && !inactivo;
+    }
+
+    return coincideTexto && coincideRol && coincideEstado;
   });
 
   const rolesUnicos = [...new Set(usuarios.map(u => u.rol_nombre).filter(Boolean))].sort();
@@ -156,6 +170,16 @@ export default function AdminGestionUsuarios() {
             >
               <option value="">Todos los roles</option>
               {rolesUnicos.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <select
+              className="gu-select"
+              value={filtroEstado}
+              onChange={e => setFiltroEstado(e.target.value)}
+            >
+              <option value="">Todos los estados</option>
+              <option value="activos">Solo activos</option>
+              <option value="inactivos">Solo inactivos</option>
+              <option value="bloqueados">Solo bloqueados</option>
             </select>
           </div>
 

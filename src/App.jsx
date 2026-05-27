@@ -26,6 +26,7 @@ import GestionInscripciones from './components/admin/gestionInscripciones';
 import AdminReportes from './components/admin/adminReportes';
 import AdminLogsAplicacion from './components/admin/adminLogsAplicacion';
 import AdminLogsSeguridad from './components/admin/adminLogsSeguridad';
+import AdminAuditoria from './components/admin/adminAuditoria';
 import GestionRoles from './components/admin/seguridad/GestionRoles';
 import CrearCuentas from './components/admin/cuentas/CrearCuentas';
 import RiesgosDashboard from './components/admin/riesgos/RiesgosDashboard';
@@ -248,6 +249,15 @@ function AppContent() {
           element={
             <PermisoProtectedRoute permiso={PERMISSIONS.LOGS_SEGURIDAD_VER}>
               <AdminLogsSeguridad />
+            </PermisoProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/auditoria"
+          element={
+            <PermisoProtectedRoute permiso={null}>
+              <AdminAuditoria />
             </PermisoProtectedRoute>
           }
         />
