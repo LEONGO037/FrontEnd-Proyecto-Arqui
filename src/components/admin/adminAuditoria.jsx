@@ -10,13 +10,17 @@ const formatDate = (value) => {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '-';
 
-    return date.toLocaleString('es-BO', {
-        year: 'numeric',
-        month: 'short',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+    try {
+        return date.toLocaleString('es-BO', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    } catch {
+        return date.toLocaleString();
+    }
 };
 
 const stringifyDetalle = (detalle) => {
