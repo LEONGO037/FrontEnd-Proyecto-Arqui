@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getMatrizRiesgos, crearItemMatriz, actualizarItemMatriz, eliminarItemMatriz } from '../../../services/riesgosApi';
+import { getUsuarios } from '../../../services/rbacApi';
+import * as XLSX from 'xlsx';
 import './MatrizRiesgos.css';
 
 const CALCULAR_NIVEL = (valor) => {
     if (valor >= 20) return 'Extremo';
-    if (valor >= 11) return 'Alto';
-    if (valor >= 6) return 'Moderado';
+    if (valor >= 10) return 'Alto';
+    if (valor >= 5) return 'Moderado';
     return 'Bajo';
 };
 
@@ -16,35 +18,55 @@ const COLOR_NIVEL = {
     Bajo: '#22c55e',    // Green
 };
 
+const defaultThreat = () => ({
+    id: 't_' + Math.random().toString(36).substring(2, 9),
+    amenaza_vulnerabilidad: '',
+    consecuencia_riesgo: '',
+    probabilidad_inherente: 3,
+    impacto_inherente: 3,
+    riesgo_inherente: 9,
+    nivel_riesgo_inherente: 'Moderado',
+    tratamiento_riesgo: 'Reducir',
+    controles_implementar: '',
+    control_tipo: 'P',
+    control_nivel: 'S',
+    control_frecuencia: 'PT',
+    probabilidad_residual: 1,
+    impacto_residual: 1,
+    riesgo_residual: 1,
+    nivel_riesgo_residual: 'Bajo',
+    plan_accion: [''],
+    fecha_limite: '',
+    responsable_id: null,
+    responsable_nombre: '',
+});
+
 const MatrizRiesgos = ({ puedeGestionar }) => {
     const [matriz, setMatriz] = useState([]);
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState('');
+    const [exitoMsg, setExitoMsg] = useState('');
     const [modalAbierto, setModalAbierto] = useState(false);
+    const [modalExplicativoAbierto, setModalExplicativoAbierto] = useState(false);
     const [editandoId, setEditandoId] = useState(null);
+    const [usuariosAdmins, setUsuariosAdmins] = useState([]);
+    const fileInputRef = useRef(null);
 
     const [form, setForm] = useState({
         activo_informacion: '',
-        amenaza_vulnerabilidad: '',
-        consecuencia_riesgo: '',
-        probabilidad_inherente: 3,
-        impacto_inherente: 3,
-        tratamiento_riesgo: 'Reducir',
-        controles_implementar: '',
-        control_tipo: 'P',
-        control_nivel: 'S',
-        control_frecuencia: 'PT',
-        probabilidad_residual: 1,
-        impacto_residual: 1,
-        responsable_nombre: '',
+        amenazas: [defaultThreat()],
     });
 
     const cargarDatos = async () => {
         setCargando(true);
         setError('');
         try {
-            const data = await getMatrizRiesgos();
+            const [data, users] = await Promise.all([
+                getMatrizRiesgos(),
+                getUsuarios().catch(() => []),
+            ]);
             setMatriz(data.datos || []);
+            setUsuariosAdmins((users || []).filter(u => u.rol_name === 'ADMIN_SEGURIDAD' || u.rol_nombre === 'ADMIN_SEGURIDAD'));
         } catch (err) {
             setError(err.message || 'Error al cargar la matriz de riesgos');
         } finally {
@@ -56,21 +78,15 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
         cargarDatos();
     }, []);
 
+    const showSuccess = (msg) => {
+        setExitoMsg(msg);
+        setTimeout(() => setExitoMsg(''), 5000);
+    };
+
     const resetForm = () => {
         setForm({
             activo_informacion: '',
-            amenaza_vulnerabilidad: '',
-            consecuencia_riesgo: '',
-            probabilidad_inherente: 3,
-            impacto_inherente: 3,
-            tratamiento_riesgo: 'Reducir',
-            controles_implementar: '',
-            control_tipo: 'P',
-            control_nivel: 'S',
-            control_frecuencia: 'PT',
-            probabilidad_residual: 1,
-            impacto_residual: 1,
-            responsable_nombre: '',
+            amenazas: [defaultThreat()],
         });
         setEditandoId(null);
     };
@@ -83,53 +99,345 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
     const abrirEditar = (item) => {
         setForm({
             activo_informacion: item.activo_informacion,
-            amenaza_vulnerabilidad: item.amenaza_vulnerabilidad,
-            consecuencia_riesgo: item.consecuencia_riesgo,
-            probabilidad_inherente: item.probabilidad_inherente,
-            impacto_inherente: item.impacto_inherente,
-            tratamiento_riesgo: item.tratamiento_riesgo,
-            controles_implementar: item.controles_implementar,
-            control_tipo: item.control_tipo,
-            control_nivel: item.control_nivel,
-            control_frecuencia: item.control_frecuencia,
-            probabilidad_residual: item.probabilidad_residual,
-            impacto_residual: item.impacto_residual,
-            responsable_nombre: item.responsable_nombre || '',
+            amenazas: Array.isArray(item.amenazas) && item.amenazas.length > 0 
+                ? item.amenazas.map(t => ({
+                    ...t,
+                    plan_accion: Array.isArray(t.plan_accion) ? t.plan_accion : [t.plan_accion || ''],
+                  }))
+                : [defaultThreat()],
         });
         setEditandoId(item.id);
         setModalAbierto(true);
     };
 
+    const handleAddThreat = () => {
+        setForm({
+            ...form,
+            amenazas: [...form.amenazas, defaultThreat()],
+        });
+    };
+
+    const handleRemoveThreat = (index) => {
+        if (form.amenazas.length === 1) return;
+        const copy = [...form.amenazas];
+        copy.splice(index, 1);
+        setForm({ ...form, amenazas: copy });
+    };
+
+    const handleThreatChange = (index, field, value) => {
+        const copy = [...form.amenazas];
+        const threat = { ...copy[index], [field]: value };
+
+        if (field === 'probabilidad_inherente' || field === 'impacto_inherente') {
+            const p = Number(field === 'probabilidad_inherente' ? value : threat.probabilidad_inherente);
+            const i = Number(field === 'impacto_inherente' ? value : threat.impacto_inherente);
+            threat.riesgo_inherente = p * i;
+            threat.nivel_riesgo_inherente = CALCULAR_NIVEL(threat.riesgo_inherente);
+        }
+
+        if (field === 'probabilidad_residual' || field === 'impacto_residual') {
+            const p = Number(field === 'probabilidad_residual' ? value : threat.probabilidad_residual);
+            const i = Number(field === 'impacto_residual' ? value : threat.impacto_residual);
+            threat.riesgo_residual = p * i;
+            threat.nivel_riesgo_residual = CALCULAR_NIVEL(threat.riesgo_residual);
+        }
+
+        copy[index] = threat;
+        setForm({ ...form, amenazas: copy });
+    };
+
+    const handleThreatFieldsChange = (index, fields) => {
+        const copy = [...form.amenazas];
+        const threat = { ...copy[index], ...fields };
+
+        if ('probabilidad_inherente' in fields || 'impacto_inherente' in fields) {
+            const p = Number(threat.probabilidad_inherente);
+            const i = Number(threat.impacto_inherente);
+            threat.riesgo_inherente = p * i;
+            threat.nivel_riesgo_inherente = CALCULAR_NIVEL(threat.riesgo_inherente);
+        }
+
+        if ('probabilidad_residual' in fields || 'impacto_residual' in fields) {
+            const p = Number(threat.probabilidad_residual);
+            const i = Number(threat.impacto_residual);
+            threat.riesgo_residual = p * i;
+            threat.nivel_riesgo_residual = CALCULAR_NIVEL(threat.riesgo_residual);
+        }
+
+        copy[index] = threat;
+        setForm({ ...form, amenazas: copy });
+    };
+
+    const handleAddStep = (threatIndex) => {
+        const copy = [...form.amenazas];
+        const steps = [...(copy[threatIndex].plan_accion || [])];
+        steps.push('');
+        copy[threatIndex] = { ...copy[threatIndex], plan_accion: steps };
+        setForm({ ...form, amenazas: copy });
+    };
+
+    const handleRemoveStep = (threatIndex, stepIndex) => {
+        const copy = [...form.amenazas];
+        const steps = [...(copy[threatIndex].plan_accion || [])];
+        if (steps.length === 1) {
+            steps[0] = '';
+        } else {
+            steps.splice(stepIndex, 1);
+        }
+        copy[threatIndex] = { ...copy[threatIndex], plan_accion: steps };
+        setForm({ ...form, amenazas: copy });
+    };
+
+    const handleStepChange = (threatIndex, stepIndex, value) => {
+        const copy = [...form.amenazas];
+        const steps = [...(copy[threatIndex].plan_accion || [])];
+        steps[stepIndex] = value;
+        copy[threatIndex] = { ...copy[threatIndex], plan_accion: steps };
+        setForm({ ...form, amenazas: copy });
+    };
+
+    const descargarExcelModelo = () => {
+        // Hoja 1: Instrucciones y Responsables
+        const instHeaders = [
+            ["GUÍA DE LLENADO Y REGLAS DE IMPORTACIÓN DE LA MATRIZ DE RIESGOS"],
+            ["1. La hoja 'Matriz (Llenar aquí)' contiene la estructura oficial para cargar los riesgos."],
+            ["2. La columna 'Responsable Email' debe coincidir EXACTAMENTE con el correo de un administrador registrado."],
+            ["3. IMPORTANTE: Si el correo del responsable no coincide, el riesgo se importará pero se quedará como 'Sin responsable asignado'."],
+            ["   Se recomienda encarecidamente verificar los correos válidos a continuación o asignar el responsable directamente en la aplicación."],
+            ["4. En la columna de 'Pasos Plan de Acción', separe cada paso secuencial usando un punto y coma (;)."],
+            ["5. Los campos P (Probabilidad) e I (Impacto) deben ser números enteros entre 1 y 5."],
+            [""],
+            ["LISTA DE ADMINISTRADORES DE SEGURIDAD REGISTRADOS EN EL SISTEMA:"],
+            ["ID", "Nombre Completo", "Correo Electrónico (Usar en la hoja Matriz)"]
+        ];
+
+        // Añadir los administradores reales cargados en el frontend a la lista de ayuda
+        usuariosAdmins.forEach(u => {
+            const fullName = `${u.nombre} ${u.apellido_paterno || ''}`.trim();
+            instHeaders.push([u.id, fullName, u.correo || u.email || 'sin-correo@college.edu']);
+        });
+
+        const wsInstructions = XLSX.utils.aoa_to_sheet(instHeaders);
+
+        // Hoja 2: Datos (Estructura oficial para importar)
+        // Agregamos una fila de EJEMPLO aclarando al inicio y filas vacías para llenar
+        const wsData = [
+            {
+                "Activo de Informacion": "[EJEMPLO - BORRAR] Base de Datos de Inscripciones y Calificaciones",
+                "Amenaza / Vulnerabilidad": "[EJEMPLO] Explotación de fallos de autorización",
+                "Consecuencias / Riesgo": "[EJEMPLO] Alteración de registros académicos",
+                "P Inherente (1-5)": 3,
+                "I Inherente (1-5)": 5,
+                "Tratamiento (Reducir/Aceptar/Evitar/Transferir)": "Reducir",
+                "Controles a Implementar": "Validación estricta de tokens JWT",
+                "Control Tipo (P/D/C/P, D)": "P, D",
+                "Control Nivel (A/S/M)": "A",
+                "Control Frecuencia (PT/D/S/M/A)": "PT",
+                "P Residual (1-5)": 1,
+                "I Residual (1-5)": 5,
+                "Pasos Plan de Accion (Separados por punto y coma ';')": "Auditar código de endpoints; Configurar reglas de WAF; Implementar firmas",
+                "Fecha Limite (AAAA-MM-DD)": "2026-06-15",
+                "Responsable Email (Debe ser un Administrador de Seguridad registrado)": usuariosAdmins[0]?.correo || usuariosAdmins[0]?.email || "admin_seguridad@college.edu"
+            },
+            {
+                "Activo de Informacion": "",
+                "Amenaza / Vulnerabilidad": "",
+                "Consecuencias / Riesgo": "",
+                "P Inherente (1-5)": "",
+                "I Inherente (1-5)": "",
+                "Tratamiento (Reducir/Aceptar/Evitar/Transferir)": "",
+                "Controles a Implementar": "",
+                "Control Tipo (P/D/C/P, D)": "",
+                "Control Nivel (A/S/M)": "",
+                "Control Frecuencia (PT/D/S/M/A)": "",
+                "P Residual (1-5)": "",
+                "I Residual (1-5)": "",
+                "Pasos Plan de Accion (Separados por punto y coma ';')": "",
+                "Fecha Limite (AAAA-MM-DD)": "",
+                "Responsable Email (Debe ser un Administrador de Seguridad registrado)": ""
+            }
+        ];
+
+        const worksheet = XLSX.utils.json_to_sheet(wsData);
+
+        // Estilos básicos en la hoja (colorear la primera fila de cabecera en el modelo de datos si es soportado por el parseador del cliente)
+        worksheet['!cols'] = [
+            { wch: 30 }, // Activo
+            { wch: 30 }, // Amenaza
+            { wch: 30 }, // Consecuencia
+            { wch: 15 }, // P Inherente
+            { wch: 15 }, // I Inherente
+            { wch: 15 }, // Tratamiento
+            { wch: 25 }, // Controles
+            { wch: 12 }, // Tipo
+            { wch: 12 }, // Nivel
+            { wch: 15 }, // Frecuencia
+            { wch: 12 }, // P Residual
+            { wch: 12 }, // I Residual
+            { wch: 35 }, // Plan
+            { wch: 15 }, // Fecha
+            { wch: 30 }  // Responsable
+        ];
+
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, wsInstructions, "Instrucciones y Responsables");
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Matriz (Llenar aqui)");
+
+        XLSX.writeFile(workbook, "modelo_matriz_riesgos_seguridad.xlsx");
+        showSuccess("Modelo de Excel con lista de responsables y guía de llenado descargado con éxito.");
+    };
+
+    const handleImportarExcel = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setError('');
+        const reader = new FileReader();
+        reader.onload = async (evt) => {
+            try {
+                const data = evt.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const rawRows = XLSX.utils.sheet_to_json(sheet);
+
+                if (rawRows.length === 0) {
+                    throw new Error("El archivo Excel está vacío o no tiene el formato correcto.");
+                }
+
+                const agrupados = {};
+                for (const row of rawRows) {
+                    const activo = row["Activo de Informacion"];
+                    if (!activo) continue;
+
+                    if (!agrupados[activo]) {
+                        agrupados[activo] = [];
+                    }
+
+                    const emailResp = row["Responsable Email (Debe ser un Administrador de Seguridad registrado)"] || '';
+                    const user = usuariosAdmins.find(u => String(u.correo || u.email || '').trim().toLowerCase() === String(emailResp).trim().toLowerCase());
+                    
+                    const pInherente = Number(row["P Inherente (1-5)"]) || 3;
+                    const iInherente = Number(row["I Inherente (1-5)"]) || 3;
+                    const pResidual = Number(row["P Residual (1-5)"]) || 1;
+                    const iResidual = Number(row["I Residual (1-5)"]) || 1;
+
+                    const pasosRaw = row["Pasos Plan de Accion (Separados por punto y coma ';')"] || '';
+                    const plan_accion = String(pasosRaw).split(';').map(p => p.trim()).filter(Boolean);
+
+                    agrupados[activo].push({
+                        id: 't_' + Math.random().toString(36).substring(2, 9),
+                        amenaza_vulnerabilidad: row["Amenaza / Vulnerabilidad"] || 'Amenaza genérica',
+                        consecuencia_riesgo: row["Consecuencias / Riesgo"] || 'Consecuencia genérica',
+                        probabilidad_inherente: pInherente,
+                        impacto_inherente: iInherente,
+                        riesgo_inherente: pInherente * iInherente,
+                        nivel_riesgo_inherente: CALCULAR_NIVEL(pInherente * iInherente),
+                        tratamiento_riesgo: row["Tratamiento (Reducir/Aceptar/Evitar/Transferir)"] || 'Reducir',
+                        controles_implementar: row["Controles a Implementar"] || 'Controles estándar',
+                        control_tipo: row["Control Tipo (P/D/C/P, D)"] || 'P',
+                        control_nivel: row["Control Nivel (A/S/M)"] || 'S',
+                        control_frecuencia: row["Control Frecuencia (PT/D/S/M/A)"] || 'PT',
+                        probabilidad_residual: pResidual,
+                        impacto_residual: iResidual,
+                        riesgo_residual: pResidual * iResidual,
+                        nivel_riesgo_residual: CALCULAR_NIVEL(pResidual * iResidual),
+                        plan_accion: plan_accion.length > 0 ? plan_accion : ['Monitoreo continuo'],
+                        fecha_limite: row["Fecha Limite (AAAA-MM-DD)"] || new Date().toISOString().split('T')[0],
+                        responsable_id: user ? user.id : null,
+                        responsable_nombre: user ? `${user.nombre} ${user.apellido_paterno || ''}`.trim() : 'Sin responsable asignado',
+                    });
+                }
+
+                let creados = 0;
+                for (const [activo, amenazas] of Object.entries(agrupados)) {
+                    await crearItemMatriz({
+                        activo_informacion: activo,
+                        amenazas
+                    });
+                    creados++;
+                }
+
+                showSuccess(`¡Éxito! Se importaron ${creados} activos de información correctamente.`);
+                await cargarDatos();
+            } catch (err) {
+                setError(err.message || 'Error al procesar el archivo Excel. Asegúrate de usar el formato del modelo.');
+            } finally {
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            }
+        };
+        reader.readAsBinaryString(file);
+    };
+
     const guardar = async (e) => {
         e.preventDefault();
         setError('');
-        const pInherente = Number(form.probabilidad_inherente);
-        const iInherente = Number(form.impacto_inherente);
-        const riesgoInherente = pInherente * iInherente;
-        const nivelInherente = CALCULAR_NIVEL(riesgoInherente);
 
-        const pResidual = Number(form.probabilidad_residual);
-        const iResidual = Number(form.impacto_residual);
-        const riesgoResidual = pResidual * iResidual;
-        const nivelResidual = CALCULAR_NIVEL(riesgoResidual);
+        if (!form.activo_informacion.trim()) {
+            setError("Debe proporcionar un nombre para el Activo de Información.");
+            return;
+        }
+
+        for (let i = 0; i < form.amenazas.length; i++) {
+            const t = form.amenazas[i];
+            if (!t.amenaza_vulnerabilidad.trim()) {
+                setError(`La Amenaza #${i + 1} no puede estar vacía.`);
+                return;
+            }
+            if (!t.consecuencia_riesgo.trim()) {
+                setError(`Las consecuencias de la Amenaza #${i + 1} no pueden estar vacías.`);
+                return;
+            }
+            if (!t.controles_implementar.trim()) {
+                setError(`Los controles de mitigación para la Amenaza #${i + 1} son requeridos.`);
+                return;
+            }
+            if (!t.fecha_limite) {
+                setError(`Debe especificar una Fecha Límite de mitigación para la Amenaza #${i + 1}.`);
+                return;
+            }
+            if (!t.responsable_id) {
+                setError(`Debe seleccionar un responsable (Administrador de Seguridad) para la mitigación de la Amenaza #${i + 1}.`);
+                return;
+            }
+        }
+
+        const amenazasValidadas = form.amenazas.map(t => {
+            const pInherente = Number(t.probabilidad_inherente);
+            const iInherente = Number(t.impacto_inherente);
+            const riesgoInherente = pInherente * iInherente;
+            const pResidual = Number(t.probabilidad_residual);
+            const iResidual = Number(t.impacto_residual);
+            const riesgoResidual = pResidual * iResidual;
+
+            return {
+                ...t,
+                probabilidad_inherente: pInherente,
+                impacto_inherente: iInherente,
+                riesgo_inherente: riesgoInherente,
+                nivel_riesgo_inherente: CALCULAR_NIVEL(riesgoInherente),
+                probabilidad_residual: pResidual,
+                impacto_residual: iResidual,
+                riesgo_residual: riesgoResidual,
+                nivel_riesgo_residual: CALCULAR_NIVEL(riesgoResidual),
+                plan_accion: (t.plan_accion || []).filter(step => step.trim() !== ''),
+            };
+        });
 
         const payload = {
-            ...form,
-            probabilidad_inherente: pInherente,
-            impacto_inherente: iInherente,
-            riesgo_inherente: riesgoInherente,
-            nivel_riesgo_inherente: nivelInherente,
-            probabilidad_residual: pResidual,
-            impacto_residual: iResidual,
-            riesgo_residual: riesgoResidual,
-            nivel_riesgo_residual: nivelResidual,
+            activo_informacion: form.activo_informacion,
+            amenazas: amenazasValidadas,
         };
 
         try {
             if (editandoId) {
                 await actualizarItemMatriz(editandoId, payload);
+                showSuccess("Análisis de riesgos actualizado con éxito.");
             } else {
                 await crearItemMatriz(payload);
+                showSuccess("Análisis de riesgos registrado con éxito.");
             }
             setModalAbierto(false);
             resetForm();
@@ -140,31 +448,83 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
     };
 
     const borrar = async (id) => {
-        if (!window.confirm('¿Estás seguro de eliminar este análisis de riesgo de la matriz?')) return;
+        if (!window.confirm('¿Estás seguro de eliminar este activo y todas sus amenazas asociadas de la matriz?')) return;
         setError('');
         try {
             await eliminarItemMatriz(id);
+            showSuccess("Activo eliminado de la matriz.");
             await cargarDatos();
         } catch (err) {
             setError(err.message || 'Error al eliminar el registro');
         }
     };
 
-    const riesgoInherenteCalculado = form.probabilidad_inherente * form.impacto_inherente;
-    const riesgoResidualCalculado = form.probabilidad_residual * form.impacto_residual;
+    const rows = [];
+    let threatCounter = 1;
+    matriz.forEach((item) => {
+        const amenazas = Array.isArray(item.amenazas) && item.amenazas.length > 0 ? item.amenazas : [{}];
+        amenazas.forEach((threat, idx) => {
+            rows.push({
+                assetId: item.id,
+                activo_informacion: item.activo_informacion,
+                isFirst: idx === 0,
+                isLastThreat: idx === amenazas.length - 1,
+                rowSpan: amenazas.length,
+                threatIndex: threatCounter++,
+                threat,
+                fullItem: item
+            });
+        });
+    });
+
+    const renderCeldaExplicativa = (p, i) => {
+        const valor = p * i;
+        const nivel = CALCULAR_NIVEL(valor);
+        return (
+            <td 
+                key={i} 
+                className="explicativo-celda"
+                style={{ backgroundColor: `${COLOR_NIVEL[nivel]}ee` }}
+            >
+                <div className="celda-valor">{valor}</div>
+                <div className="celda-nivel">{nivel}</div>
+            </td>
+        );
+    };
 
     return (
         <div className="matriz-container">
             <div className="matriz-controls-row">
                 <h2 className="matriz-subtitle">📋 Matriz de Análisis de Riesgos de Seguridad de la Información</h2>
-                {puedeGestionar && (
-                    <button className="btn-primario add-matrix-btn" onClick={abrirCrear}>
-                        + Nuevo Análisis de Riesgo
+                <div className="matriz-header-buttons">
+                    <button className="btn-secundario add-matrix-btn" onClick={() => setModalExplicativoAbierto(true)}>
+                        ❓ Criterios
                     </button>
-                )}
+                    {puedeGestionar && (
+                        <>
+                            <button className="btn-secundario add-matrix-btn" onClick={descargarExcelModelo}>
+                                📥 Descargar Plantilla
+                            </button>
+                            <label className="btn-secundario add-matrix-btn upload-excel-btn">
+                                📤 Importar Excel
+                                <input 
+                                    type="file" 
+                                    accept=".xlsx, .xls" 
+                                    ref={fileInputRef}
+                                    onChange={handleImportarExcel}
+                                    style={{ display: 'none' }} 
+                                />
+                            </label>
+                            <button className="btn-primario add-matrix-btn" onClick={abrirCrear}>
+                                + Nuevo Análisis de Riesgo
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
 
             {error && <div className="riesgos-alert riesgos-alert-error">{error}</div>}
+            {exitoMsg && <div className="riesgos-alert riesgos-alert-success">{exitoMsg}</div>}
 
             {cargando ? (
                 <div className="matriz-loading">Cargando matriz de análisis...</div>
@@ -174,26 +534,25 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                         <thead>
                             <tr className="matriz-header-groups">
                                 <th colSpan="2" className="group-activos">ACTIVOS</th>
-                                <th className="group-identificacion">IDENTIFICACIÓN</th>
-                                <th className="group-valoracion">VALORACIÓN</th>
+                                <th colSpan="2" className="group-identificacion">IDENTIFICACIÓN / VALORACIÓN</th>
                                 <th colSpan="4" className="group-eval-inherente">EVALUACIÓN DEL RIESGO INHERENTE</th>
                                 <th className="group-medicion">MEDICIÓN</th>
-                                <th className="group-mitigacion">MITIGACIÓN</th>
-                                <th colSpan="3" className="group-eficiencia">EFICIENCIA DEL CONTROL</th>
+                                <th colSpan="4" className="group-mitigacion">MITIGACIÓN Y CONTROLES</th>
                                 <th colSpan="4" className="group-residual">RIESGO RESIDUAL</th>
-                                {puedeGestionar && <th rowSpan="2" className="group-acciones">ACCIONES</th>}
+                                <th colSpan="3" className="group-eficiencia">PLAN DE ACCIÓN Y SEGUIMIENTO</th>
+                                {puedeGestionar && <th className="group-acciones">ACCIONES</th>}
                             </tr>
                             <tr className="matriz-header-fields">
                                 <th style={{ width: '40px' }}>No.</th>
-                                <th style={{ minWidth: '150px' }}>Activo de Información (Aplicativo/Sistema)</th>
-                                <th style={{ minWidth: '220px' }}>Amenaza / Vulnerabilidad</th>
-                                <th style={{ minWidth: '220px' }}>Consecuencia / Riesgo</th>
+                                <th style={{ minWidth: '150px' }}>Activo de Información</th>
+                                <th style={{ minWidth: '200px' }}>Amenaza / Vulnerabilidad</th>
+                                <th style={{ minWidth: '200px' }}>Consecuencia / Riesgo</th>
                                 <th style={{ width: '40px' }} title="Probabilidad">P</th>
                                 <th style={{ width: '40px' }} title="Impacto">I</th>
                                 <th style={{ width: '60px' }}>Valor</th>
-                                <th style={{ minWidth: '100px' }}>Nivel de Riesgo</th>
+                                <th style={{ minWidth: '100px' }}>Nivel Riesgo</th>
                                 <th style={{ minWidth: '100px' }}>Tratamiento</th>
-                                <th style={{ minWidth: '220px' }}>Controles a Implementar</th>
+                                <th style={{ minWidth: '200px' }}>Controles a Implementar</th>
                                 <th style={{ width: '60px' }} title="Tipo (P, D, C, Di)">Tipo</th>
                                 <th style={{ width: '60px' }} title="Nivel (A, S, M)">Nivel</th>
                                 <th style={{ width: '80px' }} title="Frecuencia">Frecuencia</th>
@@ -201,229 +560,409 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                                 <th style={{ width: '40px' }} title="Impacto Residual">I</th>
                                 <th style={{ width: '60px' }}>Valor</th>
                                 <th style={{ minWidth: '100px' }}>Nivel Residual</th>
+                                <th style={{ minWidth: '220px' }}>Pasos Plan de Acción</th>
+                                <th style={{ minWidth: '90px' }}>Fecha Límite</th>
+                                <th style={{ minWidth: '130px' }}>Responsable</th>
+                                {puedeGestionar && <th style={{ width: '100px' }}>Acción Activo</th>}
                             </tr>
                         </thead>
                         <tbody>
-                            {matriz.map((item, idx) => (
-                                <tr key={item.id} className="matriz-row">
-                                    <td className="text-center font-bold">{idx + 1}</td>
-                                    <td className="font-semibold text-white">{item.activo_informacion}</td>
-                                    <td>{item.amenaza_vulnerabilidad}</td>
-                                    <td>{item.consecuencia_riesgo}</td>
-                                    <td className="text-center font-semibold">{item.probabilidad_inherente}</td>
-                                    <td className="text-center font-semibold">{item.impacto_inherente}</td>
-                                    <td className="text-center font-bold text-white">{item.riesgo_inherente}</td>
-                                    <td className="text-center font-bold" style={{ color: COLOR_NIVEL[item.nivel_riesgo_inherente] }}>
-                                        <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[item.nivel_riesgo_inherente]}22`, border: `1px solid ${COLOR_NIVEL[item.nivel_riesgo_inherente]}55` }}>
-                                            {item.nivel_riesgo_inherente}
-                                        </span>
-                                    </td>
-                                    <td className="text-center text-sky-400 font-semibold">{item.tratamiento_riesgo}</td>
-                                    <td>{item.controles_implementar}</td>
-                                    <td className="text-center font-medium text-emerald-400">{item.control_tipo}</td>
-                                    <td className="text-center font-medium text-violet-400">{item.control_nivel}</td>
-                                    <td className="text-center font-medium text-teal-400">{item.control_frecuencia}</td>
-                                    <td className="text-center font-semibold">{item.probabilidad_residual}</td>
-                                    <td className="text-center font-semibold">{item.impacto_residual}</td>
-                                    <td className="text-center font-bold text-white">{item.riesgo_residual}</td>
-                                    <td className="text-center font-bold" style={{ color: COLOR_NIVEL[item.nivel_riesgo_residual] }}>
-                                        <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[item.nivel_riesgo_residual]}22`, border: `1px solid ${COLOR_NIVEL[item.nivel_riesgo_residual]}55` }}>
-                                            {item.nivel_riesgo_residual}
-                                        </span>
-                                    </td>
-                                    {puedeGestionar && (
-                                        <td className="text-center">
-                                            <div className="matrix-actions-cell">
-                                                <button className="matrix-btn-edit" onClick={() => abrirEditar(item)} title="Editar">✏️</button>
-                                                <button className="matrix-btn-delete" onClick={() => borrar(item.id)} title="Eliminar">🗑️</button>
-                                            </div>
-                                        </td>
-                                    )}
-                                </tr>
-                            ))}
-                            {matriz.length === 0 && (
-                                <tr>
-                                    <td colSpan={puedeGestionar ? 18 : 17} className="text-center py-8 text-slate-400">
-                                        No hay análisis de riesgos registrados en la matriz.
-                                    </td>
-                                </tr>
-                            )}
+                             {rows.map((row, idx) => {
+                                 const t = row.threat;
+                                 return (
+                                     <tr key={`${row.assetId}-${row.threat.id || idx}`} className={`matriz-row ${row.isLastThreat ? 'is-last-threat-row' : ''}`}>
+                                         <td className="text-center font-bold">{row.threatIndex}</td>
+                                         
+                                         {row.isFirst && (
+                                             <td rowSpan={row.rowSpan} className="font-semibold text-white asset-cell-highlight">
+                                                 {row.activo_informacion}
+                                             </td>
+                                         )}
+
+                                         <td>{t.amenaza_vulnerabilidad || '—'}</td>
+                                         <td>{t.consecuencia_riesgo || '—'}</td>
+                                         <td className="text-center font-semibold">{t.probabilidad_inherente || '—'}</td>
+                                         <td className="text-center font-semibold">{t.impacto_inherente || '—'}</td>
+                                         <td className="text-center font-bold text-white">{t.riesgo_inherente || '—'}</td>
+                                         <td className="text-center font-bold">
+                                             {t.nivel_riesgo_inherente ? (
+                                                 <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[t.nivel_riesgo_inherente]}22`, color: COLOR_NIVEL[t.nivel_riesgo_inherente], border: `1px solid ${COLOR_NIVEL[t.nivel_riesgo_inherente]}55` }}>
+                                                     {t.nivel_riesgo_inherente}
+                                                 </span>
+                                             ) : '—'}
+                                         </td>
+                                         <td className="text-center text-sky-600 font-semibold">{t.tratamiento_riesgo || '—'}</td>
+                                         <td>{t.controles_implementar || '—'}</td>
+                                         <td className="text-center font-medium text-emerald-600">{t.control_tipo || '—'}</td>
+                                         <td className="text-center font-medium text-violet-600">{t.control_nivel || '—'}</td>
+                                         <td className="text-center font-medium text-teal-600">{t.control_frecuencia || '—'}</td>
+                                         <td className="text-center font-semibold">{t.probabilidad_residual || '—'}</td>
+                                         <td className="text-center font-semibold">{t.impacto_residual || '—'}</td>
+                                         <td className="text-center font-bold text-white">{t.riesgo_residual || '—'}</td>
+                                         <td className="text-center font-bold">
+                                             {t.nivel_riesgo_residual ? (
+                                                 <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[t.nivel_riesgo_residual]}22`, color: COLOR_NIVEL[t.nivel_riesgo_residual], border: `1px solid ${COLOR_NIVEL[t.nivel_riesgo_residual]}55` }}>
+                                                     {t.nivel_riesgo_residual}
+                                                 </span>
+                                             ) : '—'}
+                                         </td>
+                                         
+                                         <td>
+                                             {Array.isArray(t.plan_accion) && t.plan_accion.length > 0 ? (
+                                                 <ol className="matrix-plan-list">
+                                                     {t.plan_accion.map((step, sidx) => (
+                                                         <li key={sidx} className="matrix-plan-item">{step}</li>
+                                                     ))}
+                                                 </ol>
+                                             ) : '—'}
+                                         </td>
+                                         <td className="text-center font-medium text-slate-500">
+                                             {t.fecha_limite ? new Date(t.fecha_limite).toLocaleDateString('es-BO') : '—'}
+                                         </td>
+                                         <td className="font-semibold text-slate-700">{t.responsable_nombre || '—'}</td>
+
+                                         {row.isFirst && puedeGestionar && (
+                                             <td rowSpan={row.rowSpan} className="text-center">
+                                                 <div className="matrix-actions-cell">
+                                                     <button className="matrix-btn-edit" onClick={() => abrirEditar(row.fullItem)} title="Editar Activo Completo">✏️</button>
+                                                     <button className="matrix-btn-delete" onClick={() => borrar(row.assetId)} title="Eliminar Activo">🗑️</button>
+                                                 </div>
+                                             </td>
+                                         )}
+                                     </tr>
+                                 );
+                             })}
+                             {matriz.length === 0 && (
+                                 <tr>
+                                     <td colSpan={puedeGestionar ? 21 : 20} className="text-center py-8 text-slate-400">
+                                         No hay análisis de riesgos registrados en la matriz.
+                                     </td>
+                                 </tr>
+                             )}
                         </tbody>
                     </table>
                 </div>
             )}
 
-            {/* Modal de CRUD */}
+            {modalExplicativoAbierto && (
+                <div className="riesgos-modal-overlay" onClick={() => setModalExplicativoAbierto(false)}>
+                    <div className="riesgos-modal explicativo-modal-width anim-scale-up" onClick={(e) => e.stopPropagation()}>
+                        <div className="explicativo-modal-header">
+                            <h2>📊 Matriz de Criterios de Evaluación de Riesgos</h2>
+                            <button className="close-modal" onClick={() => setModalExplicativoAbierto(false)}>&times;</button>
+                        </div>
+                        
+                        <div className="explicativo-modal-content">
+                            <p className="modal-desc">
+                                El Nivel de Riesgo se calcula multiplicando la <strong>Probabilidad</strong> por el <strong>Impacto</strong> (Valores de 1 a 5).
+                            </p>
+
+                            <div className="matrix-visual-container">
+                                <div className="matrix-y-label">PROBABILIDAD</div>
+                                <div className="matrix-grid-wrapper">
+                                    <table className="matrix-visual-table">
+                                        <tbody>
+                                            {[5, 4, 3, 2, 1].map((pVal) => (
+                                                <tr key={pVal}>
+                                                    <td className="matrix-axis-num font-bold">{pVal}</td>
+                                                    {[1, 2, 3, 4, 5].map((iVal) => renderCeldaExplicativa(pVal, iVal))}
+                                                </tr>
+                                            ))}
+                                            <tr>
+                                                <td></td>
+                                                {[1, 2, 3, 4, 5].map((iVal) => (
+                                                    <td key={iVal} className="matrix-axis-num font-bold text-center">{iVal}</td>
+                                                ))}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div className="matrix-x-label">IMPACTO</div>
+                                </div>
+                            </div>
+
+                            <div className="matrix-legend-section">
+                                <h3>Criterios de Valoración y Tratamiento</h3>
+                                <table className="legend-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Valor</th>
+                                            <th>Nivel de Riesgo</th>
+                                            <th>Tratamiento del Riesgo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td className="text-center font-bold">1 - 4</td>
+                                            <td><span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL.Bajo}22`, color: COLOR_NIVEL.Bajo, border: `1px solid ${COLOR_NIVEL.Bajo}55` }}>Bajo</span></td>
+                                            <td>Aceptar</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="text-center font-bold">5 - 9</td>
+                                            <td><span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL.Moderado}22`, color: COLOR_NIVEL.Moderado, border: `1px solid ${COLOR_NIVEL.Moderado}55` }}>Moderado</span></td>
+                                            <td>Reducir</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="text-center font-bold">10 - 19</td>
+                                            <td><span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL.Alto}22`, color: COLOR_NIVEL.Alto, border: `1px solid ${COLOR_NIVEL.Alto}55` }}>Alto</span></td>
+                                            <td>Evitar, Compartir, Reducir</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="text-center font-bold">20 - 25</td>
+                                            <td><span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL.Extremo}22`, color: COLOR_NIVEL.Extremo, border: `1px solid ${COLOR_NIVEL.Extremo}55` }}>Extremo</span></td>
+                                            <td>Evitar, Compartir, Reducir (Atención Inmediata)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {modalAbierto && (
                 <div className="riesgos-modal-overlay" onClick={() => setModalAbierto(false)}>
-                    <div className="riesgos-modal matriz-modal-width" onClick={(e) => e.stopPropagation()}>
-                        <h2>{editandoId ? 'Editar Análisis de Riesgo' : 'Nuevo Análisis de Riesgo'}</h2>
-                        <p className="modal-desc">Completa todos los campos para efectuar el análisis de riesgo del activo.</p>
+                    <div className="riesgos-modal matriz-modal-width anim-scale-up" onClick={(e) => e.stopPropagation()}>
+                        <h2>{editandoId ? '✏️ Editar Activo e Identificación de Riesgos' : '➕ Nuevo Registro de Riesgo por Activo'}</h2>
+                        <p className="modal-desc">
+                            Ingresa el activo afectado e identifica sus amenazas de seguridad correspondientes de forma granular. Todos los campos obligatorios (*) cuentan con validación visual.
+                        </p>
                         
                         <form onSubmit={guardar} className="matriz-modal-form">
-                            <div className="form-section-title">1. Activo e Identificación</div>
+                            <div className="form-section-title">📦 1. Activo de Información Evaluado</div>
                             <div className="form-row">
-                                <label className="form-col-12">
-                                    Activo de Información / Sistema Afectado *
+                                <label className="form-col-12 label-ux-focus">
+                                    Nombre o Descripción del Activo de Información *
                                     <input
                                         type="text"
                                         required
+                                        className="input-ux-premium"
                                         value={form.activo_informacion}
                                         onChange={(e) => setForm({ ...form, activo_informacion: e.target.value })}
-                                        placeholder="Ej: Sistema Core de Pólizas, Directorio Activo..."
-                                    />
-                                </label>
-                            </div>
-                            <div className="form-row">
-                                <label className="form-col-6">
-                                    Amenaza o Vulnerabilidad *
-                                    <textarea
-                                        rows="3"
-                                        required
-                                        value={form.amenaza_vulnerabilidad}
-                                        onChange={(e) => setForm({ ...form, amenaza_vulnerabilidad: e.target.value })}
-                                        placeholder="Describe la amenaza..."
-                                    />
-                                </label>
-                                <label className="form-col-6">
-                                    Consecuencias o Riesgos *
-                                    <textarea
-                                        rows="3"
-                                        required
-                                        value={form.consecuencia_riesgo}
-                                        onChange={(e) => setForm({ ...form, consecuencia_riesgo: e.target.value })}
-                                        placeholder="Consecuencias potenciales..."
+                                        placeholder="Ej: Base de Datos de Inscripciones, API de Paypal..."
                                     />
                                 </label>
                             </div>
 
-                            <div className="form-section-title">2. Evaluación del Riesgo Inherente</div>
-                            <div className="form-row flex-items-center">
-                                <label className="form-col-3">
-                                    Probabilidad (1 a 5) *
-                                    <select
-                                        value={form.probabilidad_inherente}
-                                        onChange={(e) => setForm({ ...form, probabilidad_inherente: Number(e.target.value) })}
-                                    >
-                                        {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
-                                    </select>
-                                </label>
-                                <label className="form-col-3">
-                                    Impacto (1 a 5) *
-                                    <select
-                                        value={form.impacto_inherente}
-                                        onChange={(e) => setForm({ ...form, impacto_inherente: Number(e.target.value) })}
-                                    >
-                                        {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
-                                    </select>
-                                </label>
-                                <div className="form-col-6 val-preview-box">
-                                    <div className="val-preview-label">Riesgo Inherente:</div>
-                                    <div className="val-preview-number" style={{ color: COLOR_NIVEL[CALCULAR_NIVEL(riesgoInherenteCalculado)] }}>
-                                        {riesgoInherenteCalculado} ({CALCULAR_NIVEL(riesgoInherenteCalculado)})
+                            <div className="form-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem' }}>
+                                <span>🛡️ 2. Amenazas e Identificación de Controles Granulares</span>
+                                <button type="button" className="btn-secundario btn-mini" onClick={handleAddThreat} style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem', borderRadius: '8px' }}>
+                                    + Añadir Otra Amenaza a este Activo
+                                </button>
+                            </div>
+
+                            {form.amenazas.map((t, tIdx) => {
+                                const inherenteVal = t.probabilidad_inherente * t.impacto_inherente;
+                                const residualVal = t.probabilidad_residual * t.impacto_residual;
+
+                                return (
+                                    <div key={t.id || tIdx} className="threat-form-card premium-card-ux">
+                                        <div className="threat-card-header">
+                                            <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1e293b' }}>
+                                                <span className="card-number-badge">{tIdx + 1}</span> 
+                                                Amenaza / Vulnerabilidad Relacionada
+                                            </h4>
+                                            {form.amenazas.length > 1 && (
+                                                <button type="button" className="threat-remove-btn" onClick={() => handleRemoveThreat(tIdx)}>
+                                                    Quitar Amenaza 🗑️
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="form-row">
+                                            <label className="form-col-6">
+                                                Descripción de la Amenaza o Vulnerabilidad *
+                                                <textarea
+                                                    rows="2"
+                                                    required
+                                                    className="input-ux-premium"
+                                                    value={t.amenaza_vulnerabilidad}
+                                                    onChange={(e) => handleThreatChange(tIdx, 'amenaza_vulnerabilidad', e.target.value)}
+                                                    placeholder="Ej: Inyección SQL en endpoints de inscripción..."
+                                                />
+                                            </label>
+                                            <label className="form-col-6">
+                                                Consecuencias Directas para la Aplicación *
+                                                <textarea
+                                                    rows="2"
+                                                    required
+                                                    className="input-ux-premium"
+                                                    value={t.consecuencia_riesgo}
+                                                    onChange={(e) => handleThreatChange(tIdx, 'consecuencia_riesgo', e.target.value)}
+                                                    placeholder="Ej: Modificación no autorizada de pagos, robo de datos..."
+                                                />
+                                            </label>
+                                        </div>
+
+                                        <div className="form-row">
+                                            <div className="form-col-6 threat-box-group border-highlight-orange">
+                                                <h5>💥 Evaluación Riesgo Inherente</h5>
+                                                <div className="form-row">
+                                                    <label className="form-col-6">
+                                                        Probabilidad *
+                                                        <select className="select-ux-premium" value={t.probabilidad_inherente} onChange={(e) => handleThreatChange(tIdx, 'probabilidad_inherente', Number(e.target.value))}>
+                                                            {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                                                        </select>
+                                                    </label>
+                                                    <label className="form-col-6">
+                                                        Impacto *
+                                                        <select className="select-ux-premium" value={t.impacto_inherente} onChange={(e) => handleThreatChange(tIdx, 'impacto_inherente', Number(e.target.value))}>
+                                                            {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                                                        </select>
+                                                    </label>
+                                                </div>
+                                                <div className="val-badge-preview mt-2 font-bold" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center' }}>
+                                                    Riesgo: {inherenteVal} - 
+                                                    <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[CALCULAR_NIVEL(inherenteVal)]}22`, color: COLOR_NIVEL[CALCULAR_NIVEL(inherenteVal)], border: `1px solid ${COLOR_NIVEL[CALCULAR_NIVEL(inherenteVal)]}55` }}>
+                                                        {CALCULAR_NIVEL(inherenteVal)}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="form-col-6 threat-box-group border-highlight-green">
+                                                <h5>🛡️ Evaluación Riesgo Residual (Con Controles)</h5>
+                                                <div className="form-row">
+                                                    <label className="form-col-6">
+                                                        P Residual *
+                                                        <select className="select-ux-premium" value={t.probabilidad_residual} onChange={(e) => handleThreatChange(tIdx, 'probabilidad_residual', Number(e.target.value))}>
+                                                            {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                                                        </select>
+                                                    </label>
+                                                    <label className="form-col-6">
+                                                        I Residual *
+                                                        <select className="select-ux-premium" value={t.impacto_residual} onChange={(e) => handleThreatChange(tIdx, 'impacto_residual', Number(e.target.value))}>
+                                                            {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                                                        </select>
+                                                    </label>
+                                                </div>
+                                                <div className="val-badge-preview mt-2 font-bold" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center' }}>
+                                                    Residual: {residualVal} - 
+                                                    <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[CALCULAR_NIVEL(residualVal)]}22`, color: COLOR_NIVEL[CALCULAR_NIVEL(residualVal)], border: `1px solid ${COLOR_NIVEL[CALCULAR_NIVEL(residualVal)]}55` }}>
+                                                        {CALCULAR_NIVEL(residualVal)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="form-row">
+                                            <label className="form-col-4">
+                                                Tratamiento
+                                                <select className="select-ux-premium" value={t.tratamiento_riesgo} onChange={(e) => handleThreatChange(tIdx, 'tratamiento_riesgo', e.target.value)}>
+                                                    {['Reducir', 'Aceptar', 'Evitar', 'Transferir'].map(tr => <option key={tr} value={tr}>{tr}</option>)}
+                                                </select>
+                                            </label>
+                                            <label className="form-col-8">
+                                                Controles de Mitigación a Implementar *
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    className="input-ux-premium"
+                                                    value={t.controles_implementar}
+                                                    onChange={(e) => handleThreatChange(tIdx, 'controles_implementar', e.target.value)}
+                                                    placeholder="Ej: Sanitización estricta de parámetros, middleware JWT..."
+                                                />
+                                            </label>
+                                        </div>
+
+                                        <div className="form-row">
+                                            <label className="form-col-4">
+                                                Tipo de Control
+                                                <select className="select-ux-premium" value={t.control_tipo} onChange={(e) => handleThreatChange(tIdx, 'control_tipo', e.target.value)}>
+                                                    <option value="P">Preventivo (P)</option>
+                                                    <option value="D">Detectivo (D)</option>
+                                                    <option value="C">Correctivo (C)</option>
+                                                    <option value="P, D">Preventivo y Detectivo (P, D)</option>
+                                                </select>
+                                            </label>
+                                            <label className="form-col-4">
+                                                Eficiencia del Control
+                                                <select className="select-ux-premium" value={t.control_nivel} onChange={(e) => handleThreatChange(tIdx, 'control_nivel', e.target.value)}>
+                                                    <option value="A">Alto (A)</option>
+                                                    <option value="S">Suficiente (S)</option>
+                                                    <option value="M">Moderado (M)</option>
+                                                </select>
+                                            </label>
+                                            <label className="form-col-4">
+                                                Frecuencia
+                                                <select className="select-ux-premium" value={t.control_frecuencia} onChange={(e) => handleThreatChange(tIdx, 'control_frecuencia', e.target.value)}>
+                                                    <option value="D">Diario (D)</option>
+                                                    <option value="S">Semanal (S)</option>
+                                                    <option value="M">Mensual (M)</option>
+                                                    <option value="A">Anual (A)</option>
+                                                    <option value="PT">Por Transacción (PT)</option>
+                                                </select>
+                                            </label>
+                                        </div>
+
+                                        <div className="threat-box-group mt-3">
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                                <h5 style={{ margin: 0 }}>📋 Plan de Acción (Secuencia de Pasos)</h5>
+                                                <button type="button" className="btn-secundario btn-mini" onClick={() => handleAddStep(tIdx)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
+                                                    + Añadir Paso
+                                                </button>
+                                            </div>
+                                            {(t.plan_accion || []).map((step, sIdx) => (
+                                                <div key={sIdx} className="plan-step-input-row">
+                                                    <span className="step-num-label">{sIdx + 1}.</span>
+                                                    <input
+                                                        type="text"
+                                                        className="input-ux-premium"
+                                                        value={step}
+                                                        onChange={(e) => handleStepChange(tIdx, sIdx, e.target.value)}
+                                                        placeholder={`Ej: Paso #${sIdx + 1} del plan de acción...`}
+                                                        style={{ flex: 1 }}
+                                                    />
+                                                    <button type="button" className="step-remove-btn" onClick={() => handleRemoveStep(tIdx, sIdx)}>
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="form-row mt-3">
+                                            <label className="form-col-4">
+                                                Fecha Límite *
+                                                <input
+                                                    type="date"
+                                                    required
+                                                    className="input-ux-premium"
+                                                    value={t.fecha_limite}
+                                                    onChange={(e) => handleThreatChange(tIdx, 'fecha_limite', e.target.value)}
+                                                />
+                                            </label>
+                                            <label className="form-col-8">
+                                                Responsable (Admin. Seguridad) *
+                                                <select
+                                                    required
+                                                    className="select-ux-premium border-pulse-glow"
+                                                    value={t.responsable_id || ''}
+                                                    onChange={(e) => {
+                                                         const selectedId = e.target.value;
+                                                         const user = usuariosAdmins.find(u => String(u.id) === String(selectedId));
+                                                         if (user) {
+                                                             const name = `${user.nombre} ${user.apellido_paterno || ''}`.trim();
+                                                             handleThreatFieldsChange(tIdx, {
+                                                                 responsable_id: user.id,
+                                                                 responsable_nombre: name
+                                                             });
+                                                         } else {
+                                                             handleThreatFieldsChange(tIdx, {
+                                                                 responsable_id: null,
+                                                                 responsable_nombre: ''
+                                                             });
+                                                         }
+                                                    }}
+                                                >
+                                                    <option value="">-- Seleccionar Responsable Obligatorio --</option>
+                                                    {usuariosAdmins.map(u => {
+                                                        const name = `${u.nombre} ${u.apellido_paterno || ''} (${u.correo || u.email || 'Admin'})`.trim();
+                                                        return <option key={u.id} value={u.id}>{name}</option>;
+                                                    })}
+                                                </select>
+                                            </label>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-
-                            <div className="form-section-title">3. Medición y Mitigación (Controles)</div>
-                            <div className="form-row">
-                                <label className="form-col-4">
-                                    Tratamiento *
-                                    <select
-                                        value={form.tratamiento_riesgo}
-                                        onChange={(e) => setForm({ ...form, tratamiento_riesgo: e.target.value })}
-                                    >
-                                        {['Reducir', 'Aceptar', 'Evitar', 'Transferir'].map(t => <option key={t} value={t}>{t}</option>)}
-                                    </select>
-                                </label>
-                                <label className="form-col-8">
-                                    Responsable de Mitigación
-                                    <input
-                                        type="text"
-                                        value={form.responsable_nombre}
-                                        onChange={(e) => setForm({ ...form, responsable_nombre: e.target.value })}
-                                        placeholder="Ej: Juan Pérez (Seguridad IT)"
-                                    />
-                                </label>
-                            </div>
-                            <div className="form-row">
-                                <label className="form-col-12">
-                                    Controles a Implementar (Mitigación) *
-                                    <textarea
-                                        rows="2"
-                                        required
-                                        value={form.controles_implementar}
-                                        onChange={(e) => setForm({ ...form, controles_implementar: e.target.value })}
-                                        placeholder="Detalle de los controles..."
-                                    />
-                                </label>
-                            </div>
-                            <div className="form-row">
-                                <label className="form-col-4">
-                                    Tipo de Control
-                                    <select
-                                        value={form.control_tipo}
-                                        onChange={(e) => setForm({ ...form, control_tipo: e.target.value })}
-                                    >
-                                        <option value="P">Preventivo (P)</option>
-                                        <option value="D">Detectivo (D)</option>
-                                        <option value="C">Correctivo (C)</option>
-                                        <option value="P, D">Preventivo y Detectivo (P, D)</option>
-                                    </select>
-                                </label>
-                                <label className="form-col-4">
-                                    Nivel
-                                    <select
-                                        value={form.control_nivel}
-                                        onChange={(e) => setForm({ ...form, control_nivel: e.target.value })}
-                                    >
-                                        <option value="A">Alto (A)</option>
-                                        <option value="S">Suficiente (S)</option>
-                                        <option value="M">Moderado (M)</option>
-                                    </select>
-                                </label>
-                                <label className="form-col-4">
-                                    Frecuencia
-                                    <select
-                                        value={form.control_frecuencia}
-                                        onChange={(e) => setForm({ ...form, control_frecuencia: e.target.value })}
-                                    >
-                                        <option value="D">Diario (D)</option>
-                                        <option value="S">Semanal (S)</option>
-                                        <option value="M">Mensual (M)</option>
-                                        <option value="A">Anual (A)</option>
-                                        <option value="PT">Por Transacción (PT)</option>
-                                    </select>
-                                </label>
-                            </div>
-
-                            <div className="form-section-title">4. Evaluación del Riesgo Residual</div>
-                            <div className="form-row flex-items-center">
-                                <label className="form-col-3">
-                                    P Residual (1 a 5) *
-                                    <select
-                                        value={form.probabilidad_residual}
-                                        onChange={(e) => setForm({ ...form, probabilidad_residual: Number(e.target.value) })}
-                                    >
-                                        {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
-                                    </select>
-                                </label>
-                                <label className="form-col-3">
-                                    I Residual (1 a 5) *
-                                    <select
-                                        value={form.impacto_residual}
-                                        onChange={(e) => setForm({ ...form, impacto_residual: Number(e.target.value) })}
-                                    >
-                                        {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
-                                    </select>
-                                </label>
-                                <div className="form-col-6 val-preview-box">
-                                    <div className="val-preview-label">Riesgo Residual:</div>
-                                    <div className="val-preview-number" style={{ color: COLOR_NIVEL[CALCULAR_NIVEL(riesgoResidualCalculado)] }}>
-                                        {riesgoResidualCalculado} ({CALCULAR_NIVEL(riesgoResidualCalculado)})
-                                    </div>
-                                </div>
-                            </div>
+                                );
+                            })}
 
                             <div className="modal-actions">
                                 <button
@@ -434,7 +973,7 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                                     Cancelar
                                 </button>
                                 <button type="submit" className="btn-primario">
-                                    {editandoId ? 'Guardar Cambios' : 'Registrar Riesgo'}
+                                    {editandoId ? 'Guardar Cambios' : 'Registrar Todo el Activo'}
                                 </button>
                             </div>
                         </form>
