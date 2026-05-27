@@ -31,6 +31,7 @@ import GestionRoles from './components/admin/seguridad/GestionRoles';
 import CrearCuentas from './components/admin/cuentas/CrearCuentas';
 import RiesgosDashboard from './components/admin/riesgos/RiesgosDashboard';
 import RiesgoDetalle from './components/admin/riesgos/RiesgoDetalle';
+import MatrizRiesgosPage from './components/admin/riesgos/MatrizRiesgosPage';
 
 import EstudiantePagos from './components/estudiante/estudiantePagos';
 import HeaderEstudiante from './components/estudiante/headerEstudiante';
@@ -276,6 +277,15 @@ function AppContent() {
           element={
             <PermisoProtectedRoute permiso={PERMISSIONS.RIESGOS_VER}>
               <RiesgosDashboard />
+            </PermisoProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/matriz-riesgos"
+          element={
+            <PermisoProtectedRoute permiso={PERMISSIONS.RIESGOS_VER}>
+              <MatrizRiesgosPage />
             </PermisoProtectedRoute>
           }
         />

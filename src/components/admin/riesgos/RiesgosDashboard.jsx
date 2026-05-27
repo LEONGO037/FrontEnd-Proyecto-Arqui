@@ -53,6 +53,7 @@ const RiesgosDashboard = () => {
     const [error, setError] = useState('');
     const [deteccionEnCurso, setDeteccionEnCurso] = useState(false);
     const [mensaje, setMensaje] = useState('');
+    const [activeTab, setActiveTab] = useState('incidentes');
 
     const [modalAbierto, setModalAbierto] = useState(false);
     const [catalogo, setCatalogo] = useState([]);

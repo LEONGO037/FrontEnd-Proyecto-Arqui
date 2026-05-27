@@ -730,3 +730,38 @@
         gap: 0.8rem;
     }
 }
+
+/* ───── Tabs ───── */
+.riesgos-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+    padding-bottom: 0.5rem;
+}
+
+.riesgos-tab {
+    background: none;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.riesgos-tab:hover {
+    color: #0f172a;
+    background: rgba(0, 0, 0, 0.03);
+}
+
+.riesgos-tab.active {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
