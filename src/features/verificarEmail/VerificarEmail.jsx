@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { verificarCodigo } from '../../services/loginApi';
 
@@ -8,6 +8,7 @@ const VerificarEmail = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const emailParam = searchParams.get('email') || '';
+  const tokenParam = searchParams.get('token') || '';
 
   const [email, setEmail] = useState(emailParam);
   const [digitos, setDigitos] = useState(['', '', '', '', '', '']);
@@ -15,6 +16,28 @@ const VerificarEmail = () => {
   const [mensaje, setMensaje] = useState('');
   const [reenvioMsg, setReenvioMsg] = useState('');
   const inputsRef = useRef([]);
+
+  useEffect(() => {
+    const verificarAutomaticamente = async () => {
+      if (!tokenParam) return;
+      setEstado('cargando');
+      setMensaje('Verificando tu cuenta de forma segura...');
+      try {
+        const response = await fetch(`${API_BASE}/api/autenticacion/verificar-token?token=${encodeURIComponent(tokenParam)}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'El enlace de verificación es inválido o ha expirado.');
+        }
+        setEstado('ok');
+        setMensaje(data.mensaje || 'Tu cuenta ha sido verificada con éxito. Ya puedes iniciar sesión.');
+      } catch (err) {
+        setEstado('error');
+        setMensaje(err.message);
+      }
+    };
+
+    verificarAutomaticamente();
+  }, [tokenParam]);
 
   const handleDigito = (index, valor) => {
     const v = valor.replace(/\D/g, '').slice(-1);

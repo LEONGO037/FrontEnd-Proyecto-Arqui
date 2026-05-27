@@ -317,7 +317,7 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                           <polyline points="22,6 12,13 2,6" />
                         </svg>
-                        <input className="login-input" type="email" placeholder="nombre.apellido@ucb.edu.bo"
+                        <input className="login-input" type="email" placeholder="usuario@ucb.edu.bo"
                           value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required />
                       </div>
                     </div>
@@ -539,11 +539,11 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,13 2,6" />
                 </svg>
-                <input className="login-input" type="email" name="email" placeholder="nombre.apellido@ucb.edu.bo"
+                <input className="login-input" type="email" name="email" placeholder="usuario@ucb.edu.bo"
                   value={formData.email} onChange={handleChange} required />
               </div>
               {isRegisterMode && emailWasTyped && !isEmailValid && (
-                <p className="field-hint field-hint-error">Formato esperado: nombre.apellido@ucb.edu.bo</p>
+                <p className="field-hint field-hint-error">El correo debe pertenecer al dominio @ucb.edu.bo</p>
               )}
               {isRegisterMode && emailWasTyped && isEmailValid && (
                 <p className="field-hint field-hint-success">Correo institucional válido</p>
