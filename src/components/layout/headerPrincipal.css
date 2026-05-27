@@ -216,9 +216,130 @@
   display: flex;
 }
 
+/* ===== Menú móvil deslizable ===== */
+.navbar-mobile-menu {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.navbar-mobile-menu.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.navbar-mobile-content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 85%;
+  max-width: 360px;
+  height: 100vh;
+  background: rgba(0, 51, 102, 0.98);
+  backdrop-filter: blur(20px);
+  padding: 5.5rem 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.navbar-mobile-menu.active .navbar-mobile-content {
+  transform: translateX(0);
+}
+
+.mobile-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(140, 198, 63, 0.1);
+  border: 1px solid rgba(140, 198, 63, 0.2);
+  border-radius: 14px;
+  margin-bottom: 0.75rem;
+}
+
+.mobile-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8cc63f, #7ab332);
+  color: #003366;
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobile-user-name {
+  color: white;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.mobile-user-email {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+  word-break: break-all;
+}
+
+.mobile-menu-item {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.mobile-menu-item:hover,
+.mobile-menu-item:active {
+  background: rgba(140, 198, 63, 0.15);
+  border-color: rgba(140, 198, 63, 0.3);
+}
+
+.mobile-menu-logout {
+  color: #fca5a5;
+  margin-top: 0.5rem;
+  border-color: rgba(252, 165, 165, 0.2);
+}
+
+.mobile-menu-logout:hover,
+.mobile-menu-logout:active {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(220, 38, 38, 0.4);
+}
+
+.mobile-login-button {
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
 @media (max-width: 968px) {
   .mobile-toggle {
     display: flex;
+  }
+
+  .navbar-mobile-menu {
+    display: block;
   }
 
   .navbar-links {

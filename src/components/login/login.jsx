@@ -1,10 +1,12 @@
 // login.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { useAuth } from '../../context/AuthContext';
 import loginApi from '../../services/loginApi';
 const { login: apiLogin, register: apiRegister, solicitarReset, verificarCodigoReset, resetPassword: apiResetPassword } = loginApi;
 import { getRolePath } from '../../utils/roleUtils';
+import { RECAPTCHA_SITE_KEY, captchaConfigurado } from '../../utils/captcha';
 import {
   validateForm,
   validateInstitutionalEmail,
@@ -35,6 +37,13 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
   const [forgotMostrar, setForgotMostrar] = useState({ nueva: false, confirmar: false });
   const [forgotMsg, setForgotMsg] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
+
+  // reCAPTCHA v2 — token y referencia al widget para reset()
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const [forgotCaptchaToken, setForgotCaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
+  const forgotRecaptchaRef = useRef(null);
+  const captchaEnabled = captchaConfigurado();
 
   const forgotInputsRef = React.useRef([]);
   const forgotReglas = getPasswordRequirements(forgotNuevaPass);
@@ -102,11 +111,17 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
       if (Object.values(errs).some(Boolean)) return;
     }
 
+    // Verificar reCAPTCHA si está configurado
+    if (captchaEnabled && !captchaToken) {
+      setError('Por favor, completa la verificación "No soy un robot"');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
     try {
       if (isLogin) {
-        const res = await apiLogin(formData.email, formData.password);
+        const res = await apiLogin(formData.email, formData.password, captchaToken);
 
         // Contraseña vencida o debe cambiar (docente nuevo)
         if (res?.debe_cambiar || res?.expirada) {
@@ -130,12 +145,15 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
           apellido_paterno: formData.apellido_paterno,
           apellido_materno: formData.apellido_materno,
           email: formData.email, password: formData.password,
-        });
+        }, captchaToken);
         onClose?.();
         navigate(`/verificar-email?email=${encodeURIComponent(formData.email)}`);
       }
     } catch (err) {
       const errorMsg = err?.message || 'Error en autenticación. Intenta de nuevo.';
+      // Resetear captcha tras un error (Google invalida el token tras usarlo)
+      recaptchaRef.current?.reset();
+      setCaptchaToken(null);
       if (isLogin && errorMsg.includes('verificar')) {
         onClose?.();
         navigate(`/verificar-email?email=${encodeURIComponent(formData.email)}`);
@@ -150,13 +168,19 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
   const handleForgotEmail = async (e) => {
     e.preventDefault();
     if (!forgotEmail) return;
+    if (captchaEnabled && !forgotCaptchaToken) {
+      setForgotMsg('Por favor, completa la verificación "No soy un robot"');
+      return;
+    }
     setForgotLoading(true);
     setForgotMsg('');
     try {
-      await solicitarReset(forgotEmail);
+      await solicitarReset(forgotEmail, forgotCaptchaToken);
       setForgotStep('codigo');
       setForgotMsg('');
     } catch {
+      forgotRecaptchaRef.current?.reset();
+      setForgotCaptchaToken(null);
       setForgotMsg('Ocurrió un error. Intenta de nuevo.');
     } finally {
       setForgotLoading(false);
@@ -297,7 +321,31 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
                           value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} required />
                       </div>
                     </div>
-                    <button type="submit" className={`submit-btn ${forgotLoading ? 'loading' : ''}`} disabled={forgotLoading}>
+                    {captchaEnabled && (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
+                          <ReCAPTCHA
+                            ref={forgotRecaptchaRef}
+                            sitekey={RECAPTCHA_SITE_KEY}
+                            onChange={(token) => setForgotCaptchaToken(token)}
+                            onExpired={() => setForgotCaptchaToken(null)}
+                            onErrored={() => setForgotCaptchaToken(null)}
+                            hl="es"
+                          />
+                        </div>
+                        {!forgotCaptchaToken && (
+                          <div className="captcha-hint">
+                            Marca el captcha para habilitar el botón
+                          </div>
+                        )}
+                      </>
+                    )}
+                    <button
+                      type="submit"
+                      className={`submit-btn ${forgotLoading ? 'loading' : ''}`}
+                      disabled={forgotLoading || (captchaEnabled && !forgotCaptchaToken)}
+                      title={captchaEnabled && !forgotCaptchaToken ? 'Primero marca "No soy un robot"' : ''}
+                    >
                       {forgotLoading ? <div className="spinner" /> : <span>Enviar código de verificación</span>}
                     </button>
                   </form>
@@ -583,7 +631,33 @@ const Login = ({ initialMode = 'login', onClose, onLoginSuccess }) => {
               </div>
             )}
 
-            <button type="submit" className={`submit-btn ${isLoading ? 'loading' : ''}`} disabled={isLoading}>
+            {/* reCAPTCHA v2 — checkbox "No soy un robot" */}
+            {captchaEnabled && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0' }}>
+                  <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={RECAPTCHA_SITE_KEY}
+                    onChange={(token) => setCaptchaToken(token)}
+                    onExpired={() => setCaptchaToken(null)}
+                    onErrored={() => setCaptchaToken(null)}
+                    hl="es"
+                  />
+                </div>
+                {!captchaToken && (
+                  <div className="captcha-hint">
+                    Marca el captcha para habilitar el botón
+                  </div>
+                )}
+              </>
+            )}
+
+            <button
+              type="submit"
+              className={`submit-btn ${isLoading ? 'loading' : ''}`}
+              disabled={isLoading || (captchaEnabled && !captchaToken)}
+              title={captchaEnabled && !captchaToken ? 'Primero marca "No soy un robot"' : ''}
+            >
               {isLoading ? <div className="spinner" /> : (
                 <>
                   <span>{isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}</span>

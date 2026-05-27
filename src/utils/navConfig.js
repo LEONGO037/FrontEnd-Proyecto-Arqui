@@ -11,6 +11,7 @@ export const NAV_LINKS = [
   { id: 'pagos',            path: '/admin/pagos',            label: 'Pagos',                         permiso: PERMISSIONS.PAGOS_VER },
   { id: 'reportes',         path: '/admin/reportes',         label: 'Reportes',                      permiso: PERMISSIONS.REPORTES_VER },
   { id: 'auditoria',        path: '/admin/auditoria',        label: 'Auditoría',                     permiso: PERMISSIONS.AUDITORIA_VER },
+  { id: 'riesgos',          path: '/admin/riesgos',          label: 'Gestión de Riesgos',            permiso: PERMISSIONS.RIESGOS_VER },
 ];
 
 export const MENU_CARDS = [
@@ -85,6 +86,15 @@ export const MENU_CARDS = [
     desc: 'Consulta el registro de actividad del sistema.',
     color: '#0f766e',
     permiso: PERMISSIONS.AUDITORIA_VER,
+  },
+  {
+    id: 'riesgos',
+    path: '/admin/riesgos',
+    icon: '🛡️',
+    title: 'Gestión de Riesgos',
+    desc: 'Detecta incidentes de seguridad, gestiona planes de mitigación.',
+    color: '#b91c1c',
+    permiso: PERMISSIONS.RIESGOS_VER,
   },
 ];
 

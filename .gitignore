@@ -23,3 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Reportes y artefactos de OWASP ZAP (no deben subirse al repo)
+zap-reports/
+zap-*.html
+zap-*.json
+zap-*.xml
+zap-*.md
+*.zap.session
+*.zap.session.lck
+*.zap.session.properties

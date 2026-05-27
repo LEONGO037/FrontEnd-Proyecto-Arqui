@@ -7,6 +7,8 @@ export const PERMISSIONS = {
   PAGOS_VER:               'pagos:ver',
   REPORTES_VER:            'reportes:ver',
   AUDITORIA_VER:           'auditoria:ver',
+  RIESGOS_VER:             'riesgos:ver',
+  RIESGOS_GESTIONAR:       'riesgos:gestionar',
   USUARIO_ESTUDIANTE:      'usuario:estudiante',
   USUARIO_DOCENTE:         'usuario:docente',
 };

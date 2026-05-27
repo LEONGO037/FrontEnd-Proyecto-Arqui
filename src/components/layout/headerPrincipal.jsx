@@ -171,6 +171,73 @@ const Header = () => {
             )}
           </div>
         </div>
+
+        {/* Menú móvil deslizable */}
+        <div
+          className={`navbar-mobile-menu ${mobileMenuOpen ? 'active' : ''}`}
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div className="navbar-mobile-content" onClick={(e) => e.stopPropagation()}>
+            {usuario ? (
+              <>
+                <div className="mobile-user-info">
+                  <div className="mobile-avatar">{iniciales}</div>
+                  <div>
+                    <div className="mobile-user-name">{usuario.nombre}</div>
+                    <div className="mobile-user-email">{usuario.email}</div>
+                  </div>
+                </div>
+
+                <button
+                  className="mobile-menu-item"
+                  onClick={() => { navigate('/perfil'); setMobileMenuOpen(false); }}
+                >
+                  🎓 Mi Perfil
+                </button>
+
+                {usuario?.rol === ROLES.DOCENTE ? (
+                  <button
+                    className="mobile-menu-item"
+                    onClick={() => { navigate('/docente'); setMobileMenuOpen(false); }}
+                  >
+                    📊 Panel Docente
+                  </button>
+                ) : (
+                  <button
+                    className="mobile-menu-item"
+                    onClick={() => { navigate('/cursos'); setMobileMenuOpen(false); }}
+                  >
+                    📚 Catálogo de Cursos
+                  </button>
+                )}
+
+                <button
+                  className="mobile-menu-item"
+                  onClick={() => { setShowPasswordModal(true); setMobileMenuOpen(false); }}
+                >
+                  🔐 Cambiar contraseña
+                </button>
+
+                <button
+                  className="mobile-menu-item mobile-menu-logout"
+                  onClick={() => { logout(); navigate('/'); setMobileMenuOpen(false); }}
+                >
+                  🚪 Cerrar sesión
+                </button>
+              </>
+            ) : (
+              <button
+                className="btn-login mobile-login-button"
+                onClick={() => { setShowLogin(true); setMobileMenuOpen(false); }}
+              >
+                <span>Iniciar Sesión</span>
+                <svg className="login-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
       </nav>
 
       {showLogin && (
