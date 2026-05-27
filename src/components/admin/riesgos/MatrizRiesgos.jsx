@@ -27,10 +27,9 @@ const defaultThreat = () => ({
     riesgo_inherente: 9,
     nivel_riesgo_inherente: 'Moderado',
     tratamiento_riesgo: 'Reducir',
-    controles_implementar: '',
-    control_tipo: 'P',
-    control_nivel: 'S',
-    control_frecuencia: 'PT',
+    controles_implementar: [
+        { descripcion: '', control_tipo: 'P', control_nivel: 'S', control_frecuencia: 'PT' }
+    ],
     probabilidad_residual: 1,
     impacto_residual: 1,
     riesgo_residual: 1,
@@ -102,6 +101,9 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
             amenazas: Array.isArray(item.amenazas) && item.amenazas.length > 0 
                 ? item.amenazas.map(t => ({
                     ...t,
+                    controles_implementar: Array.isArray(t.controles_implementar) 
+                        ? t.controles_implementar.map(c => typeof c === 'string' ? { descripcion: c, control_tipo: 'P', control_nivel: 'S', control_frecuencia: 'PT' } : c)
+                        : [{ descripcion: t.controles_implementar || '', control_tipo: t.control_tipo || 'P', control_nivel: t.control_nivel || 'S', control_frecuencia: t.control_frecuencia || 'PT' }],
                     plan_accion: Array.isArray(t.plan_accion) ? t.plan_accion : [t.plan_accion || ''],
                   }))
                 : [defaultThreat()],
@@ -168,6 +170,34 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
         setForm({ ...form, amenazas: copy });
     };
 
+    const handleAddControl = (threatIndex) => {
+        const copy = [...form.amenazas];
+        const controls = [...(copy[threatIndex].controles_implementar || [])];
+        controls.push({ descripcion: '', control_tipo: 'P', control_nivel: 'S', control_frecuencia: 'PT' });
+        copy[threatIndex] = { ...copy[threatIndex], controles_implementar: controls };
+        setForm({ ...form, amenazas: copy });
+    };
+
+    const handleRemoveControl = (threatIndex, controlIndex) => {
+        const copy = [...form.amenazas];
+        const controls = [...(copy[threatIndex].controles_implementar || [])];
+        if (controls.length === 1) {
+            controls[0] = { descripcion: '', control_tipo: 'P', control_nivel: 'S', control_frecuencia: 'PT' };
+        } else {
+            controls.splice(controlIndex, 1);
+        }
+        copy[threatIndex] = { ...copy[threatIndex], controles_implementar: controls };
+        setForm({ ...form, amenazas: copy });
+    };
+
+    const handleControlChange = (threatIndex, controlIndex, field, value) => {
+        const copy = [...form.amenazas];
+        const controls = [...(copy[threatIndex].controles_implementar || [])];
+        controls[controlIndex] = { ...controls[controlIndex], [field]: value };
+        copy[threatIndex] = { ...copy[threatIndex], controles_implementar: controls };
+        setForm({ ...form, amenazas: copy });
+    };
+
     const handleAddStep = (threatIndex) => {
         const copy = [...form.amenazas];
         const steps = [...(copy[threatIndex].plan_accion || [])];
@@ -197,21 +227,21 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
     };
 
     const descargarExcelModelo = () => {
-        // Hoja 1: Instrucciones y Responsables
         const instHeaders = [
             ["GUÍA DE LLENADO Y REGLAS DE IMPORTACIÓN DE LA MATRIZ DE RIESGOS"],
             ["1. La hoja 'Matriz (Llenar aquí)' contiene la estructura oficial para cargar los riesgos."],
             ["2. La columna 'Responsable Email' debe coincidir EXACTAMENTE con el correo de un administrador registrado."],
             ["3. IMPORTANTE: Si el correo del responsable no coincide, el riesgo se importará pero se quedará como 'Sin responsable asignado'."],
-            ["   Se recomienda encarecidamente verificar los correos válidos a continuación o asignar el responsable directamente en la aplicación."],
-            ["4. En la columna de 'Pasos Plan de Acción', separe cada paso secuencial usando un punto y coma (;)."],
+            ["   Se recomienda encarecipamente verificar los correos válidos a continuación o asignar el responsable directamente en la aplicación."],
+            ["4. En la columna 'Controles a Implementar', cada control debe escribirse con sus atributos entre corchetes: Descripcion [Tipo, Nivel, Frecuencia], separados por punto y coma (;)."],
+            ["   Ejemplo: Validación JWT [P, A, PT]; Configurar WAF [P, S, D]; Monitoreo logs [D, M, M]"],
+            ["   Abreviaciones válidas: Tipo (P=Preventivo, D=Detectivo, C=Correctivo); Nivel (A=Alto, S=Suficiente, M=Moderado); Frecuencia (PT=Por Transacción, D=Diario, S=Semanal, M=Mensual, A=Anual)"],
             ["5. Los campos P (Probabilidad) e I (Impacto) deben ser números enteros entre 1 y 5."],
             [""],
             ["LISTA DE ADMINISTRADORES DE SEGURIDAD REGISTRADOS EN EL SISTEMA:"],
             ["ID", "Nombre Completo", "Correo Electrónico (Usar en la hoja Matriz)"]
         ];
 
-        // Añadir los administradores reales cargados en el frontend a la lista de ayuda
         usuariosAdmins.forEach(u => {
             const fullName = `${u.nombre} ${u.apellido_paterno || ''}`.trim();
             instHeaders.push([u.id, fullName, u.correo || u.email || 'sin-correo@college.edu']);
@@ -219,8 +249,6 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
 
         const wsInstructions = XLSX.utils.aoa_to_sheet(instHeaders);
 
-        // Hoja 2: Datos (Estructura oficial para importar)
-        // Agregamos una fila de EJEMPLO aclarando al inicio y filas vacías para llenar
         const wsData = [
             {
                 "Activo de Informacion": "[EJEMPLO - BORRAR] Base de Datos de Inscripciones y Calificaciones",
@@ -229,10 +257,7 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                 "P Inherente (1-5)": 3,
                 "I Inherente (1-5)": 5,
                 "Tratamiento (Reducir/Aceptar/Evitar/Transferir)": "Reducir",
-                "Controles a Implementar": "Validación estricta de tokens JWT",
-                "Control Tipo (P/D/C/P, D)": "P, D",
-                "Control Nivel (A/S/M)": "A",
-                "Control Frecuencia (PT/D/S/M/A)": "PT",
+                "Controles a Implementar (Formato: Descripcion [Tipo, Nivel, Frecuencia]; separados por ';')": "Validación estricta de tokens JWT [P, A, PT]; Sanitización de entradas [P, A, PT]; Monitoreo de logs [D, S, D]",
                 "P Residual (1-5)": 1,
                 "I Residual (1-5)": 5,
                 "Pasos Plan de Accion (Separados por punto y coma ';')": "Auditar código de endpoints; Configurar reglas de WAF; Implementar firmas",
@@ -246,10 +271,7 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                 "P Inherente (1-5)": "",
                 "I Inherente (1-5)": "",
                 "Tratamiento (Reducir/Aceptar/Evitar/Transferir)": "",
-                "Controles a Implementar": "",
-                "Control Tipo (P/D/C/P, D)": "",
-                "Control Nivel (A/S/M)": "",
-                "Control Frecuencia (PT/D/S/M/A)": "",
+                "Controles a Implementar (Formato: Descripcion [Tipo, Nivel, Frecuencia]; separados por ';')": "",
                 "P Residual (1-5)": "",
                 "I Residual (1-5)": "",
                 "Pasos Plan de Accion (Separados por punto y coma ';')": "",
@@ -260,7 +282,6 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
 
         const worksheet = XLSX.utils.json_to_sheet(wsData);
 
-        // Estilos básicos en la hoja (colorear la primera fila de cabecera en el modelo de datos si es soportado por el parseador del cliente)
         worksheet['!cols'] = [
             { wch: 30 }, // Activo
             { wch: 30 }, // Amenaza
@@ -268,10 +289,7 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
             { wch: 15 }, // P Inherente
             { wch: 15 }, // I Inherente
             { wch: 15 }, // Tratamiento
-            { wch: 25 }, // Controles
-            { wch: 12 }, // Tipo
-            { wch: 12 }, // Nivel
-            { wch: 15 }, // Frecuencia
+            { wch: 60 }, // Controles (formato granular)
             { wch: 12 }, // P Residual
             { wch: 12 }, // I Residual
             { wch: 35 }, // Plan
@@ -322,6 +340,29 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                     const pResidual = Number(row["P Residual (1-5)"]) || 1;
                     const iResidual = Number(row["I Residual (1-5)"]) || 1;
 
+                    const controlesRaw = row["Controles a Implementar (Formato: Descripcion [Tipo, Nivel, Frecuencia]; separados por ';')"] ||
+                                         row["Controles a Implementar (Formato: Descripcion [Tipo, Nivel, Frecuencia]; ...)"] ||
+                                         row["Controles a Implementar (Separados por ';')"] || '';
+                    const parsedControles = String(controlesRaw).split(';').map(cStr => {
+                        const trimmed = cStr.trim();
+                        if (!trimmed) return null;
+                        const match = trimmed.match(/(.*)\[\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^\]]+)\s*\]/);
+                        if (match) {
+                            return {
+                                descripcion: match[1].trim(),
+                                control_tipo: match[2].trim(),
+                                control_nivel: match[3].trim(),
+                                control_frecuencia: match[4].trim()
+                            };
+                        }
+                        return {
+                            descripcion: trimmed,
+                            control_tipo: 'P',
+                            control_nivel: 'S',
+                            control_frecuencia: 'PT'
+                        };
+                    }).filter(Boolean);
+
                     const pasosRaw = row["Pasos Plan de Accion (Separados por punto y coma ';')"] || '';
                     const plan_accion = String(pasosRaw).split(';').map(p => p.trim()).filter(Boolean);
 
@@ -334,10 +375,7 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                         riesgo_inherente: pInherente * iInherente,
                         nivel_riesgo_inherente: CALCULAR_NIVEL(pInherente * iInherente),
                         tratamiento_riesgo: row["Tratamiento (Reducir/Aceptar/Evitar/Transferir)"] || 'Reducir',
-                        controles_implementar: row["Controles a Implementar"] || 'Controles estándar',
-                        control_tipo: row["Control Tipo (P/D/C/P, D)"] || 'P',
-                        control_nivel: row["Control Nivel (A/S/M)"] || 'S',
-                        control_frecuencia: row["Control Frecuencia (PT/D/S/M/A)"] || 'PT',
+                        controles_implementar: parsedControles.length > 0 ? parsedControles : [{ descripcion: 'Controles estándar', control_tipo: 'P', control_nivel: 'S', control_frecuencia: 'PT' }],
                         probabilidad_residual: pResidual,
                         impacto_residual: iResidual,
                         riesgo_residual: pResidual * iResidual,
@@ -390,8 +428,9 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                 setError(`Las consecuencias de la Amenaza #${i + 1} no pueden estar vacías.`);
                 return;
             }
-            if (!t.controles_implementar.trim()) {
-                setError(`Los controles de mitigación para la Amenaza #${i + 1} son requeridos.`);
+            const controlesValidos = (t.controles_implementar || []).filter(c => c.descripcion.trim() !== '');
+            if (controlesValidos.length === 0) {
+                setError(`Debe especificar al menos un control de mitigación para la Amenaza #${i + 1}.`);
                 return;
             }
             if (!t.fecha_limite) {
@@ -422,6 +461,7 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                 impacto_residual: iResidual,
                 riesgo_residual: riesgoResidual,
                 nivel_riesgo_residual: CALCULAR_NIVEL(riesgoResidual),
+                controles_implementar: (t.controles_implementar || []).filter(c => c.descripcion.trim() !== ''),
                 plan_accion: (t.plan_accion || []).filter(step => step.trim() !== ''),
             };
         });
@@ -463,17 +503,42 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
     let threatCounter = 1;
     matriz.forEach((item) => {
         const amenazas = Array.isArray(item.amenazas) && item.amenazas.length > 0 ? item.amenazas : [{}];
-        amenazas.forEach((threat, idx) => {
-            rows.push({
-                assetId: item.id,
-                activo_informacion: item.activo_informacion,
-                isFirst: idx === 0,
-                isLastThreat: idx === amenazas.length - 1,
-                rowSpan: amenazas.length,
-                threatIndex: threatCounter++,
-                threat,
-                fullItem: item
+        
+        let totalAssetControls = 0;
+        amenazas.forEach(t => {
+            const ctrls = Array.isArray(t.controles_implementar) && t.controles_implementar.length > 0 
+                ? t.controles_implementar 
+                : [{}];
+            totalAssetControls += ctrls.length;
+        });
+
+        let cumulativeControlIdx = 0;
+        amenazas.forEach((threat, tIdx) => {
+            const controls = Array.isArray(threat.controles_implementar) && threat.controles_implementar.length > 0
+                ? threat.controles_implementar
+                : [{}];
+            
+            controls.forEach((control, cIdx) => {
+                rows.push({
+                    assetId: item.id,
+                    activo_informacion: item.activo_informacion,
+                    isFirstControlOfAsset: cumulativeControlIdx === 0,
+                    assetRowSpan: totalAssetControls,
+                    
+                    threatIndex: threatCounter,
+                    threat,
+                    isFirstControlOfThreat: cIdx === 0,
+                    threatRowSpan: controls.length,
+                    isLastControlOfThreat: cIdx === controls.length - 1,
+                    isLastThreatOfAsset: tIdx === amenazas.length - 1 && cIdx === controls.length - 1,
+
+                    control,
+                    controlIndex: cIdx,
+                    fullItem: item
+                });
+                cumulativeControlIdx++;
             });
+            threatCounter++;
         });
     });
 
@@ -544,22 +609,22 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                             </tr>
                             <tr className="matriz-header-fields">
                                 <th style={{ width: '40px' }}>No.</th>
-                                <th style={{ minWidth: '150px' }}>Activo de Información</th>
+                                <th style={{ minWidth: '150px' }} className="border-thick-right">Activo de Información</th>
                                 <th style={{ minWidth: '200px' }}>Amenaza / Vulnerabilidad</th>
-                                <th style={{ minWidth: '200px' }}>Consecuencia / Riesgo</th>
+                                <th style={{ minWidth: '200px' }} className="border-thick-right">Consecuencia / Riesgo</th>
                                 <th style={{ width: '40px' }} title="Probabilidad">P</th>
                                 <th style={{ width: '40px' }} title="Impacto">I</th>
                                 <th style={{ width: '60px' }}>Valor</th>
-                                <th style={{ minWidth: '100px' }}>Nivel Riesgo</th>
-                                <th style={{ minWidth: '100px' }}>Tratamiento</th>
+                                <th style={{ minWidth: '100px' }} className="border-thick-right">Nivel Riesgo</th>
+                                <th style={{ minWidth: '100px' }} className="border-thick-right">Tratamiento</th>
                                 <th style={{ minWidth: '200px' }}>Controles a Implementar</th>
                                 <th style={{ width: '60px' }} title="Tipo (P, D, C, Di)">Tipo</th>
                                 <th style={{ width: '60px' }} title="Nivel (A, S, M)">Nivel</th>
-                                <th style={{ width: '80px' }} title="Frecuencia">Frecuencia</th>
+                                <th style={{ width: '80px' }} title="Frecuencia" className="border-thick-right">Frecuencia</th>
                                 <th style={{ width: '40px' }} title="Probabilidad Residual">P</th>
                                 <th style={{ width: '40px' }} title="Impacto Residual">I</th>
                                 <th style={{ width: '60px' }}>Valor</th>
-                                <th style={{ minWidth: '100px' }}>Nivel Residual</th>
+                                <th style={{ minWidth: '100px' }} className="border-thick-right">Nivel Residual</th>
                                 <th style={{ minWidth: '220px' }}>Pasos Plan de Acción</th>
                                 <th style={{ minWidth: '90px' }}>Fecha Límite</th>
                                 <th style={{ minWidth: '130px' }}>Responsable</th>
@@ -569,60 +634,73 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                         <tbody>
                              {rows.map((row, idx) => {
                                  const t = row.threat;
+                                 const ctrl = row.control;
                                  return (
-                                     <tr key={`${row.assetId}-${row.threat.id || idx}`} className={`matriz-row ${row.isLastThreat ? 'is-last-threat-row' : ''}`}>
-                                         <td className="text-center font-bold">{row.threatIndex}</td>
+                                     <tr key={`${row.assetId}-${t.id || ''}-${row.controlIndex}-${idx}`} className={`matriz-row ${row.isLastThreatOfAsset ? 'is-last-threat-row' : ''}`}>
+                                         {row.isFirstControlOfThreat && (
+                                             <td rowSpan={row.threatRowSpan} className="text-center font-bold">{row.threatIndex}</td>
+                                         )}
                                          
-                                         {row.isFirst && (
-                                             <td rowSpan={row.rowSpan} className="font-semibold text-white asset-cell-highlight">
+                                         {row.isFirstControlOfAsset && (
+                                             <td rowSpan={row.assetRowSpan} className="font-semibold text-white asset-cell-highlight border-thick-right">
                                                  {row.activo_informacion}
                                              </td>
                                          )}
 
-                                         <td>{t.amenaza_vulnerabilidad || '—'}</td>
-                                         <td>{t.consecuencia_riesgo || '—'}</td>
-                                         <td className="text-center font-semibold">{t.probabilidad_inherente || '—'}</td>
-                                         <td className="text-center font-semibold">{t.impacto_inherente || '—'}</td>
-                                         <td className="text-center font-bold text-white">{t.riesgo_inherente || '—'}</td>
-                                         <td className="text-center font-bold">
-                                             {t.nivel_riesgo_inherente ? (
-                                                 <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[t.nivel_riesgo_inherente]}22`, color: COLOR_NIVEL[t.nivel_riesgo_inherente], border: `1px solid ${COLOR_NIVEL[t.nivel_riesgo_inherente]}55` }}>
-                                                     {t.nivel_riesgo_inherente}
-                                                 </span>
-                                             ) : '—'}
-                                         </td>
-                                         <td className="text-center text-sky-600 font-semibold">{t.tratamiento_riesgo || '—'}</td>
-                                         <td>{t.controles_implementar || '—'}</td>
-                                         <td className="text-center font-medium text-emerald-600">{t.control_tipo || '—'}</td>
-                                         <td className="text-center font-medium text-violet-600">{t.control_nivel || '—'}</td>
-                                         <td className="text-center font-medium text-teal-600">{t.control_frecuencia || '—'}</td>
-                                         <td className="text-center font-semibold">{t.probabilidad_residual || '—'}</td>
-                                         <td className="text-center font-semibold">{t.impacto_residual || '—'}</td>
-                                         <td className="text-center font-bold text-white">{t.riesgo_residual || '—'}</td>
-                                         <td className="text-center font-bold">
-                                             {t.nivel_riesgo_residual ? (
-                                                 <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[t.nivel_riesgo_residual]}22`, color: COLOR_NIVEL[t.nivel_riesgo_residual], border: `1px solid ${COLOR_NIVEL[t.nivel_riesgo_residual]}55` }}>
-                                                     {t.nivel_riesgo_residual}
-                                                 </span>
-                                             ) : '—'}
-                                         </td>
+                                         {row.isFirstControlOfThreat && (
+                                             <>
+                                                 <td rowSpan={row.threatRowSpan}>{t.amenaza_vulnerabilidad || '—'}</td>
+                                                 <td rowSpan={row.threatRowSpan} className="border-thick-right">{t.consecuencia_riesgo || '—'}</td>
+                                                 <td rowSpan={row.threatRowSpan} className="text-center font-semibold">{t.probabilidad_inherente || '—'}</td>
+                                                 <td rowSpan={row.threatRowSpan} className="text-center font-semibold">{t.impacto_inherente || '—'}</td>
+                                                 <td rowSpan={row.threatRowSpan} className="text-center font-bold text-white">{t.riesgo_inherente || '—'}</td>
+                                                 <td rowSpan={row.threatRowSpan} className="text-center font-bold border-thick-right">
+                                                     {t.nivel_riesgo_inherente ? (
+                                                         <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[t.nivel_riesgo_inherente]}22`, color: COLOR_NIVEL[t.nivel_riesgo_inherente], border: `1px solid ${COLOR_NIVEL[t.nivel_riesgo_inherente]}55` }}>
+                                                             {t.nivel_riesgo_inherente}
+                                                         </span>
+                                                     ) : '—'}
+                                                 </td>
+                                                 <td rowSpan={row.threatRowSpan} className="text-center text-sky-600 font-semibold border-thick-right">{t.tratamiento_riesgo || '—'}</td>
+                                             </>
+                                         )}
                                          
-                                         <td>
-                                             {Array.isArray(t.plan_accion) && t.plan_accion.length > 0 ? (
-                                                 <ol className="matrix-plan-list">
-                                                     {t.plan_accion.map((step, sidx) => (
-                                                         <li key={sidx} className="matrix-plan-item">{step}</li>
-                                                     ))}
-                                                 </ol>
-                                             ) : '—'}
-                                         </td>
-                                         <td className="text-center font-medium text-slate-500">
-                                             {t.fecha_limite ? new Date(t.fecha_limite).toLocaleDateString('es-BO') : '—'}
-                                         </td>
-                                         <td className="font-semibold text-slate-700">{t.responsable_nombre || '—'}</td>
+                                         {/* Control Columns: Rendered for every control row */}
+                                         <td>{ctrl.descripcion || ctrl || '—'}</td>
+                                         <td className="text-center font-medium text-emerald-600">{ctrl.control_tipo || 'P'}</td>
+                                         <td className="text-center font-medium text-violet-600">{ctrl.control_nivel || 'S'}</td>
+                                         <td className="text-center font-medium text-teal-600 border-thick-right">{ctrl.control_frecuencia || 'PT'}</td>
+                                         
+                                         {row.isFirstControlOfThreat && (
+                                             <>
+                                                 <td rowSpan={row.threatRowSpan} className="text-center font-semibold">{t.probabilidad_residual || '—'}</td>
+                                                 <td rowSpan={row.threatRowSpan} className="text-center font-semibold">{t.impacto_residual || '—'}</td>
+                                                 <td rowSpan={row.threatRowSpan} className="text-center font-bold text-white">{t.riesgo_residual || '—'}</td>
+                                                 <td rowSpan={row.threatRowSpan} className="text-center font-bold border-thick-right">
+                                                     {t.nivel_riesgo_residual ? (
+                                                         <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[t.nivel_riesgo_residual]}22`, color: COLOR_NIVEL[t.nivel_riesgo_residual], border: `1px solid ${COLOR_NIVEL[t.nivel_riesgo_residual]}55` }}>
+                                                             {t.nivel_riesgo_residual}
+                                                         </span>
+                                                     ) : '—'}
+                                                 </td>
+                                                 <td rowSpan={row.threatRowSpan}>
+                                                     {Array.isArray(t.plan_accion) && t.plan_accion.length > 0 ? (
+                                                         <ol className="matrix-plan-list">
+                                                             {t.plan_accion.map((step, sidx) => (
+                                                                 <li key={sidx} className="matrix-plan-item">{step}</li>
+                                                             ))}
+                                                         </ol>
+                                                     ) : '—'}
+                                                 </td>
+                                                 <td rowSpan={row.threatRowSpan} className="text-center font-medium text-slate-500">
+                                                     {t.fecha_limite ? new Date(t.fecha_limite).toLocaleDateString('es-BO') : '—'}
+                                                 </td>
+                                                 <td rowSpan={row.threatRowSpan} className="font-semibold text-slate-700">{t.responsable_nombre || '—'}</td>
+                                             </>
+                                         )}
 
-                                         {row.isFirst && puedeGestionar && (
-                                             <td rowSpan={row.rowSpan} className="text-center">
+                                         {row.isFirstControlOfAsset && puedeGestionar && (
+                                             <td rowSpan={row.assetRowSpan} className="text-center">
                                                  <div className="matrix-actions-cell">
                                                      <button className="matrix-btn-edit" onClick={() => abrirEditar(row.fullItem)} title="Editar Activo Completo">✏️</button>
                                                      <button className="matrix-btn-delete" onClick={() => borrar(row.assetId)} title="Eliminar Activo">🗑️</button>
@@ -844,54 +922,69 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                                         </div>
 
                                         <div className="form-row">
-                                            <label className="form-col-4">
-                                                Tratamiento
-                                                <select className="select-ux-premium" value={t.tratamiento_riesgo} onChange={(e) => handleThreatChange(tIdx, 'tratamiento_riesgo', e.target.value)}>
-                                                    {['Reducir', 'Aceptar', 'Evitar', 'Transferir'].map(tr => <option key={tr} value={tr}>{tr}</option>)}
-                                                </select>
-                                            </label>
-                                            <label className="form-col-8">
-                                                Controles de Mitigación a Implementar *
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    className="input-ux-premium"
-                                                    value={t.controles_implementar}
-                                                    onChange={(e) => handleThreatChange(tIdx, 'controles_implementar', e.target.value)}
-                                                    placeholder="Ej: Sanitización estricta de parámetros, middleware JWT..."
-                                                />
-                                            </label>
-                                        </div>
-
-                                        <div className="form-row">
-                                            <label className="form-col-4">
-                                                Tipo de Control
-                                                <select className="select-ux-premium" value={t.control_tipo} onChange={(e) => handleThreatChange(tIdx, 'control_tipo', e.target.value)}>
-                                                    <option value="P">Preventivo (P)</option>
-                                                    <option value="D">Detectivo (D)</option>
-                                                    <option value="C">Correctivo (C)</option>
-                                                    <option value="P, D">Preventivo y Detectivo (P, D)</option>
-                                                </select>
-                                            </label>
-                                            <label className="form-col-4">
-                                                Eficiencia del Control
-                                                <select className="select-ux-premium" value={t.control_nivel} onChange={(e) => handleThreatChange(tIdx, 'control_nivel', e.target.value)}>
-                                                    <option value="A">Alto (A)</option>
-                                                    <option value="S">Suficiente (S)</option>
-                                                    <option value="M">Moderado (M)</option>
-                                                </select>
-                                            </label>
-                                            <label className="form-col-4">
-                                                Frecuencia
-                                                <select className="select-ux-premium" value={t.control_frecuencia} onChange={(e) => handleThreatChange(tIdx, 'control_frecuencia', e.target.value)}>
-                                                    <option value="D">Diario (D)</option>
-                                                    <option value="S">Semanal (S)</option>
-                                                    <option value="M">Mensual (M)</option>
-                                                    <option value="A">Anual (A)</option>
-                                                    <option value="PT">Por Transacción (PT)</option>
-                                                </select>
-                                            </label>
-                                        </div>
+                                             <label className="form-col-4">
+                                                 Tratamiento
+                                                 <select className="select-ux-premium" value={t.tratamiento_riesgo} onChange={(e) => handleThreatChange(tIdx, 'tratamiento_riesgo', e.target.value)}>
+                                                     {['Reducir', 'Aceptar', 'Evitar', 'Transferir'].map(tr => <option key={tr} value={tr}>{tr}</option>)}
+                                                 </select>
+                                             </label>
+                                             <div className="form-col-8 threat-box-group">
+                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                                     <h5 style={{ margin: 0 }}>🛡️ Controles de Mitigación Granulares *</h5>
+                                                     <button type="button" className="btn-secundario btn-mini" onClick={() => handleAddControl(tIdx)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
+                                                         + Añadir Control
+                                                     </button>
+                                                 </div>
+                                                 {(t.controles_implementar || []).map((ctrl, cIdx) => (
+                                                     <div key={cIdx} className="control-granular-item-box" style={{ border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0.75rem', marginTop: '0.5rem', background: '#f8fafc' }}>
+                                                         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                                             <span className="step-num-label" style={{ fontWeight: 'bold', color: '#64748b' }}>#{cIdx + 1}</span>
+                                                             <input
+                                                                 type="text"
+                                                                 required
+                                                                 className="input-ux-premium"
+                                                                 value={ctrl.descripcion || ''}
+                                                                 onChange={(e) => handleControlChange(tIdx, cIdx, 'descripcion', e.target.value)}
+                                                                 placeholder={`Descripción del control mitigante`}
+                                                                 style={{ flex: 1 }}
+                                                             />
+                                                             <button type="button" className="step-remove-btn" onClick={() => handleRemoveControl(tIdx, cIdx)} style={{ padding: '0.35rem 0.5rem', border: '1px solid #e2e8f0', background: '#fff', borderRadius: '6px', color: '#ef4444', cursor: 'pointer' }}>
+                                                                 ✕
+                                                             </button>
+                                                         </div>
+                                                         <div className="form-row" style={{ gap: '0.5rem', margin: 0 }}>
+                                                             <label className="form-col-4" style={{ margin: 0, fontSize: '0.75rem' }}>
+                                                                 Tipo
+                                                                 <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_tipo || 'P'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_tipo', e.target.value)}>
+                                                                     <option value="P">Preventivo (P)</option>
+                                                                     <option value="D">Detectivo (D)</option>
+                                                                     <option value="C">Correctivo (C)</option>
+                                                                     <option value="P, D">Preventivo y Detectivo (P, D)</option>
+                                                                 </select>
+                                                             </label>
+                                                             <label className="form-col-4" style={{ margin: 0, fontSize: '0.75rem' }}>
+                                                                 Nivel (Eficiencia)
+                                                                 <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_nivel || 'S'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_nivel', e.target.value)}>
+                                                                     <option value="A">Alto (A)</option>
+                                                                     <option value="S">Suficiente (S)</option>
+                                                                     <option value="M">Moderado (M)</option>
+                                                                 </select>
+                                                             </label>
+                                                             <label className="form-col-4" style={{ margin: 0, fontSize: '0.75rem' }}>
+                                                                 Frecuencia
+                                                                 <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_frecuencia || 'PT'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_frecuencia', e.target.value)}>
+                                                                     <option value="D">Diario (D)</option>
+                                                                     <option value="S">Semanal (S)</option>
+                                                                     <option value="M">Mensual (M)</option>
+                                                                     <option value="A">Anual (A)</option>
+                                                                     <option value="PT">Por Transacción (PT)</option>
+                                                                 </select>
+                                                             </label>
+                                                         </div>
+                                                     </div>
+                                                 ))}
+                                             </div>
+                                         </div>
 
                                         <div className="threat-box-group mt-3">
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
