@@ -85,7 +85,14 @@ const AdminLogsSeguridad = () => {
                 limite: parseInt(limite) || 100
             });
 
-            setLogs(response?.datos || []);
+            const datos = response?.datos || [];
+            // Ocultar registros sin usuario identificado (token no proporcionado, etc.)
+            const datosConUsuario = datos.filter((item) => {
+                const usuario = (item.usuario || '').toString().trim();
+                const email = (item.email || '').toString().trim();
+                return usuario !== '' || email !== '';
+            });
+            setLogs(datosConUsuario);
         } catch (err) {
             setError(err.message || 'No se pudieron cargar los logs de seguridad.');
         } finally {
@@ -225,7 +232,7 @@ const AdminLogsSeguridad = () => {
                                         <th style={{ width: '100px' }}>Resultado</th>
                                         <th style={{ width: '220px' }}>Usuario / Destino</th>
                                         <th style={{ width: '200px' }}>Cliente (IP / UA)</th>
-                                        <th style={{ width: '250px' }}>Ruta de Consulta</th>
+                                        <th style={{ width: '360px' }}>Ruta de Consulta</th>
                                         <th style={{ width: '250px' }}>Metadatos</th>
                                     </tr>
                                 </thead>
