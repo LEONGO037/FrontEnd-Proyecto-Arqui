@@ -18,11 +18,11 @@ const jsonRequest = async (path, options = {}) => {
   return data;
 };
 
-export const login = async (email, password, captcha_token = null) => {
+export const login = async (email, password) => {
   const res = await fetch(`${API_BASE}/api/autenticacion/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, captcha_token }),
+    body: JSON.stringify({ email, password }),
   });
   const text = await res.text();
   let data = null;
@@ -37,10 +37,10 @@ export const login = async (email, password, captcha_token = null) => {
   throw e;
 };
 
-export const register = async (payload, captcha_token = null) =>
+export const register = async (payload) =>
   jsonRequest('/api/autenticacion/registrar', {
     method: 'POST',
-    body: JSON.stringify({ ...payload, captcha_token }),
+    body: JSON.stringify(payload),
   });
 
 export const verificarCodigo = async (email, codigo) =>
@@ -59,10 +59,10 @@ export const changePassword = async (passwordActual, nuevaPassword) => {
   });
 };
 
-export const solicitarReset = async (email, captcha_token = null) =>
+export const solicitarReset = async (email) =>
   jsonRequest('/api/autenticacion/solicitar-reset', {
     method: 'POST',
-    body: JSON.stringify({ email, captcha_token }),
+    body: JSON.stringify({ email }),
   });
 
 export const verificarCodigoReset = async (email, codigo) =>
