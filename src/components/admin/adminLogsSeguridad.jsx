@@ -243,6 +243,9 @@ const AdminLogsSeguridad = () => {
                                                         <div className="logs-usuario-email" style={{ fontStyle: item.email ? 'normal' : 'italic', color: item.email ? undefined : '#94a3b8' }}>
                                                             {item.email || '—'}
                                                         </div>
+                                                        {item.usuario_id != null && (
+                                                            <div className="logs-usuario-id">ID #{item.usuario_id}</div>
+                                                        )}
                                                     </td>
                                                     <td>
                                                         <span className="logs-ip-badge">{item.ip || '—'}</span>

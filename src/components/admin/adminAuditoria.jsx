@@ -200,6 +200,9 @@ const AdminAuditoria = () => {
                                                 <td>
                                                     <div className="auditoria-usuario">{item.usuario || 'Sistema'}</div>
                                                     <div className="auditoria-email">{item.usuario_email || '-'}</div>
+                                                    {item.usuario_id != null && (
+                                                        <div className="auditoria-usuario-id">ID #{item.usuario_id}</div>
+                                                    )}
                                                 </td>
                                                 <td>
                                                     <span className="auditoria-badge">{item.accion || '-'}</span>

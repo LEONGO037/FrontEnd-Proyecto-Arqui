@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { NAV_LINKS, tieneAcceso } from '../../utils/navConfig';
-import { ROLES, ADMIN_ROLES, getRolPath } from '../../utils/roleUtils';
+import { ROLES, ADMIN_ROLES, getRolPath, getNombreCompleto } from '../../utils/roleUtils';
 import CambiarPasswordPanel from '../auth/CambiarPasswordPanel';
 import './headerPrincipal.css';
 
@@ -66,7 +66,7 @@ const UserHeaderDynamic = () => {
     setShowUserMenu(false);
   };
 
-  const nombreAdmin = usuario?.nombre || 'Administrador';
+  const nombreAdmin = getNombreCompleto(usuario) || usuario?.nombre || 'Administrador';
   // ¿El usuario es estudiante/docente en modo admin (con permisos extra)?
   const esRolPrincipal = rol === ROLES.ESTUDIANTE || rol === ROLES.DOCENTE;
   const labelRolPrincipal = rol === ROLES.DOCENTE ? 'Docente' : 'Estudiante';
@@ -184,6 +184,9 @@ const UserHeaderDynamic = () => {
                   <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #f0f2f5', marginBottom: '0.25rem' }}>
                     <div style={{ fontWeight: 700, color: '#003366', fontSize: '0.95rem' }}>{nombreAdmin}</div>
                     <div style={{ fontSize: '0.78rem', color: '#aaa' }}>{usuario?.email}</div>
+                    {usuario?.id != null && (
+                      <div style={{ fontSize: '0.72rem', color: '#9ca3af', marginTop: '0.15rem' }}>ID #{usuario.id}</div>
+                    )}
                     <div style={{
                       marginTop: '0.4rem', display: 'inline-flex', alignItems: 'center',
                       background: '#eff6ff', color: '#1d4ed8',

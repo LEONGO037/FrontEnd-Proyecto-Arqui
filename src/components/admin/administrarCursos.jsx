@@ -49,6 +49,14 @@ const AdministrarCursos = () => {
 
   useEffect(() => { cargar(); }, [cargar]);
 
+  // Limpia el mensaje de éxito tras unos segundos para que la pantalla no
+  // quede con el aviso de la operación anterior una vez concluida.
+  useEffect(() => {
+    if (!exito) return;
+    const t = setTimeout(() => setExito(''), 4000);
+    return () => clearTimeout(t);
+  }, [exito]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));

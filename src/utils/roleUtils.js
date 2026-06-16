@@ -1,9 +1,19 @@
 export const PERMISSIONS = {
+  // Usuarios — granulares + legacy "gestionar" (respaldo)
   USUARIOS_GESTIONAR:      'usuarios:gestionar',
+  USUARIOS_VER:            'usuarios:ver',
+  USUARIOS_CREAR:          'usuarios:crear',
+  USUARIOS_EDITAR:         'usuarios:editar',
+  USUARIOS_ELIMINAR:       'usuarios:eliminar',
   ROLES_GESTIONAR:         'roles:gestionar',
+  // Cursos — granulares + legacy "gestionar" (respaldo)
   CURSOS_GESTIONAR:        'cursos:gestionar',
   CURSOS_VER:              'cursos:ver',
+  CURSOS_REGISTRAR:        'cursos:registrar',
+  CURSOS_MODIFICAR:        'cursos:modificar',
+  CURSOS_ELIMINAR:         'cursos:eliminar',
   INSCRIPCIONES_GESTIONAR: 'inscripciones:gestionar',
+  INSCRIPCIONES_VER:       'inscripciones:ver',
   PAGOS_VER:               'pagos:ver',
   REPORTES_VER:            'reportes:ver',
   LOGS_APLICACION_VER:     'logs_aplicacion:ver',
@@ -54,3 +64,13 @@ export const getRolPath = (rol) => {
 
 // Backward-compatible alias
 export const getRolePath = getRolPath;
+
+// Construye el nombre completo del usuario (nombre + apellidos) para mostrar
+// su identidad real en pantalla, en vez de solo el primer nombre.
+export const getNombreCompleto = (usuario) => {
+  if (!usuario) return '';
+  return [usuario.nombre, usuario.apellido_paterno, usuario.apellido_materno]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+};

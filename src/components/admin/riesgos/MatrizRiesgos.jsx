@@ -871,9 +871,10 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                                             </label>
                                         </div>
 
+                                        {/* Paso 1: Riesgo Inherente (antes de aplicar controles) */}
                                         <div className="form-row">
                                             <div className="form-col-6 threat-box-group border-highlight-orange">
-                                                <h5>💥 Evaluación Riesgo Inherente</h5>
+                                                <h5>💥 1. Evaluación Riesgo Inherente</h5>
                                                 <div className="form-row">
                                                     <label className="form-col-6">
                                                         Probabilidad *
@@ -889,38 +890,15 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                                                     </label>
                                                 </div>
                                                 <div className="val-badge-preview mt-2 font-bold" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center' }}>
-                                                    Riesgo: {inherenteVal} - 
+                                                    Riesgo: {inherenteVal} -
                                                     <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[CALCULAR_NIVEL(inherenteVal)]}22`, color: COLOR_NIVEL[CALCULAR_NIVEL(inherenteVal)], border: `1px solid ${COLOR_NIVEL[CALCULAR_NIVEL(inherenteVal)]}55` }}>
                                                         {CALCULAR_NIVEL(inherenteVal)}
                                                     </span>
                                                 </div>
                                             </div>
-
-                                            <div className="form-col-6 threat-box-group border-highlight-green">
-                                                <h5>🛡️ Evaluación Riesgo Residual (Con Controles)</h5>
-                                                <div className="form-row">
-                                                    <label className="form-col-6">
-                                                        P Residual *
-                                                        <select className="select-ux-premium" value={t.probabilidad_residual} onChange={(e) => handleThreatChange(tIdx, 'probabilidad_residual', Number(e.target.value))}>
-                                                            {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
-                                                        </select>
-                                                    </label>
-                                                    <label className="form-col-6">
-                                                        I Residual *
-                                                        <select className="select-ux-premium" value={t.impacto_residual} onChange={(e) => handleThreatChange(tIdx, 'impacto_residual', Number(e.target.value))}>
-                                                            {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
-                                                        </select>
-                                                    </label>
-                                                </div>
-                                                <div className="val-badge-preview mt-2 font-bold" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center' }}>
-                                                    Residual: {residualVal} - 
-                                                    <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[CALCULAR_NIVEL(residualVal)]}22`, color: COLOR_NIVEL[CALCULAR_NIVEL(residualVal)], border: `1px solid ${COLOR_NIVEL[CALCULAR_NIVEL(residualVal)]}55` }}>
-                                                        {CALCULAR_NIVEL(residualVal)}
-                                                    </span>
-                                                </div>
-                                            </div>
                                         </div>
 
+                                        {/* Paso 2: Tratamiento y Controles (la metodología define los controles ANTES del residual) */}
                                         <div className="form-row">
                                              <label className="form-col-4">
                                                  Tratamiento
@@ -930,7 +908,7 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                                              </label>
                                              <div className="form-col-8 threat-box-group">
                                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                                     <h5 style={{ margin: 0 }}>🛡️ Controles de Mitigación Granulares *</h5>
+                                                     <h5 style={{ margin: 0 }}>🛡️ 2. Controles de Mitigación Granulares *</h5>
                                                      <button type="button" className="btn-secundario btn-mini" onClick={() => handleAddControl(tIdx)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
                                                          + Añadir Control
                                                      </button>
@@ -986,9 +964,36 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                                              </div>
                                          </div>
 
+                                        {/* Paso 3: Riesgo Residual (se evalúa DESPUÉS de definir los controles) */}
+                                        <div className="form-row">
+                                            <div className="form-col-6 threat-box-group border-highlight-green">
+                                                <h5>🛡️ 3. Evaluación Riesgo Residual (después de aplicar los controles)</h5>
+                                                <div className="form-row">
+                                                    <label className="form-col-6">
+                                                        P Residual *
+                                                        <select className="select-ux-premium" value={t.probabilidad_residual} onChange={(e) => handleThreatChange(tIdx, 'probabilidad_residual', Number(e.target.value))}>
+                                                            {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                                                        </select>
+                                                    </label>
+                                                    <label className="form-col-6">
+                                                        I Residual *
+                                                        <select className="select-ux-premium" value={t.impacto_residual} onChange={(e) => handleThreatChange(tIdx, 'impacto_residual', Number(e.target.value))}>
+                                                            {[1, 2, 3, 4, 5].map(v => <option key={v} value={v}>{v}</option>)}
+                                                        </select>
+                                                    </label>
+                                                </div>
+                                                <div className="val-badge-preview mt-2 font-bold" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', justifyContent: 'center' }}>
+                                                    Residual: {residualVal} -
+                                                    <span className="matrix-badge" style={{ backgroundColor: `${COLOR_NIVEL[CALCULAR_NIVEL(residualVal)]}22`, color: COLOR_NIVEL[CALCULAR_NIVEL(residualVal)], border: `1px solid ${COLOR_NIVEL[CALCULAR_NIVEL(residualVal)]}55` }}>
+                                                        {CALCULAR_NIVEL(residualVal)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <div className="threat-box-group mt-3">
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                                <h5 style={{ margin: 0 }}>📋 Plan de Acción (Secuencia de Pasos)</h5>
+                                                <h5 style={{ margin: 0 }}>📋 4. Plan de Acción (Secuencia de Pasos)</h5>
                                                 <button type="button" className="btn-secundario btn-mini" onClick={() => handleAddStep(tIdx)} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
                                                     + Añadir Paso
                                                 </button>

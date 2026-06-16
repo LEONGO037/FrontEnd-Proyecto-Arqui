@@ -86,6 +86,19 @@
     color: #6b7280;
 }
 
+.auditoria-usuario-id {
+    display: inline-block;
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #475569;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 0.05rem 0.4rem;
+    font-variant-numeric: tabular-nums;
+}
+
 .auditoria-badge {
     display: inline-block;
     background: #ecfeff;

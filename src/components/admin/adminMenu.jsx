@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import UserHeaderDynamic from '../layout/UserHeaderDynamic';
 import Footer from '../layout/footerPrincipal';
 import { MENU_CARDS, tieneAcceso } from '../../utils/navConfig';
-import { ROLES } from '../../utils/roleUtils';
+import { ROLES, getNombreCompleto } from '../../utils/roleUtils';
 import './adminMenu.css';
 
 const ROL_LABELS = {
@@ -24,7 +24,7 @@ const AdminMenu = () => {
   const { usuario } = useAuth();
 
   const permisos = usuario?.permisos || [];
-  const nombreAdmin = usuario?.nombre || 'Administrador';
+  const nombreAdmin = getNombreCompleto(usuario) || usuario?.nombre || 'Administrador';
   const rol = usuario?.rol || '';
 
   // Show only cards the user is actually allowed to access
@@ -53,6 +53,14 @@ const AdminMenu = () => {
               <h1 className="admin-title">
                 Bienvenido, <span className="admin-name">{nombreAdmin}</span>
               </h1>
+              <p className="admin-identidad" style={{
+                margin: '0.15rem 0 0.4rem', fontSize: '0.85rem',
+                color: 'rgba(255,255,255,0.85)', display: 'flex',
+                flexWrap: 'wrap', gap: '0.4rem 0.9rem', alignItems: 'center',
+              }}>
+                {usuario?.email && <span>✉️ {usuario.email}</span>}
+                {usuario?.id != null && <span>🆔 ID #{usuario.id}</span>}
+              </p>
               <span className="admin-badge">
                 {ROL_LABELS[rol] || rol || 'Administrador'}
               </span>

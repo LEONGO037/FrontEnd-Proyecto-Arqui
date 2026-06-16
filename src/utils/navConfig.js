@@ -3,8 +3,8 @@ import { PERMISSIONS } from './roleUtils';
 
 export const NAV_LINKS = [
   { id: 'inicio',           path: '/admin',                  label: 'Inicio',           exact: true, permiso: null },
-  { id: 'cursos',           path: '/admin/cursos',           label: 'Cursos',                        permiso: PERMISSIONS.CURSOS_GESTIONAR },
-  { id: 'inscripciones',    path: '/admin/inscripciones',    label: 'Inscripciones',                 permiso: PERMISSIONS.INSCRIPCIONES_GESTIONAR },
+  { id: 'cursos',           path: '/admin/cursos',           label: 'Cursos',                        permiso: [PERMISSIONS.CURSOS_VER, PERMISSIONS.CURSOS_REGISTRAR, PERMISSIONS.CURSOS_MODIFICAR, PERMISSIONS.CURSOS_ELIMINAR, PERMISSIONS.CURSOS_GESTIONAR] },
+  { id: 'inscripciones',    path: '/admin/inscripciones',    label: 'Inscripciones',                 permiso: [PERMISSIONS.INSCRIPCIONES_VER, PERMISSIONS.INSCRIPCIONES_GESTIONAR] },
   { id: 'pagos',            path: '/admin/pagos',            label: 'Pagos',                         permiso: PERMISSIONS.PAGOS_VER },
   { id: 'reportes',         path: '/admin/reportes',         label: 'Reportes',                      permiso: PERMISSIONS.REPORTES_VER },
   { id: 'logs-aplicacion',  path: '/admin/logs-aplicacion',  label: 'Logs Aplicación',               permiso: PERMISSIONS.LOGS_APLICACION_VER },
@@ -20,7 +20,7 @@ export const MENU_CARDS = [
     title: 'Crear Cuenta',
     desc: 'Registra cuentas para estudiantes y docentes.',
     color: '#0ea5e9',
-    permiso: PERMISSIONS.USUARIOS_GESTIONAR,
+    permiso: [PERMISSIONS.USUARIOS_CREAR, PERMISSIONS.USUARIOS_GESTIONAR],
   },
   {
     id: 'gestion-usuarios',
@@ -29,7 +29,7 @@ export const MENU_CARDS = [
     title: 'Gestión de Usuarios',
     desc: 'Lista, edita, desbloquea, cambia roles y elimina usuarios.',
     color: '#4f46e5',
-    permiso: PERMISSIONS.USUARIOS_GESTIONAR,
+    permiso: [PERMISSIONS.USUARIOS_VER, PERMISSIONS.USUARIOS_EDITAR, PERMISSIONS.USUARIOS_ELIMINAR, PERMISSIONS.USUARIOS_GESTIONAR],
   },
   {
     id: 'roles',
@@ -47,7 +47,7 @@ export const MENU_CARDS = [
     title: 'Gestión de Cursos',
     desc: 'Crea, edita y asigna docentes a cursos.',
     color: '#0891b2',
-    permiso: PERMISSIONS.CURSOS_GESTIONAR,
+    permiso: [PERMISSIONS.CURSOS_VER, PERMISSIONS.CURSOS_REGISTRAR, PERMISSIONS.CURSOS_MODIFICAR, PERMISSIONS.CURSOS_ELIMINAR, PERMISSIONS.CURSOS_GESTIONAR],
   },
   {
     id: 'inscripciones',
@@ -56,7 +56,7 @@ export const MENU_CARDS = [
     title: 'Inscripciones',
     desc: 'Monitorea inscripciones y estado académico.',
     color: '#f59e0b',
-    permiso: PERMISSIONS.INSCRIPCIONES_GESTIONAR,
+    permiso: [PERMISSIONS.INSCRIPCIONES_VER, PERMISSIONS.INSCRIPCIONES_GESTIONAR],
   },
   {
     id: 'pagos',
@@ -115,6 +115,13 @@ export const MENU_CARDS = [
 ];
 
 // Returns true if the user's permissions include the required one.
-// permiso === null means "always visible to any authenticated user".
-export const tieneAcceso = (permisos, permiso) =>
-  permiso === null || (Array.isArray(permisos) && permisos.includes(permiso));
+// permiso === null  → siempre visible para cualquier usuario autenticado.
+// permiso = string  → debe tener ese permiso.
+// permiso = array   → basta con tener AL MENOS UNO (útil para módulos con
+//                     permisos granulares, p.ej. cursos:registrar/modificar/...).
+export const tieneAcceso = (permisos, permiso) => {
+  if (permiso === null || permiso === undefined) return true;
+  if (!Array.isArray(permisos)) return false;
+  if (Array.isArray(permiso)) return permiso.some((p) => permisos.includes(p));
+  return permisos.includes(permiso);
+};
