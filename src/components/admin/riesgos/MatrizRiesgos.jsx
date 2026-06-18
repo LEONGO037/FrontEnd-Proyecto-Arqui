@@ -839,7 +839,7 @@ const MatrizRiesgos = () => {
                             <div className="form-section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem' }}>
                                 <span>🛡️ 2. Amenazas e Identificación de Controles Granulares</span>
                                 <button type="button" className="btn-secundario btn-mini" onClick={handleAddThreat} style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem', borderRadius: '8px' }}>
-                                    + Añadir Otra Amenaza a este Activo
+                                    + Añadir Otra Amenaza
                                 </button>
                             </div>
 
@@ -1086,7 +1086,7 @@ const MatrizRiesgos = () => {
                                     Cancelar
                                 </button>
                                 <button type="submit" className="btn-primario">
-                                    {editandoId ? 'Guardar Cambios' : 'Registrar Todo el Activo'}
+                                    {editandoId ? 'Guardar Cambios' : 'Registrar Riesgo'}
                                 </button>
                             </div>
                         </form>
