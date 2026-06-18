@@ -129,7 +129,7 @@ const AdminLogsSeguridad = () => {
     return (
         <div className="admin-page">
             <UserHeaderDynamic />
-            <main className="admin-main">
+            <main className="admin-main logs-main-wide">
                 <div className="admin-logs-container security-theme">
 
                     {/* Cabecera */}

@@ -137,7 +137,7 @@ const AdminAuditoria = () => {
         <div className="admin-page">
             <UserHeaderDynamic />
 
-            <main className="admin-main">
+            <main className="admin-main logs-main-wide">
                 <div className="admin-auditoria-container">
                     <header className="admin-auditoria-header">
                         <button className="auditoria-back-button" onClick={() => navigate('/admin')}>
