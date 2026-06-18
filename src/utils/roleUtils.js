@@ -20,6 +20,16 @@ export const PERMISSIONS = {
   LOGS_SEGURIDAD_VER:      'logs_seguridad:ver',
   RIESGOS_VER:             'riesgos:ver',
   RIESGOS_GESTIONAR:       'riesgos:gestionar',
+  // Roles — CRUD granular
+  ROLES_VER:               'roles:ver',
+  ROLES_CREAR:             'roles:crear',
+  ROLES_MODIFICAR:         'roles:modificar',
+  ROLES_ELIMINAR:          'roles:eliminar',
+  // Matriz de Riesgos — CRUD granular
+  MATRIZ_VER:              'matriz:ver',
+  MATRIZ_AGREGAR:          'matriz:agregar',
+  MATRIZ_EDITAR:           'matriz:editar',
+  MATRIZ_ELIMINAR:         'matriz:eliminar',
   USUARIO_ESTUDIANTE:      'usuario:estudiante',
   USUARIO_DOCENTE:         'usuario:docente',
 };
