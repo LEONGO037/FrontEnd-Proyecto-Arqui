@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getMatrizRiesgos, crearItemMatriz, actualizarItemMatriz, eliminarItemMatriz } from '../../../services/riesgosApi';
 import { getUsuarios } from '../../../services/rbacApi';
+import { useAuth } from '../../../context/AuthContext';
+import { PERMISSIONS } from '../../../utils/roleUtils';
 import * as XLSX from 'xlsx';
 import './MatrizRiesgos.css';
 
@@ -40,7 +42,13 @@ const defaultThreat = () => ({
     responsable_nombre: '',
 });
 
-const MatrizRiesgos = ({ puedeAgregar = false, puedeEditar = false, puedeEliminar = false }) => {
+const MatrizRiesgos = () => {
+    const { usuario } = useAuth();
+    const misPermisos   = usuario?.permisos || [];
+    const puedeAgregar  = misPermisos.includes(PERMISSIONS.MATRIZ_AGREGAR);
+    const puedeEditar   = misPermisos.includes(PERMISSIONS.MATRIZ_EDITAR);
+    const puedeEliminar = misPermisos.includes(PERMISSIONS.MATRIZ_ELIMINAR);
+
     const [matriz, setMatriz] = useState([]);
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState('');
@@ -560,18 +568,18 @@ const MatrizRiesgos = ({ puedeAgregar = false, puedeEditar = false, puedeElimina
     return (
         <div className="matriz-container">
             <div className="matriz-controls-row">
-                <h2 className="matriz-subtitle">📋 Matriz de Análisis de Riesgos de Seguridad de la Información</h2>
+                <h2 className="matriz-subtitle">Matriz de Análisis de Riesgos de Seguridad de la Información</h2>
                 <div className="matriz-header-buttons">
                     <button className="btn-secundario add-matrix-btn" onClick={() => setModalExplicativoAbierto(true)}>
-                        ❓ Criterios
+                        <i className="fa-solid fa-circle-question"></i> Criterios
                     </button>
                     {puedeAgregar && (
                         <>
                             <button className="btn-secundario add-matrix-btn" onClick={descargarExcelModelo}>
-                                📥 Descargar Plantilla
+                                <i className="fa-solid fa-download"></i> Descargar Plantilla
                             </button>
                             <label className="btn-secundario add-matrix-btn upload-excel-btn">
-                                📤 Importar Excel
+                                <i className="fa-solid fa-upload"></i> Importar Excel
                                 <input
                                     type="file"
                                     accept=".xlsx, .xls"
@@ -703,10 +711,10 @@ const MatrizRiesgos = ({ puedeAgregar = false, puedeEditar = false, puedeElimina
                                              <td rowSpan={row.assetRowSpan} className="text-center">
                                                  <div className="matrix-actions-cell">
                                                      {puedeEditar && (
-                                                         <button className="matrix-btn-edit" onClick={() => abrirEditar(row.fullItem)} title="Editar Activo Completo">✏️</button>
+                                                         <button className="matrix-btn-edit" onClick={() => abrirEditar(row.fullItem)} title="Editar Activo Completo"><i className="fa-solid fa-pen"></i></button>
                                                      )}
                                                      {puedeEliminar && (
-                                                         <button className="matrix-btn-delete" onClick={() => borrar(row.assetId)} title="Eliminar Activo">🗑️</button>
+                                                         <button className="matrix-btn-delete" onClick={() => borrar(row.assetId)} title="Eliminar Activo"><i className="fa-solid fa-trash"></i></button>
                                                      )}
                                                  </div>
                                              </td>
@@ -730,7 +738,7 @@ const MatrizRiesgos = ({ puedeAgregar = false, puedeEditar = false, puedeElimina
                 <div className="riesgos-modal-overlay" onClick={() => setModalExplicativoAbierto(false)}>
                     <div className="riesgos-modal explicativo-modal-width anim-scale-up" onClick={(e) => e.stopPropagation()}>
                         <div className="explicativo-modal-header">
-                            <h2>📊 Matriz de Criterios de Evaluación de Riesgos</h2>
+                            <h2>Matriz de Criterios de Evaluación de Riesgos</h2>
                             <button className="close-modal" onClick={() => setModalExplicativoAbierto(false)}>&times;</button>
                         </div>
                         
@@ -804,13 +812,13 @@ const MatrizRiesgos = ({ puedeAgregar = false, puedeEditar = false, puedeElimina
             {modalAbierto && (
                 <div className="riesgos-modal-overlay" onClick={() => setModalAbierto(false)}>
                     <div className="riesgos-modal matriz-modal-width anim-scale-up" onClick={(e) => e.stopPropagation()}>
-                        <h2>{editandoId ? '✏️ Editar Activo e Identificación de Riesgos' : '➕ Nuevo Registro de Riesgo por Activo'}</h2>
+                        <h2>{editandoId ? 'Editar Activo e Identificación de Riesgos' : 'Nuevo Registro de Riesgo por Activo'}</h2>
                         <p className="modal-desc">
                             Ingresa el activo afectado e identifica sus amenazas de seguridad correspondientes de forma granular. Todos los campos obligatorios (*) cuentan con validación visual.
                         </p>
                         
                         <form onSubmit={guardar} className="matriz-modal-form">
-                            <div className="form-section-title">📦 1. Activo de Información Evaluado</div>
+                            <div className="form-section-title">1. Activo de Información Evaluado</div>
                             <div className="form-row">
                                 <label className="form-col-12 label-ux-focus">
                                     Nombre o Descripción del Activo de Información *
@@ -845,7 +853,7 @@ const MatrizRiesgos = ({ puedeAgregar = false, puedeEditar = false, puedeElimina
                                             </h4>
                                             {form.amenazas.length > 1 && (
                                                 <button type="button" className="threat-remove-btn" onClick={() => handleRemoveThreat(tIdx)}>
-                                                    Quitar Amenaza 🗑️
+                                                    <i className="fa-solid fa-trash"></i> Quitar Amenaza
                                                 </button>
                                             )}
                                         </div>
