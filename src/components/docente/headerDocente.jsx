@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getNombreCompleto } from '../../utils/roleUtils';
+import { getNombreCompleto, ROLES } from '../../utils/roleUtils';
 import CambiarPasswordPanel from '../auth/CambiarPasswordPanel';
 import '../layout/headerPrincipal.css';
 
@@ -90,8 +90,8 @@ const HeaderDocente = () => {
             </li>
           ))}
 
-          {/* Modo admin — móvil */}
-          {usuario?.permisos?.length > 0 && (
+                  {/* Modo admin — móvil */}
+          {usuario && usuario.rol !== ROLES.ESTUDIANTE && usuario.rol !== ROLES.DOCENTE && (
             <li className="mobile-only">
               <button
                 className="btn-login"
@@ -115,7 +115,7 @@ const HeaderDocente = () => {
         <div className="navbar-actions">
 
           {/* Toggle modo admin — desktop */}
-          {usuario?.permisos?.length > 0 && (
+          {usuario && usuario.rol !== ROLES.ESTUDIANTE && usuario.rol !== ROLES.DOCENTE && (
             <button
               className="desktop-only"
               onClick={() => { toggleModoAdmin(); handleNavigate('/admin'); }}
@@ -205,7 +205,7 @@ const HeaderDocente = () => {
                   🏠 Mi Panel Docente
                 </button>
 
-                {usuario?.permisos?.length > 0 && (
+                {usuario && usuario.rol !== ROLES.ESTUDIANTE && usuario.rol !== ROLES.DOCENTE && (
                   <button
                     onClick={() => { toggleModoAdmin(); handleNavigate('/admin'); }}
                     style={{

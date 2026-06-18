@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getNombreCompleto } from '../../utils/roleUtils';
+import { getNombreCompleto, ROLES } from '../../utils/roleUtils';
 import '../layout/headerPrincipal.css';
 import Login from '../login/login';
 import CambiarPasswordPanel from '../auth/CambiarPasswordPanel';
@@ -86,7 +86,7 @@ const HeaderEstudiante = () => {
                         </li>
 
                         {/* Modo admin — móvil */}
-                        {usuario?.permisos?.length > 0 && (
+                        {usuario && usuario.rol !== ROLES.ESTUDIANTE && usuario.rol !== ROLES.DOCENTE && (
                             <li className="mobile-only">
                                 <button
                                     className="btn-login"
@@ -115,7 +115,7 @@ const HeaderEstudiante = () => {
                     {/* Acciones del lado derecho */}
                     <div className="navbar-actions">
                         {/* Toggle modo admin — desktop */}
-                        {usuario?.permisos?.length > 0 && (
+                        {usuario && usuario.rol !== ROLES.ESTUDIANTE && usuario.rol !== ROLES.DOCENTE && (
                             <button
                                 className="desktop-only"
                                 onClick={() => { toggleModoAdmin(); navigate('/admin'); }}
@@ -195,7 +195,7 @@ const HeaderEstudiante = () => {
                                         >
                                             💳 Mis Pagos
                                         </button>
-                                        {usuario?.permisos?.length > 0 && (
+                                        {usuario && usuario.rol !== ROLES.ESTUDIANTE && usuario.rol !== ROLES.DOCENTE && (
                                             <button onClick={() => { toggleModoAdmin(); navigate('/admin'); setShowUserMenu(false); }}
                                                 style={{
                                                     width: '100%', background: 'linear-gradient(135deg,#eff6ff,#dbeafe)', border: 'none', padding: '0.6rem 1rem',
