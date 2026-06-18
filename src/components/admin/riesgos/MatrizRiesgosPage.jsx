@@ -10,7 +10,13 @@ import './RiesgosDashboard.css'; // Reuse container layout styles
 const MatrizRiesgosPage = () => {
     const navigate = useNavigate();
     const { usuario } = useAuth();
-    const puedeGestionar = (usuario?.permisos || []).includes(PERMISSIONS.RIESGOS_GESTIONAR);
+    const permisos = usuario?.permisos || [];
+
+    // Backward-compat: riesgos:gestionar implica todos los sub-permisos de matriz
+    const esGestorTotal = permisos.includes(PERMISSIONS.RIESGOS_GESTIONAR);
+    const puedeAgregar  = esGestorTotal || permisos.includes(PERMISSIONS.MATRIZ_AGREGAR);
+    const puedeEditar   = esGestorTotal || permisos.includes(PERMISSIONS.MATRIZ_EDITAR);
+    const puedeEliminar = esGestorTotal || permisos.includes(PERMISSIONS.MATRIZ_ELIMINAR);
 
     return (
         <div className="riesgos-page">
@@ -34,7 +40,11 @@ const MatrizRiesgosPage = () => {
                     </div>
                 </div>
 
-                <MatrizRiesgos puedeGestionar={puedeGestionar} />
+                <MatrizRiesgos
+                    puedeAgregar={puedeAgregar}
+                    puedeEditar={puedeEditar}
+                    puedeEliminar={puedeEliminar}
+                />
             </main>
 
             <Footer />

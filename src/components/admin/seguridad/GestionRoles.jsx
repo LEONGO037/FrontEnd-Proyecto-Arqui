@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import UserHeaderDynamic from '../../layout/UserHeaderDynamic';
 import Footer from '../../layout/footerPrincipal';
 import rbacApi from '../../../services/rbacApi';
+import { useAuth } from '../../../context/AuthContext';
 import './GestionRoles.css';
 
 const TAB = { ROLES: 0, MATRIZ: 1, USUARIOS: 2 };
@@ -26,8 +27,13 @@ const GRUPOS = [
     key: 'roles',
     icon: '🔐',
     label: 'Roles y Permisos',
-    desc: 'Crear/editar/eliminar roles y asignar o revocar permisos',
-    permisos: [PERMISSIONS.ROLES_GESTIONAR],
+    desc: 'Ver, crear, modificar y eliminar roles; asignar o revocar permisos',
+    permisos: [
+      PERMISSIONS.ROLES_VER,
+      PERMISSIONS.ROLES_CREAR,
+      PERMISSIONS.ROLES_MODIFICAR,
+      PERMISSIONS.ROLES_ELIMINAR,
+    ],
   },
   {
     key: 'cursos',
@@ -77,6 +83,25 @@ const GRUPOS = [
     permisos: [PERMISSIONS.LOGS_SEGURIDAD_VER],
   },
   {
+    key: 'riesgos',
+    icon: '☣️',
+    label: 'Gestión de Riesgos',
+    desc: 'Ver catálogo de riesgos y registros detectados; gestionar planes de acción',
+    permisos: [PERMISSIONS.RIESGOS_VER, PERMISSIONS.RIESGOS_GESTIONAR],
+  },
+  {
+    key: 'matriz',
+    icon: '📊',
+    label: 'Matriz de Riesgos',
+    desc: 'Ver, agregar, editar y eliminar entradas de la matriz de riesgos',
+    permisos: [
+      PERMISSIONS.MATRIZ_VER,
+      PERMISSIONS.MATRIZ_AGREGAR,
+      PERMISSIONS.MATRIZ_EDITAR,
+      PERMISSIONS.MATRIZ_ELIMINAR,
+    ],
+  },
+  {
     key: 'estudiante',
     icon: '🎓',
     label: 'Acceso Estudiante',
@@ -99,6 +124,10 @@ const PERMISO_LABEL = {
   [PERMISSIONS.USUARIOS_EDITAR]:         'Modificar usuarios (cambiar rol, desbloquear)',
   [PERMISSIONS.USUARIOS_ELIMINAR]:       'Eliminar (desactivar) usuarios',
   [PERMISSIONS.ROLES_GESTIONAR]:         'Gestión completa de roles y permisos',
+  [PERMISSIONS.ROLES_VER]:               'Ver roles y permisos (solo lectura)',
+  [PERMISSIONS.ROLES_CREAR]:             'Crear nuevos roles',
+  [PERMISSIONS.ROLES_MODIFICAR]:         'Modificar roles y asignar permisos',
+  [PERMISSIONS.ROLES_ELIMINAR]:          'Eliminar roles',
   [PERMISSIONS.CURSOS_GESTIONAR]:        'Gestión completa de cursos (CRUD)',
   [PERMISSIONS.CURSOS_VER]:              'Solo visualizar cursos',
   [PERMISSIONS.CURSOS_REGISTRAR]:        'Registrar (crear) cursos',
@@ -110,6 +139,12 @@ const PERMISO_LABEL = {
   [PERMISSIONS.REPORTES_VER]:            'Ver y descargar reportes',
   [PERMISSIONS.LOGS_APLICACION_VER]:     'Ver logs de aplicación',
   [PERMISSIONS.LOGS_SEGURIDAD_VER]:      'Ver logs de seguridad',
+  [PERMISSIONS.RIESGOS_VER]:             'Ver catálogo y registros de riesgos',
+  [PERMISSIONS.RIESGOS_GESTIONAR]:       'Gestión completa de riesgos y planes de acción',
+  [PERMISSIONS.MATRIZ_VER]:              'Ver matriz de riesgos (solo lectura)',
+  [PERMISSIONS.MATRIZ_AGREGAR]:          'Agregar activos y amenazas a la matriz',
+  [PERMISSIONS.MATRIZ_EDITAR]:           'Editar entradas de la matriz de riesgos',
+  [PERMISSIONS.MATRIZ_ELIMINAR]:         'Eliminar activos de la matriz de riesgos',
   [PERMISSIONS.USUARIO_ESTUDIANTE]:      'Acceso completo de estudiante',
   [PERMISSIONS.USUARIO_DOCENTE]:         'Acceso completo de docente',
 };
@@ -130,6 +165,15 @@ const TOTAL_PERMISOS = GRUPOS.reduce((s, g) => s + g.permisos.length, 0);
 // ─────────────────────────────────────────────────────────────────────────────
 
 const GestionRoles = () => {
+  const { usuario } = useAuth();
+  const misPermisos = usuario?.permisos || [];
+
+  // Backward-compat: roles:gestionar implica todos los sub-permisos
+  const esGestorTotal = misPermisos.includes(PERMISSIONS.ROLES_GESTIONAR);
+  const canCreate   = esGestorTotal || misPermisos.includes(PERMISSIONS.ROLES_CREAR);
+  const canModify   = esGestorTotal || misPermisos.includes(PERMISSIONS.ROLES_MODIFICAR);
+  const canDelete   = esGestorTotal || misPermisos.includes(PERMISSIONS.ROLES_ELIMINAR);
+
   const [tab, setTab] = useState(TAB.ROLES);
   const [roles, setRoles] = useState([]);
   const [permisos, setPermisos] = useState([]);   // all permission objects {id, nombre}
@@ -353,9 +397,11 @@ const GestionRoles = () => {
                     />
                     Mostrar inactivos
                   </label>
-                  <button className="gr-btn-primary" onClick={() => setShowNuevoRol(!showNuevoRol)}>
-                    {showNuevoRol ? '✕ Cancelar' : '+ Nuevo Rol'}
-                  </button>
+                  {canCreate && (
+                    <button className="gr-btn-primary" onClick={() => setShowNuevoRol(!showNuevoRol)}>
+                      {showNuevoRol ? '✕ Cancelar' : '+ Nuevo Rol'}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -409,19 +455,23 @@ const GestionRoles = () => {
                             </div>
                           </div>
                           <div className="gr-role-actions">
-                            <button
-                              className={`gr-btn-detail ${isSelected ? 'active' : ''}`}
-                              onClick={() => isSelected ? closeEditor() : openEditor(rol)}
-                            >
-                              {isSelected ? '✕ Cerrar' : 'Editar permisos →'}
-                            </button>
-                            <button
-                              className="gr-btn-danger"
-                              onClick={() => handleEliminarRol(rol.id, rol.nombre)}
-                              disabled={rol.activo === false}
-                            >
-                              {rol.activo === false ? 'Inactivo' : 'Eliminar'}
-                            </button>
+                            {canModify && (
+                              <button
+                                className={`gr-btn-detail ${isSelected ? 'active' : ''}`}
+                                onClick={() => isSelected ? closeEditor() : openEditor(rol)}
+                              >
+                                {isSelected ? '✕ Cerrar' : 'Editar permisos →'}
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                className="gr-btn-danger"
+                                onClick={() => handleEliminarRol(rol.id, rol.nombre)}
+                                disabled={rol.activo === false}
+                              >
+                                {rol.activo === false ? 'Inactivo' : 'Eliminar'}
+                              </button>
+                            )}
                           </div>
                         </div>
 

@@ -266,7 +266,7 @@ function AppContent() {
         <Route
           path="/admin/seguridad/roles"
           element={
-            <PermisoProtectedRoute permiso={PERMISSIONS.ROLES_GESTIONAR}>
+            <PermisoProtectedRoute permiso={[PERMISSIONS.ROLES_GESTIONAR, PERMISSIONS.ROLES_VER, PERMISSIONS.ROLES_CREAR, PERMISSIONS.ROLES_MODIFICAR, PERMISSIONS.ROLES_ELIMINAR]}>
               <GestionRoles />
             </PermisoProtectedRoute>
           }
@@ -284,7 +284,7 @@ function AppContent() {
         <Route
           path="/admin/matriz-riesgos"
           element={
-            <PermisoProtectedRoute permiso={PERMISSIONS.RIESGOS_VER}>
+            <PermisoProtectedRoute permiso={[PERMISSIONS.RIESGOS_VER, PERMISSIONS.RIESGOS_GESTIONAR, PERMISSIONS.MATRIZ_VER, PERMISSIONS.MATRIZ_AGREGAR, PERMISSIONS.MATRIZ_EDITAR, PERMISSIONS.MATRIZ_ELIMINAR]}>
               <MatrizRiesgosPage />
             </PermisoProtectedRoute>
           }

@@ -40,7 +40,7 @@ const defaultThreat = () => ({
     responsable_nombre: '',
 });
 
-const MatrizRiesgos = ({ puedeGestionar }) => {
+const MatrizRiesgos = ({ puedeAgregar = false, puedeEditar = false, puedeEliminar = false }) => {
     const [matriz, setMatriz] = useState([]);
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState('');
@@ -565,19 +565,19 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                     <button className="btn-secundario add-matrix-btn" onClick={() => setModalExplicativoAbierto(true)}>
                         ❓ Criterios
                     </button>
-                    {puedeGestionar && (
+                    {puedeAgregar && (
                         <>
                             <button className="btn-secundario add-matrix-btn" onClick={descargarExcelModelo}>
                                 📥 Descargar Plantilla
                             </button>
                             <label className="btn-secundario add-matrix-btn upload-excel-btn">
                                 📤 Importar Excel
-                                <input 
-                                    type="file" 
-                                    accept=".xlsx, .xls" 
+                                <input
+                                    type="file"
+                                    accept=".xlsx, .xls"
                                     ref={fileInputRef}
                                     onChange={handleImportarExcel}
-                                    style={{ display: 'none' }} 
+                                    style={{ display: 'none' }}
                                 />
                             </label>
                             <button className="btn-primario add-matrix-btn" onClick={abrirCrear}>
@@ -605,7 +605,7 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                                 <th colSpan="4" className="group-mitigacion">MITIGACIÓN Y CONTROLES</th>
                                 <th colSpan="4" className="group-residual">RIESGO RESIDUAL</th>
                                 <th colSpan="3" className="group-eficiencia">PLAN DE ACCIÓN Y SEGUIMIENTO</th>
-                                {puedeGestionar && <th className="group-acciones">ACCIONES</th>}
+                                {(puedeEditar || puedeEliminar) && <th className="group-acciones">ACCIONES</th>}
                             </tr>
                             <tr className="matriz-header-fields">
                                 <th style={{ width: '40px' }}>No.</th>
@@ -628,7 +628,7 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                                 <th style={{ minWidth: '220px' }}>Pasos Plan de Acción</th>
                                 <th style={{ minWidth: '90px' }}>Fecha Límite</th>
                                 <th style={{ minWidth: '130px' }}>Responsable</th>
-                                {puedeGestionar && <th style={{ width: '100px' }}>Acción Activo</th>}
+                                {(puedeEditar || puedeEliminar) && <th style={{ width: '100px' }}>Acción Activo</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -699,11 +699,15 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                                              </>
                                          )}
 
-                                         {row.isFirstControlOfAsset && puedeGestionar && (
+                                         {row.isFirstControlOfAsset && (puedeEditar || puedeEliminar) && (
                                              <td rowSpan={row.assetRowSpan} className="text-center">
                                                  <div className="matrix-actions-cell">
-                                                     <button className="matrix-btn-edit" onClick={() => abrirEditar(row.fullItem)} title="Editar Activo Completo">✏️</button>
-                                                     <button className="matrix-btn-delete" onClick={() => borrar(row.assetId)} title="Eliminar Activo">🗑️</button>
+                                                     {puedeEditar && (
+                                                         <button className="matrix-btn-edit" onClick={() => abrirEditar(row.fullItem)} title="Editar Activo Completo">✏️</button>
+                                                     )}
+                                                     {puedeEliminar && (
+                                                         <button className="matrix-btn-delete" onClick={() => borrar(row.assetId)} title="Eliminar Activo">🗑️</button>
+                                                     )}
                                                  </div>
                                              </td>
                                          )}
@@ -712,7 +716,7 @@ const MatrizRiesgos = ({ puedeGestionar }) => {
                              })}
                              {matriz.length === 0 && (
                                  <tr>
-                                     <td colSpan={puedeGestionar ? 21 : 20} className="text-center py-8 text-slate-400">
+                                     <td colSpan={(puedeEditar || puedeEliminar) ? 21 : 20} className="text-center py-8 text-slate-400">
                                          No hay análisis de riesgos registrados en la matriz.
                                      </td>
                                  </tr>
