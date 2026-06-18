@@ -46,20 +46,10 @@ export const ADMIN_ROLES = [
 ];
 
 export const getRolPath = (rol) => {
-  switch (rol) {
-    case ROLES.ADMIN_CUENTAS:
-      return '/admin/cuentas';
-    case ROLES.ADMIN_SEGURIDAD:
-    case ROLES.ADMIN_CURSOS:
-    case ROLES.ADMIN_PAGOS:
-    case ROLES.ADMIN_REPORTES:
-    case ROLES.ADMINISTRADOR:
-      return '/admin';
-    case ROLES.DOCENTE:
-      return '/docente';
-    default:
-      return '/cursos';
-  }
+  if (rol === ROLES.DOCENTE) return '/docente';
+  if (rol === ROLES.ESTUDIANTE) return '/cursos';
+  if (rol === ROLES.ADMIN_CUENTAS) return '/admin/cuentas';
+  return '/admin';
 };
 
 // Backward-compatible alias
