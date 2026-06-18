@@ -2,14 +2,18 @@
 import { PERMISSIONS } from './roleUtils';
 
 export const NAV_LINKS = [
-  { id: 'inicio',           path: '/admin',                  label: 'Inicio',           exact: true, permiso: null },
-  { id: 'cursos',           path: '/admin/cursos',           label: 'Cursos',                        permiso: [PERMISSIONS.CURSOS_VER, PERMISSIONS.CURSOS_REGISTRAR, PERMISSIONS.CURSOS_MODIFICAR, PERMISSIONS.CURSOS_ELIMINAR, PERMISSIONS.CURSOS_GESTIONAR] },
-  { id: 'inscripciones',    path: '/admin/inscripciones',    label: 'Inscripciones',                 permiso: [PERMISSIONS.INSCRIPCIONES_VER, PERMISSIONS.INSCRIPCIONES_GESTIONAR] },
-  { id: 'pagos',            path: '/admin/pagos',            label: 'Pagos',                         permiso: PERMISSIONS.PAGOS_VER },
-  { id: 'reportes',         path: '/admin/reportes',         label: 'Reportes',                      permiso: PERMISSIONS.REPORTES_VER },
-  { id: 'logs-aplicacion',  path: '/admin/logs-aplicacion',  label: 'Logs Aplicación',               permiso: PERMISSIONS.LOGS_APLICACION_VER },
-  { id: 'logs-seguridad',   path: '/admin/logs-seguridad',   label: 'Logs Seguridad',                permiso: PERMISSIONS.LOGS_SEGURIDAD_VER },
-  { id: 'riesgos',          path: '/admin/riesgos',          label: 'Gestión de Riesgos',            permiso: PERMISSIONS.RIESGOS_VER },
+  { id: 'inicio',           path: '/admin',                     label: 'Inicio',               exact: true, permiso: null },
+  { id: 'cuentas',          path: '/admin/cuentas',             label: 'Crear Cuenta',                      permiso: [PERMISSIONS.USUARIOS_CREAR, PERMISSIONS.USUARIOS_GESTIONAR] },
+  { id: 'gestion-usuarios', path: '/admin/gestion-usuarios',    label: 'Gestión Usuarios',                  permiso: [PERMISSIONS.USUARIOS_VER, PERMISSIONS.USUARIOS_EDITAR, PERMISSIONS.USUARIOS_ELIMINAR, PERMISSIONS.USUARIOS_GESTIONAR] },
+  { id: 'roles',            path: '/admin/seguridad/roles',     label: 'Roles y Permisos',                  permiso: PERMISSIONS.ROLES_GESTIONAR },
+  { id: 'cursos',           path: '/admin/cursos',              label: 'Cursos',                            permiso: [PERMISSIONS.CURSOS_VER, PERMISSIONS.CURSOS_REGISTRAR, PERMISSIONS.CURSOS_MODIFICAR, PERMISSIONS.CURSOS_ELIMINAR, PERMISSIONS.CURSOS_GESTIONAR] },
+  { id: 'inscripciones',    path: '/admin/inscripciones',       label: 'Inscripciones',                     permiso: [PERMISSIONS.INSCRIPCIONES_VER, PERMISSIONS.INSCRIPCIONES_GESTIONAR] },
+  { id: 'pagos',            path: '/admin/pagos',               label: 'Pagos',                             permiso: PERMISSIONS.PAGOS_VER },
+  { id: 'reportes',         path: '/admin/reportes',            label: 'Reportes',                          permiso: PERMISSIONS.REPORTES_VER },
+  { id: 'logs-aplicacion',  path: '/admin/logs-aplicacion',     label: 'Logs Aplicación',                   permiso: PERMISSIONS.LOGS_APLICACION_VER },
+  { id: 'logs-seguridad',   path: '/admin/logs-seguridad',      label: 'Logs Seguridad',                    permiso: PERMISSIONS.LOGS_SEGURIDAD_VER },
+  { id: 'riesgos',          path: '/admin/riesgos',             label: 'Riesgos',                           permiso: PERMISSIONS.RIESGOS_VER },
+  { id: 'matriz-riesgos',   path: '/admin/matriz-riesgos',      label: 'Matriz de Riesgos',                 permiso: PERMISSIONS.RIESGOS_VER },
 ];
 
 export const MENU_CARDS = [
