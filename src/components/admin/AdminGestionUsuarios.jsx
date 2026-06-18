@@ -30,6 +30,24 @@ const estadoBadgeStyle = (activo) => activo
 
 const isBloqueado = (hasta) => hasta && new Date(hasta) > new Date();
 
+// Íconos SVG (reemplazan emojis que no se renderizan en todos los navegadores)
+const IconEye = () => (
+  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+  </svg>
+);
+const IconUnlock = () => (
+  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 9.9-1" />
+  </svg>
+);
+const IconTrash = () => (
+  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+  </svg>
+);
+
 export default function AdminGestionUsuarios() {
   const navigate = useNavigate();
   const { usuario: self } = useAuth();
@@ -251,16 +269,16 @@ export default function AdminGestionUsuarios() {
                       <td>
                         <div className="gu-actions">
                           <button className="gu-btn gu-btn-role" onClick={() => handleVerDetalle(u)} title="Ver detalle">
-                            👁 Detalle
+                            <IconEye /> Detalle
                           </button>
                           {bloqueado && !inactivo && (
                             <button className="gu-btn gu-btn-unlock" onClick={() => handleDesbloquear(u)} title="Desbloquear">
-                              🔓 Desbloquear
+                              <IconUnlock /> Desbloquear
                             </button>
                           )}
                           {!esSelf && !inactivo && (
-                            <button className="gu-btn gu-btn-delete" onClick={() => setModalEliminar(u)} title="Eliminar">
-                              🗑
+                            <button className="gu-btn gu-btn-delete" onClick={() => setModalEliminar(u)} title="Eliminar" aria-label="Eliminar usuario">
+                              <IconTrash />
                             </button>
                           )}
                         </div>
