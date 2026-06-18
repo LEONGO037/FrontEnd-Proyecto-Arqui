@@ -13,6 +13,14 @@ const CALCULAR_NIVEL = (valor) => {
     return 'Bajo';
 };
 
+const TRATAMIENTOS_POR_NIVEL = {
+    'Bajo':     ['Aceptar'],
+    'Moderado': ['Reducir'],
+    'Alto':     ['Reducir', 'Evitar', 'Compartir'],
+    'Extremo':  ['Reducir', 'Evitar', 'Compartir'],
+};
+const TRATAMIENTO_DEFAULT = { Bajo: 'Aceptar', Moderado: 'Reducir', Alto: 'Evitar', Extremo: 'Evitar' };
+
 const COLOR_NIVEL = {
     Extremo: '#dc2626', // Red
     Alto: '#f97316',    // Orange
@@ -30,7 +38,7 @@ const defaultThreat = () => ({
     nivel_riesgo_inherente: 'Moderado',
     tratamiento_riesgo: 'Reducir',
     controles_implementar: [
-        { descripcion: '', control_tipo: 'P', control_nivel: 'S', control_frecuencia: 'PT' }
+        { descripcion: '', control_tipo: 'P', control_nivel: 'M', control_frecuencia: 'PT' }
     ],
     probabilidad_residual: 1,
     impacto_residual: 1,
@@ -58,6 +66,7 @@ const MatrizRiesgos = () => {
     const [editandoId, setEditandoId] = useState(null);
     const [usuariosAdmins, setUsuariosAdmins] = useState([]);
     const fileInputRef = useRef(null);
+    const activoInputRef = useRef(null);
 
     const [form, setForm] = useState({
         activo_informacion: '',
@@ -165,6 +174,10 @@ const MatrizRiesgos = () => {
             const i = Number(threat.impacto_inherente);
             threat.riesgo_inherente = p * i;
             threat.nivel_riesgo_inherente = CALCULAR_NIVEL(threat.riesgo_inherente);
+            const permitidos = TRATAMIENTOS_POR_NIVEL[threat.nivel_riesgo_inherente] || [];
+            if (!permitidos.includes(threat.tratamiento_riesgo)) {
+                threat.tratamiento_riesgo = TRATAMIENTO_DEFAULT[threat.nivel_riesgo_inherente] || permitidos[0];
+            }
         }
 
         if ('probabilidad_residual' in fields || 'impacto_residual' in fields) {
@@ -181,7 +194,7 @@ const MatrizRiesgos = () => {
     const handleAddControl = (threatIndex) => {
         const copy = [...form.amenazas];
         const controls = [...(copy[threatIndex].controles_implementar || [])];
-        controls.push({ descripcion: '', control_tipo: 'P', control_nivel: 'S', control_frecuencia: 'PT' });
+        controls.push({ descripcion: '', control_tipo: 'P', control_nivel: 'M', control_frecuencia: 'PT' });
         copy[threatIndex] = { ...copy[threatIndex], controles_implementar: controls };
         setForm({ ...form, amenazas: copy });
     };
@@ -190,7 +203,7 @@ const MatrizRiesgos = () => {
         const copy = [...form.amenazas];
         const controls = [...(copy[threatIndex].controles_implementar || [])];
         if (controls.length === 1) {
-            controls[0] = { descripcion: '', control_tipo: 'P', control_nivel: 'S', control_frecuencia: 'PT' };
+            controls[0] = { descripcion: '', control_tipo: 'P', control_nivel: 'M', control_frecuencia: 'PT' };
         } else {
             controls.splice(controlIndex, 1);
         }
@@ -243,7 +256,7 @@ const MatrizRiesgos = () => {
             ["   Se recomienda encarecipamente verificar los correos válidos a continuación o asignar el responsable directamente en la aplicación."],
             ["4. En la columna 'Controles a Implementar', cada control debe escribirse con sus atributos entre corchetes: Descripcion [Tipo, Nivel, Frecuencia], separados por punto y coma (;)."],
             ["   Ejemplo: Validación JWT [P, A, PT]; Configurar WAF [P, S, D]; Monitoreo logs [D, M, M]"],
-            ["   Abreviaciones válidas: Tipo (P=Preventivo, D=Detectivo, C=Correctivo); Nivel (A=Alto, S=Suficiente, M=Moderado); Frecuencia (PT=Por Transacción, D=Diario, S=Semanal, M=Mensual, A=Anual)"],
+            ["   Abreviaciones válidas: Tipo (P=Preventivo, C=Correctivo, D=Detectivo, Ds=Disuasivo); Nivel (A=Automático, SA=Semiautomático, M=Manual); Frecuencia (PT=Por Transacción, s=Por Segundo, m=Por Minuto, D=Diario, S=Semanal, M=Mensual, A=Anual)"],
             ["5. Los campos P (Probabilidad) e I (Impacto) deben ser números enteros entre 1 y 5."],
             [""],
             ["LISTA DE OFICIALES DE SEGURIDAD REGISTRADOS EN EL SISTEMA:"],
@@ -822,12 +835,45 @@ const MatrizRiesgos = () => {
                         
                         <form onSubmit={guardar} className="matriz-modal-form">
                             <div className="form-section-title">1. Activo de Información Evaluado</div>
+                            {(() => {
+                                const activosExistentes = [...new Set(
+                                    matriz.map(item => item.activo_informacion).filter(Boolean)
+                                )].sort();
+                                return activosExistentes.length > 0 && (
+                                    <div className="activos-existentes-section">
+                                        <span className="activos-existentes-label">Activos registrados — selecciona uno o escribe uno nuevo:</span>
+                                        <div className="activos-chips">
+                                            {activosExistentes.map(nombre => (
+                                                <button
+                                                    type="button"
+                                                    key={nombre}
+                                                    className={`activo-chip${form.activo_informacion === nombre ? ' activo-chip-selected' : ''}`}
+                                                    onClick={() => setForm({ ...form, activo_informacion: nombre })}
+                                                >
+                                                    {nombre}
+                                                </button>
+                                            ))}
+                                            <button
+                                                type="button"
+                                                className="activo-chip activo-chip-new"
+                                                onClick={() => {
+                                                    setForm({ ...form, activo_informacion: '' });
+                                                    setTimeout(() => activoInputRef.current?.focus(), 50);
+                                                }}
+                                            >
+                                                + Nuevo
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                             <div className="form-row">
                                 <label className="form-col-12 label-ux-focus">
                                     Nombre o Descripción del Activo de Información *
                                     <input
                                         type="text"
                                         required
+                                        ref={activoInputRef}
                                         className="input-ux-premium"
                                         value={form.activo_informacion}
                                         onChange={(e) => setForm({ ...form, activo_informacion: e.target.value })}
@@ -918,7 +964,9 @@ const MatrizRiesgos = () => {
                                              <label className="form-col-4">
                                                  Tratamiento
                                                  <select className="select-ux-premium" value={t.tratamiento_riesgo} onChange={(e) => handleThreatChange(tIdx, 'tratamiento_riesgo', e.target.value)}>
-                                                     {['Reducir', 'Aceptar', 'Evitar', 'Transferir'].map(tr => <option key={tr} value={tr}>{tr}</option>)}
+                                                     {(TRATAMIENTOS_POR_NIVEL[t.nivel_riesgo_inherente] || ['Reducir', 'Aceptar', 'Evitar', 'Compartir']).map(tr => (
+                                                         <option key={tr} value={tr}>{tr}{t.nivel_riesgo_inherente === 'Extremo' && tr === 'Evitar' ? ' (Atención Inmediata)' : ''}</option>
+                                                     ))}
                                                  </select>
                                              </label>
                                              <div className="form-col-8 threat-box-group">
@@ -950,27 +998,29 @@ const MatrizRiesgos = () => {
                                                                  Tipo
                                                                  <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_tipo || 'P'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_tipo', e.target.value)}>
                                                                      <option value="P">Preventivo (P)</option>
-                                                                     <option value="D">Detectivo (D)</option>
                                                                      <option value="C">Correctivo (C)</option>
-                                                                     <option value="P, D">Preventivo y Detectivo (P, D)</option>
+                                                                     <option value="D">Detectivo (D)</option>
+                                                                     <option value="Ds">Disuasivo (Ds)</option>
                                                                  </select>
                                                              </label>
                                                              <label className="form-col-4" style={{ margin: 0, fontSize: '0.75rem' }}>
                                                                  Nivel (Eficiencia)
-                                                                 <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_nivel || 'S'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_nivel', e.target.value)}>
-                                                                     <option value="A">Alto (A)</option>
-                                                                     <option value="S">Suficiente (S)</option>
-                                                                     <option value="M">Moderado (M)</option>
+                                                                 <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_nivel || 'M'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_nivel', e.target.value)}>
+                                                                     <option value="A">Automático (A)</option>
+                                                                     <option value="SA">Semiautomático (SA)</option>
+                                                                     <option value="M">Manual (M)</option>
                                                                  </select>
                                                              </label>
                                                              <label className="form-col-4" style={{ margin: 0, fontSize: '0.75rem' }}>
                                                                  Frecuencia
                                                                  <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_frecuencia || 'PT'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_frecuencia', e.target.value)}>
+                                                                     <option value="PT">Por Transacción (PT)</option>
+                                                                     <option value="s">Por Segundo / Continuo (s)</option>
+                                                                     <option value="m">Por Minuto / Tiempo Real (m)</option>
                                                                      <option value="D">Diario (D)</option>
                                                                      <option value="S">Semanal (S)</option>
                                                                      <option value="M">Mensual (M)</option>
                                                                      <option value="A">Anual (A)</option>
-                                                                     <option value="PT">Por Transacción (PT)</option>
                                                                  </select>
                                                              </label>
                                                          </div>
