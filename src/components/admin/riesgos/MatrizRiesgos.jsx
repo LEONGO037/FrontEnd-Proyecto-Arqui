@@ -947,30 +947,64 @@ const MatrizRiesgos = () => {
                                                          </div>
                                                          <div className="form-row" style={{ gap: '0.5rem', margin: 0 }}>
                                                              <label className="form-col-4" style={{ margin: 0, fontSize: '0.75rem' }}>
-                                                                 Tipo
-                                                                 <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_tipo || 'P'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_tipo', e.target.value)}>
-                                                                     <option value="P">Preventivo (P)</option>
-                                                                     <option value="D">Detectivo (D)</option>
-                                                                     <option value="C">Correctivo (C)</option>
-                                                                     <option value="P, D">Preventivo y Detectivo (P, D)</option>
-                                                                 </select>
+                                                                 Tipo (Múltiple)
+                                                                 <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.3rem', height: '1.75rem' }}>
+                                                                     {[
+                                                                         { v: 'P', l: 'Preventivo' },
+                                                                         { v: 'D', l: 'Detectivo' },
+                                                                         { v: 'C', l: 'Correctivo' },
+                                                                         { v: 'Di', l: 'Disuasivo' }
+                                                                     ].map(opt => {
+                                                                         const currentTipos = ctrl.control_tipo ? String(ctrl.control_tipo).split(',').map(s => s.trim()) : [];
+                                                                         const isActive = currentTipos.includes(opt.v);
+                                                                         return (
+                                                                             <button
+                                                                                 key={opt.v}
+                                                                                 type="button"
+                                                                                 onClick={() => {
+                                                                                     let newTipos = isActive 
+                                                                                         ? currentTipos.filter(t => t !== opt.v) 
+                                                                                         : [...currentTipos, opt.v];
+                                                                                     handleControlChange(tIdx, cIdx, 'control_tipo', newTipos.join(', '));
+                                                                                 }}
+                                                                                 style={{
+                                                                                     flex: 1,
+                                                                                     padding: '0',
+                                                                                     fontSize: '0.7rem',
+                                                                                     fontWeight: isActive ? 'bold' : 'normal',
+                                                                                     border: `1px solid ${isActive ? '#3b82f6' : '#cbd5e1'}`,
+                                                                                     backgroundColor: isActive ? '#eff6ff' : '#fff',
+                                                                                     color: isActive ? '#1d4ed8' : '#64748b',
+                                                                                     borderRadius: '4px',
+                                                                                     cursor: 'pointer',
+                                                                                     transition: 'all 0.2s'
+                                                                                 }}
+                                                                                 title={opt.l}
+                                                                             >
+                                                                                 {opt.v}
+                                                                             </button>
+                                                                         );
+                                                                     })}
+                                                                 </div>
                                                              </label>
                                                              <label className="form-col-4" style={{ margin: 0, fontSize: '0.75rem' }}>
                                                                  Nivel (Eficiencia)
                                                                  <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_nivel || 'S'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_nivel', e.target.value)}>
-                                                                     <option value="A">Alto (A)</option>
-                                                                     <option value="S">Suficiente (S)</option>
-                                                                     <option value="M">Moderado (M)</option>
+                                                                     <option value="A">Automático (A)</option>
+                                                                     <option value="S">Semiautomático (S)</option>
+                                                                     <option value="M">Manual (M)</option>
                                                                  </select>
                                                              </label>
                                                              <label className="form-col-4" style={{ margin: 0, fontSize: '0.75rem' }}>
                                                                  Frecuencia
                                                                  <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_frecuencia || 'PT'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_frecuencia', e.target.value)}>
-                                                                     <option value="D">Diario (D)</option>
+                                                                     <option value="D">Diaria (D)</option>
                                                                      <option value="S">Semanal (S)</option>
                                                                      <option value="M">Mensual (M)</option>
                                                                      <option value="A">Anual (A)</option>
                                                                      <option value="PT">Por Transacción (PT)</option>
+                                                                     <option value="m">Masivo (m)</option>
+                                                                     <option value="s">Semestral (s)</option>
                                                                  </select>
                                                              </label>
                                                          </div>
