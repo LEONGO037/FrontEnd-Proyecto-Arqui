@@ -26,8 +26,19 @@ const request = async (path, options = {}) => {
   return data;
 };
 
-export const getRoles = () => request('/api/rbac/roles');
-export const getPermisos = () => request('/api/rbac/permisos');
+export const getRoles = (options = {}) => {
+  const params = new URLSearchParams();
+  if (options.includeInactive) params.set('include_inactive', 'true');
+  const query = params.toString();
+  return request(`/api/rbac/roles${query ? `?${query}` : ''}`);
+};
+
+export const getPermisos = (options = {}) => {
+  const params = new URLSearchParams();
+  if (options.includeInactive) params.set('include_inactive', 'true');
+  const query = params.toString();
+  return request(`/api/rbac/permisos${query ? `?${query}` : ''}`);
+};
 export const createRole = (data) => request('/api/rbac/roles', { method: 'POST', body: JSON.stringify(data) });
 export const updateRole = (id, data) => request(`/api/rbac/roles/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteRole = (id) => request(`/api/rbac/roles/${id}`, { method: 'DELETE' });

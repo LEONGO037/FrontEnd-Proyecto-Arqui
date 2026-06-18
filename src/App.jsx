@@ -24,9 +24,14 @@ import AdminUsuarios from './components/admin/adminUsuarios';
 import AdminGestionUsuarios from './components/admin/AdminGestionUsuarios';
 import GestionInscripciones from './components/admin/gestionInscripciones';
 import AdminReportes from './components/admin/adminReportes';
+import AdminLogsAplicacion from './components/admin/adminLogsAplicacion';
+import AdminLogsSeguridad from './components/admin/adminLogsSeguridad';
 import AdminAuditoria from './components/admin/adminAuditoria';
 import GestionRoles from './components/admin/seguridad/GestionRoles';
 import CrearCuentas from './components/admin/cuentas/CrearCuentas';
+import RiesgosDashboard from './components/admin/riesgos/RiesgosDashboard';
+import RiesgoDetalle from './components/admin/riesgos/RiesgoDetalle';
+import MatrizRiesgosPage from './components/admin/riesgos/MatrizRiesgosPage';
 
 import EstudiantePagos from './components/estudiante/estudiantePagos';
 import HeaderEstudiante from './components/estudiante/headerEstudiante';
@@ -84,7 +89,7 @@ function AppContent() {
           path="/"
           element={
             <div className="app-wrapper">
-              <SelectedHeader />
+              <Header />
               <main style={{ minHeight: '80vh' }}><Home /></main>
               <Footer />
             </div>
@@ -162,7 +167,7 @@ function AppContent() {
         <Route
           path="/admin/cuentas"
           element={
-            <PermisoProtectedRoute permiso={PERMISSIONS.USUARIOS_GESTIONAR}>
+            <PermisoProtectedRoute permiso={[PERMISSIONS.USUARIOS_CREAR, PERMISSIONS.USUARIOS_GESTIONAR]}>
               <CrearCuentas />
             </PermisoProtectedRoute>
           }
@@ -171,7 +176,7 @@ function AppContent() {
         <Route
           path="/admin/gestion-usuarios"
           element={
-            <PermisoProtectedRoute permiso={PERMISSIONS.USUARIOS_GESTIONAR}>
+            <PermisoProtectedRoute permiso={[PERMISSIONS.USUARIOS_VER, PERMISSIONS.USUARIOS_EDITAR, PERMISSIONS.USUARIOS_ELIMINAR, PERMISSIONS.USUARIOS_GESTIONAR]}>
               <AdminGestionUsuarios />
             </PermisoProtectedRoute>
           }
@@ -180,7 +185,7 @@ function AppContent() {
         <Route
           path="/admin/usuarios"
           element={
-            <PermisoProtectedRoute permiso={PERMISSIONS.CURSOS_GESTIONAR}>
+            <PermisoProtectedRoute permiso={[PERMISSIONS.CURSOS_VER, PERMISSIONS.CURSOS_REGISTRAR, PERMISSIONS.CURSOS_MODIFICAR, PERMISSIONS.CURSOS_ELIMINAR, PERMISSIONS.CURSOS_GESTIONAR]}>
               <AdminUsuarios />
             </PermisoProtectedRoute>
           }
@@ -189,7 +194,7 @@ function AppContent() {
         <Route
           path="/admin/cursos"
           element={
-            <PermisoProtectedRoute permiso={PERMISSIONS.CURSOS_GESTIONAR}>
+            <PermisoProtectedRoute permiso={[PERMISSIONS.CURSOS_VER, PERMISSIONS.CURSOS_REGISTRAR, PERMISSIONS.CURSOS_MODIFICAR, PERMISSIONS.CURSOS_ELIMINAR, PERMISSIONS.CURSOS_GESTIONAR]}>
               <AdministrarCursos />
             </PermisoProtectedRoute>
           }
@@ -198,7 +203,7 @@ function AppContent() {
         <Route
           path="/admin/asignar-docente/:cursoId"
           element={
-            <PermisoProtectedRoute permiso={PERMISSIONS.CURSOS_GESTIONAR}>
+            <PermisoProtectedRoute permiso={[PERMISSIONS.CURSOS_MODIFICAR, PERMISSIONS.CURSOS_GESTIONAR]}>
               <AdminAsignarCursosDocente />
             </PermisoProtectedRoute>
           }
@@ -216,7 +221,7 @@ function AppContent() {
         <Route
           path="/admin/inscripciones"
           element={
-            <PermisoProtectedRoute permiso={PERMISSIONS.INSCRIPCIONES_GESTIONAR}>
+            <PermisoProtectedRoute permiso={[PERMISSIONS.INSCRIPCIONES_VER, PERMISSIONS.INSCRIPCIONES_GESTIONAR]}>
               <GestionInscripciones />
             </PermisoProtectedRoute>
           }
@@ -232,9 +237,27 @@ function AppContent() {
         />
 
         <Route
+          path="/admin/logs-aplicacion"
+          element={
+            <PermisoProtectedRoute permiso={PERMISSIONS.LOGS_APLICACION_VER}>
+              <AdminLogsAplicacion />
+            </PermisoProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/logs-seguridad"
+          element={
+            <PermisoProtectedRoute permiso={PERMISSIONS.LOGS_SEGURIDAD_VER}>
+              <AdminLogsSeguridad />
+            </PermisoProtectedRoute>
+          }
+        />
+
+        <Route
           path="/admin/auditoria"
           element={
-            <PermisoProtectedRoute permiso={PERMISSIONS.AUDITORIA_VER}>
+            <PermisoProtectedRoute permiso={null}>
               <AdminAuditoria />
             </PermisoProtectedRoute>
           }
@@ -243,8 +266,35 @@ function AppContent() {
         <Route
           path="/admin/seguridad/roles"
           element={
-            <PermisoProtectedRoute permiso={PERMISSIONS.ROLES_GESTIONAR}>
+            <PermisoProtectedRoute permiso={[PERMISSIONS.ROLES_GESTIONAR, PERMISSIONS.ROLES_VER, PERMISSIONS.ROLES_CREAR, PERMISSIONS.ROLES_MODIFICAR, PERMISSIONS.ROLES_ELIMINAR]}>
               <GestionRoles />
+            </PermisoProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/riesgos"
+          element={
+            <PermisoProtectedRoute permiso={PERMISSIONS.RIESGOS_VER}>
+              <RiesgosDashboard />
+            </PermisoProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/matriz-riesgos"
+          element={
+            <PermisoProtectedRoute permiso={[PERMISSIONS.RIESGOS_VER, PERMISSIONS.RIESGOS_GESTIONAR, PERMISSIONS.MATRIZ_VER, PERMISSIONS.MATRIZ_AGREGAR, PERMISSIONS.MATRIZ_EDITAR, PERMISSIONS.MATRIZ_ELIMINAR]}>
+              <MatrizRiesgosPage />
+            </PermisoProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/riesgos/:id"
+          element={
+            <PermisoProtectedRoute permiso={PERMISSIONS.RIESGOS_VER}>
+              <RiesgoDetalle />
             </PermisoProtectedRoute>
           }
         />

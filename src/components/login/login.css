@@ -508,6 +508,47 @@
   opacity: 0.8;
 }
 
+.submit-btn:disabled:not(.loading) {
+  background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+  color: #475569;
+  cursor: not-allowed;
+  opacity: 0.75;
+  box-shadow: none;
+  transform: none;
+}
+
+.submit-btn:disabled:not(.loading):hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Hint debajo del captcha cuando aún no se marca */
+.captcha-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px dashed #fca5a5;
+  border-radius: 10px;
+  padding: 0.55rem 0.85rem;
+  margin: 0.4rem 0;
+  font-weight: 500;
+  animation: fadeInHint 0.25s ease;
+}
+
+.captcha-hint::before {
+  content: "👆";
+  font-size: 1rem;
+}
+
+@keyframes fadeInHint {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .spinner {
   width: 24px;
   height: 24px;

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import UserHeaderDynamic from '../../layout/UserHeaderDynamic';
 import Footer from '../../layout/footerPrincipal';
 import rbacApi from '../../../services/rbacApi';
+import { useAuth } from '../../../context/AuthContext';
 import './GestionRoles.css';
 
 const TAB = { ROLES: 0, MATRIZ: 1, USUARIOS: 2 };
@@ -14,29 +15,44 @@ const GRUPOS = [
     key: 'usuarios',
     icon: '👥',
     label: 'Gestión de Usuarios',
-    desc: 'Listar, crear, editar, cambiar rol y desbloquear usuarios',
-    permisos: [PERMISSIONS.USUARIOS_GESTIONAR],
+    desc: 'Permisos granulares: ver, crear, editar y eliminar usuarios',
+    permisos: [
+      PERMISSIONS.USUARIOS_VER,
+      PERMISSIONS.USUARIOS_CREAR,
+      PERMISSIONS.USUARIOS_EDITAR,
+      PERMISSIONS.USUARIOS_ELIMINAR,
+    ],
   },
   {
     key: 'roles',
     icon: '🔐',
     label: 'Roles y Permisos',
-    desc: 'Crear/editar/eliminar roles y asignar o revocar permisos',
-    permisos: [PERMISSIONS.ROLES_GESTIONAR],
+    desc: 'Ver, crear, modificar y eliminar roles; asignar o revocar permisos',
+    permisos: [
+      PERMISSIONS.ROLES_VER,
+      PERMISSIONS.ROLES_CREAR,
+      PERMISSIONS.ROLES_MODIFICAR,
+      PERMISSIONS.ROLES_ELIMINAR,
+    ],
   },
   {
     key: 'cursos',
     icon: '📚',
     label: 'Cursos',
-    desc: 'Gestión o solo visualización del catálogo de cursos',
-    permisos: [PERMISSIONS.CURSOS_GESTIONAR, PERMISSIONS.CURSOS_VER],
+    desc: 'Permisos granulares: ver, registrar, modificar y eliminar cursos',
+    permisos: [
+      PERMISSIONS.CURSOS_VER,
+      PERMISSIONS.CURSOS_REGISTRAR,
+      PERMISSIONS.CURSOS_MODIFICAR,
+      PERMISSIONS.CURSOS_ELIMINAR,
+    ],
   },
   {
     key: 'inscripciones',
     icon: '📋',
     label: 'Inscripciones',
-    desc: 'Ver y gestionar inscripciones y estado académico',
-    permisos: [PERMISSIONS.INSCRIPCIONES_GESTIONAR],
+    desc: 'Solo lectura (ver resumen) o gestión completa de inscripciones',
+    permisos: [PERMISSIONS.INSCRIPCIONES_VER, PERMISSIONS.INSCRIPCIONES_GESTIONAR],
   },
   {
     key: 'pagos',
@@ -53,11 +69,37 @@ const GRUPOS = [
     permisos: [PERMISSIONS.REPORTES_VER],
   },
   {
-    key: 'auditoria',
-    icon: '🧾',
-    label: 'Auditoría',
-    desc: 'Consultar el registro de actividad del sistema (solo lectura)',
-    permisos: [PERMISSIONS.AUDITORIA_VER],
+    key: 'logs_aplicacion',
+    icon: '📊',
+    label: 'Logs de Aplicación',
+    desc: 'Consultar eventos de funcionalidades críticas (solo lectura)',
+    permisos: [PERMISSIONS.LOGS_APLICACION_VER],
+  },
+  {
+    key: 'logs_seguridad',
+    icon: '🛡️',
+    label: 'Logs de Seguridad',
+    desc: 'Consultar inicios de sesión, intentos fallidos y bloqueos (solo lectura)',
+    permisos: [PERMISSIONS.LOGS_SEGURIDAD_VER],
+  },
+  {
+    key: 'riesgos',
+    icon: '☣️',
+    label: 'Gestión de Riesgos',
+    desc: 'Ver catálogo de riesgos y registros detectados; gestionar planes de acción',
+    permisos: [PERMISSIONS.RIESGOS_VER, PERMISSIONS.RIESGOS_GESTIONAR],
+  },
+  {
+    key: 'matriz',
+    icon: '📊',
+    label: 'Matriz de Riesgos',
+    desc: 'Ver, agregar, editar y eliminar entradas de la matriz de riesgos',
+    permisos: [
+      PERMISSIONS.MATRIZ_VER,
+      PERMISSIONS.MATRIZ_AGREGAR,
+      PERMISSIONS.MATRIZ_EDITAR,
+      PERMISSIONS.MATRIZ_ELIMINAR,
+    ],
   },
   {
     key: 'estudiante',
@@ -77,13 +119,32 @@ const GRUPOS = [
 
 const PERMISO_LABEL = {
   [PERMISSIONS.USUARIOS_GESTIONAR]:      'Gestión completa de usuarios',
+  [PERMISSIONS.USUARIOS_VER]:            'Ver usuarios (listado y detalle)',
+  [PERMISSIONS.USUARIOS_CREAR]:          'Registrar (crear) cuentas de usuario',
+  [PERMISSIONS.USUARIOS_EDITAR]:         'Modificar usuarios (cambiar rol, desbloquear)',
+  [PERMISSIONS.USUARIOS_ELIMINAR]:       'Eliminar (desactivar) usuarios',
   [PERMISSIONS.ROLES_GESTIONAR]:         'Gestión completa de roles y permisos',
+  [PERMISSIONS.ROLES_VER]:               'Ver roles y permisos (solo lectura)',
+  [PERMISSIONS.ROLES_CREAR]:             'Crear nuevos roles',
+  [PERMISSIONS.ROLES_MODIFICAR]:         'Modificar roles y asignar permisos',
+  [PERMISSIONS.ROLES_ELIMINAR]:          'Eliminar roles',
   [PERMISSIONS.CURSOS_GESTIONAR]:        'Gestión completa de cursos (CRUD)',
   [PERMISSIONS.CURSOS_VER]:              'Solo visualizar cursos',
-  [PERMISSIONS.INSCRIPCIONES_GESTIONAR]: 'Gestión de inscripciones',
+  [PERMISSIONS.CURSOS_REGISTRAR]:        'Registrar (crear) cursos',
+  [PERMISSIONS.CURSOS_MODIFICAR]:        'Modificar cursos (datos, prerreq., docente)',
+  [PERMISSIONS.CURSOS_ELIMINAR]:         'Eliminar cursos',
+  [PERMISSIONS.INSCRIPCIONES_VER]:       'Ver inscripciones (solo lectura)',
+  [PERMISSIONS.INSCRIPCIONES_GESTIONAR]: 'Gestión completa de inscripciones',
   [PERMISSIONS.PAGOS_VER]:               'Ver pagos (solo lectura)',
   [PERMISSIONS.REPORTES_VER]:            'Ver y descargar reportes',
-  [PERMISSIONS.AUDITORIA_VER]:           'Ver auditoría (solo lectura)',
+  [PERMISSIONS.LOGS_APLICACION_VER]:     'Ver logs de aplicación',
+  [PERMISSIONS.LOGS_SEGURIDAD_VER]:      'Ver logs de seguridad',
+  [PERMISSIONS.RIESGOS_VER]:             'Ver catálogo y registros de riesgos',
+  [PERMISSIONS.RIESGOS_GESTIONAR]:       'Gestión completa de riesgos y planes de acción',
+  [PERMISSIONS.MATRIZ_VER]:              'Ver matriz de riesgos (solo lectura)',
+  [PERMISSIONS.MATRIZ_AGREGAR]:          'Agregar activos y amenazas a la matriz',
+  [PERMISSIONS.MATRIZ_EDITAR]:           'Editar entradas de la matriz de riesgos',
+  [PERMISSIONS.MATRIZ_ELIMINAR]:         'Eliminar activos de la matriz de riesgos',
   [PERMISSIONS.USUARIO_ESTUDIANTE]:      'Acceso completo de estudiante',
   [PERMISSIONS.USUARIO_DOCENTE]:         'Acceso completo de docente',
 };
@@ -104,6 +165,15 @@ const TOTAL_PERMISOS = GRUPOS.reduce((s, g) => s + g.permisos.length, 0);
 // ─────────────────────────────────────────────────────────────────────────────
 
 const GestionRoles = () => {
+  const { usuario } = useAuth();
+  const misPermisos = usuario?.permisos || [];
+
+  // Backward-compat: roles:gestionar implica todos los sub-permisos
+  const esGestorTotal = misPermisos.includes(PERMISSIONS.ROLES_GESTIONAR);
+  const canCreate   = esGestorTotal || misPermisos.includes(PERMISSIONS.ROLES_CREAR);
+  const canModify   = esGestorTotal || misPermisos.includes(PERMISSIONS.ROLES_MODIFICAR);
+  const canDelete   = esGestorTotal || misPermisos.includes(PERMISSIONS.ROLES_ELIMINAR);
+
   const [tab, setTab] = useState(TAB.ROLES);
   const [roles, setRoles] = useState([]);
   const [permisos, setPermisos] = useState([]);   // all permission objects {id, nombre}
@@ -113,6 +183,7 @@ const GestionRoles = () => {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
   const [msgExito, setMsgExito] = useState('');
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
 
   // New-role form
   const [showNuevoRol, setShowNuevoRol] = useState(false);
@@ -131,8 +202,8 @@ const GestionRoles = () => {
     setError('');
     try {
       const [r, p, m, u] = await Promise.all([
-        rbacApi.getRoles(),
-        rbacApi.getPermisos(),
+        rbacApi.getRoles({ includeInactive: mostrarInactivos }),
+        rbacApi.getPermisos({ includeInactive: mostrarInactivos }),
         rbacApi.getMatriz(),
         rbacApi.getUsuarios({ includeInactive: true }),
       ]);
@@ -145,7 +216,7 @@ const GestionRoles = () => {
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [mostrarInactivos]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
@@ -317,9 +388,21 @@ const GestionRoles = () => {
               {/* Header + New Role button */}
               <div className="gr-section-header">
                 <h2>Roles ({roles.length})</h2>
-                <button className="gr-btn-primary" onClick={() => setShowNuevoRol(!showNuevoRol)}>
-                  {showNuevoRol ? '✕ Cancelar' : '+ Nuevo Rol'}
-                </button>
+                <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={mostrarInactivos}
+                      onChange={(e) => setMostrarInactivos(e.target.checked)}
+                    />
+                    Mostrar inactivos
+                  </label>
+                  {canCreate && (
+                    <button className="gr-btn-primary" onClick={() => setShowNuevoRol(!showNuevoRol)}>
+                      {showNuevoRol ? '✕ Cancelar' : '+ Nuevo Rol'}
+                    </button>
+                  )}
+                </div>
               </div>
 
               {showNuevoRol && (
@@ -372,19 +455,23 @@ const GestionRoles = () => {
                             </div>
                           </div>
                           <div className="gr-role-actions">
-                            <button
-                              className={`gr-btn-detail ${isSelected ? 'active' : ''}`}
-                              onClick={() => isSelected ? closeEditor() : openEditor(rol)}
-                            >
-                              {isSelected ? '✕ Cerrar' : 'Editar permisos →'}
-                            </button>
-                            <button
-                              className="gr-btn-danger"
-                              onClick={() => handleEliminarRol(rol.id, rol.nombre)}
-                              disabled={rol.activo === false}
-                            >
-                              {rol.activo === false ? 'Inactivo' : 'Eliminar'}
-                            </button>
+                            {canModify && (
+                              <button
+                                className={`gr-btn-detail ${isSelected ? 'active' : ''}`}
+                                onClick={() => isSelected ? closeEditor() : openEditor(rol)}
+                              >
+                                {isSelected ? '✕ Cerrar' : 'Editar permisos →'}
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                className="gr-btn-danger"
+                                onClick={() => handleEliminarRol(rol.id, rol.nombre)}
+                                disabled={rol.activo === false}
+                              >
+                                {rol.activo === false ? 'Inactivo' : 'Eliminar'}
+                              </button>
+                            )}
                           </div>
                         </div>
 

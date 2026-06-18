@@ -6,17 +6,32 @@ import { getRegistrosAuditoria } from '../../services/auditoriaApi';
 import './adminAuditoria.css';
 
 const formatDate = (value) => {
-    if (!value) return '-';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '-';
+    if (value === null || value === undefined || value === '') return '-';
+    
+    let date;
+    if (value instanceof Date) {
+        date = value;
+    } else if (typeof value === 'string' || typeof value === 'number') {
+        const normalized = typeof value === 'string' ? value.replace(' ', 'T') : value;
+        date = new Date(normalized);
+    } else {
+        return '-';
+    }
+    
+    if (isNaN(date.getTime())) return '-';
 
-    return date.toLocaleString('es-BO', {
-        year: 'numeric',
-        month: 'short',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+    try {
+        return date.toLocaleString('es-BO', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        });
+    } catch {
+        return date.toISOString().replace('T', ' ').slice(0, 16);
+    }
 };
 
 const stringifyDetalle = (detalle) => {
@@ -51,6 +66,10 @@ const explicarDetalle = (item) => {
     }
 
     if (accion === 'UPDATE') {
+        if (data?.cambios && Array.isArray(data.cambios)) {
+            const listado = data.cambios.map(c => `[${c.campo}]: "${c.anterior !== null && c.anterior !== undefined ? c.anterior : ''}" -> "${c.nuevo !== null && c.nuevo !== undefined ? c.nuevo : ''}"`).join(', ');
+            return `Se actualizaron campos en ${tabla}: ${listado || 'Ninguno'}.`;
+        }
         if (data && Object.keys(data).length) {
             const campos = Object.keys(data).join(', ');
             return `Se actualizaron los campos [${campos}] en ${tabla}.`;
@@ -118,7 +137,7 @@ const AdminAuditoria = () => {
         <div className="admin-page">
             <UserHeaderDynamic />
 
-            <main className="admin-main">
+            <main className="admin-main logs-main-wide">
                 <div className="admin-auditoria-container">
                     <header className="admin-auditoria-header">
                         <button className="auditoria-back-button" onClick={() => navigate('/admin')}>
@@ -181,6 +200,9 @@ const AdminAuditoria = () => {
                                                 <td>
                                                     <div className="auditoria-usuario">{item.usuario || 'Sistema'}</div>
                                                     <div className="auditoria-email">{item.usuario_email || '-'}</div>
+                                                    {item.usuario_id != null && (
+                                                        <div className="auditoria-usuario-id">ID #{item.usuario_id}</div>
+                                                    )}
                                                 </td>
                                                 <td>
                                                     <span className="auditoria-badge">{item.accion || '-'}</span>

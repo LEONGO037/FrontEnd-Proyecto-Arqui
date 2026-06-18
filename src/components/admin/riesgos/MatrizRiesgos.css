@@ -1,0 +1,517 @@
+/* MatrizRiesgos.css (Light/White Theme - Granular edition) */
+
+.matriz-container {
+    margin-top: 1.5rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.matriz-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.matriz-header-buttons {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.matriz-subtitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+}
+
+.add-matrix-btn {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.matriz-loading {
+    padding: 3rem;
+    text-align: center;
+    color: #64748b;
+    font-size: 1rem;
+}
+
+/* Scroll Container for Excel Grid */
+.matriz-table-scroll-container {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    max-height: 70vh;
+}
+
+/* Custom Scrollbar */
+.matriz-table-scroll-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+.matriz-table-scroll-container::-webkit-scrollbar-track {
+    background: #f8fafc;
+}
+.matriz-table-scroll-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.matriz-table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Table Style */
+.matriz-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    text-align: left;
+    color: #334155;
+}
+
+.matriz-table .text-white {
+    color: #0f172a !important;
+    font-weight: 700;
+}
+
+/* Headers */
+.matriz-table th {
+    padding: 0.75rem 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+.matriz-header-groups th {
+    text-align: center;
+    background: #f8fafc;
+    font-size: 0.75rem;
+    border-bottom: 1px solid #cbd5e1;
+}
+
+.matriz-header-fields th {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* Group Colors in header */
+.group-activos { color: #5f8d22; border-top: 3px solid #8bc63f; }
+.group-identificacion { color: #e11d48; border-top: 3px solid #f43f5e; }
+.group-valoracion { color: #2563eb; border-top: 3px solid #3b82f6; }
+.group-eval-inherente { color: #ea580c; border-top: 3px solid #f97316; }
+.group-medicion { color: #0891b2; border-top: 3px solid #06b6d4; }
+.group-mitigacion { color: #9333ea; border-top: 3px solid #a855f7; }
+.group-eficiencia { color: #059669; border-top: 3px solid #10b981; }
+.group-residual { color: #ca8a04; border-top: 3px solid #eab308; }
+.group-acciones { background: #f8fafc; border-top: 3px solid #64748b; color: #475569; }
+
+/* Table Rows */
+.matriz-row {
+    transition: background-color 0.2s ease;
+    background: #ffffff;
+}
+
+.matriz-row:hover {
+    background-color: #f8fafc;
+}
+
+.is-last-threat-row td {
+    border-bottom: 2.5px solid #94a3b8 !important;
+}
+
+.matriz-table td {
+    padding: 0.85rem;
+    vertical-align: middle;
+    line-height: 1.4;
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* Thicker vertical separators between Excel blocks */
+.border-thick-right {
+    border-right: 3px solid #cbd5e1 !important;
+}
+
+.asset-cell-highlight {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    font-weight: 700 !important;
+    border-right: 3px solid #cbd5e1 !important;
+    box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+/* Plan of Action List in Cell */
+.matrix-plan-list {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: #475569;
+}
+
+.matrix-plan-item {
+    margin-bottom: 0.25rem;
+}
+
+/* Helpers */
+.text-center { text-align: center; }
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+
+/* Badges */
+.matrix-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+/* Actions */
+.matrix-actions-cell {
+    display: flex;
+    gap: 0.4rem;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+.matrix-btn-edit, .matrix-btn-delete {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.35rem 0.5rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    width: 100%;
+    max-width: 80px;
+}
+
+.matrix-btn-edit:hover {
+    background: #eff6ff;
+    border-color: #3b82f6;
+}
+
+.matrix-btn-delete:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+
+/* Threat Cards in Form */
+.threat-form-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+}
+
+.threat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dashed #cbd5e1;
+    padding-bottom: 0.5rem;
+}
+
+.threat-card-header h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.threat-remove-btn {
+    background: none;
+    border: none;
+    color: #dc2626;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.threat-remove-btn:hover {
+    text-decoration: underline;
+}
+
+.threat-box-group {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.threat-box-group h5 {
+    margin: 0 0 0.75rem;
+    font-size: 0.8rem;
+    color: #475569;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.val-badge-preview {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+
+/* Plan Action steps inputs */
+.plan-step-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+}
+
+.step-num-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #64748b;
+    width: 15px;
+}
+
+.step-remove-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 0.2rem;
+}
+
+/* Explicativo Matrix Modal Styles */
+.explicativo-modal-width {
+    width: 90% !important;
+    max-width: 620px !important;
+}
+
+.explicativo-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.explicativo-modal-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #0f172a;
+}
+
+.matrix-visual-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1.5rem 0;
+    gap: 1rem;
+}
+
+.matrix-y-label {
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.1em;
+}
+
+.matrix-x-label {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.1em;
+    margin-top: 0.5rem;
+}
+
+.matrix-visual-table {
+    border-collapse: separate;
+    border-spacing: 4px;
+}
+
+.matrix-axis-num {
+    background: transparent !important;
+    color: #475569;
+    padding: 0.5rem !important;
+    font-size: 0.85rem;
+    border: none !important;
+}
+
+.explicativo-celda {
+    width: 70px;
+    height: 50px;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: default;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+.explicativo-celda:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    z-index: 10;
+}
+
+.celda-valor {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.celda-nivel {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.95);
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+.legend-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+}
+
+.legend-table th, .legend-table td {
+    padding: 0.55rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.legend-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+}
+
+/* Animations */
+.anim-scale-up {
+    animation: scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes scaleUp {
+    from {
+        transform: scale(0.92);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Modal Form Adjustment */
+.matriz-modal-width {
+    width: 90% !important;
+    max-width: 820px !important;
+}
+
+.matriz-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+/* Premium Form UI/UX Controls */
+.input-ux-premium,
+.select-ux-premium {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: #334155;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.input-ux-premium:focus,
+.select-ux-premium:focus {
+    border-color: #3b82f6;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.premium-card-ux {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.card-number-badge {
+    background: #3b82f6;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.border-highlight-orange {
+    border-left: 4px solid #f97316 !important;
+}
+
+.border-highlight-green {
+    border-left: 4px solid #22c55e !important;
+}
+
+.border-pulse-glow {
+    border: 2px solid #3b82f6 !important;
+    animation: borderGlowPulse 2s infinite ease-in-out;
+}
+
+@keyframes borderGlowPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0px rgba(59, 130, 246, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.35);
+    }
+}
+
+.upload-excel-btn {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
