@@ -30,6 +30,11 @@ export default function AdminGestionUsuarios() {
   const navigate = useNavigate();
   const { usuario: self } = useAuth();
 
+  const misPermisos   = self?.permisos || [];
+  const esGestor      = misPermisos.includes('usuarios:gestionar');
+  const canEditar     = esGestor || misPermisos.includes('usuarios:editar');
+  const canEliminar   = esGestor || misPermisos.includes('usuarios:eliminar');
+
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -250,7 +255,7 @@ export default function AdminGestionUsuarios() {
                             <i className="fa-solid fa-eye"></i>
                           </button>
 
-                          {bloqueado && !inactivo && (
+                          {bloqueado && !inactivo && canEditar && (
                             <button
                               className="gu-icon-btn gu-icon-btn--unlock"
                               onClick={() => handleDesbloquear(u)}
@@ -260,7 +265,7 @@ export default function AdminGestionUsuarios() {
                             </button>
                           )}
 
-                          {!esSelf && !inactivo && (
+                          {!esSelf && !inactivo && canEliminar && (
                             <button
                               className="gu-icon-btn gu-icon-btn--delete"
                               onClick={() => setModalEliminar(u)}
