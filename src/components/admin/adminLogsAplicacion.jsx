@@ -189,9 +189,8 @@ const AdminLogsAplicacion = () => {
                                                     <td>
                                                         {item.usuario_id != null ? (
                                                             <>
-                                                                <div className="logs-usuario-name">{item.usuario || `Usuario #${item.usuario_id}`}</div>
-                                                                <div className="logs-usuario-email">{item.usuario_email || '-'}</div>
-                                                                <div className="logs-usuario-id">ID #{item.usuario_id}</div>
+                                                                <div className="logs-usuario-name">{item.usuario || '—'}</div>
+                                                                <div className="logs-usuario-email">User ID: {item.usuario_email || '—'}</div>
                                                             </>
                                                         ) : (
                                                             <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.82rem' }}>Sistema</span>
