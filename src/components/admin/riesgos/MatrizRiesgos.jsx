@@ -947,7 +947,7 @@ const MatrizRiesgos = () => {
                                                          </div>
                                                          <div className="form-row" style={{ gap: '0.5rem', margin: 0 }}>
                                                              <label className="form-col-4" style={{ margin: 0, fontSize: '0.75rem' }}>
-                                                                 Tipo (Múltiple)
+                                                                 Por tipo de control
                                                                  <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.3rem', height: '1.75rem' }}>
                                                                      {[
                                                                          { v: 'P', l: 'Preventivo' },
@@ -988,7 +988,7 @@ const MatrizRiesgos = () => {
                                                                  </div>
                                                              </label>
                                                              <label className="form-col-4" style={{ margin: 0, fontSize: '0.75rem' }}>
-                                                                 Nivel (Eficiencia)
+                                                                 Por su nivel de implementación
                                                                  <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_nivel || 'S'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_nivel', e.target.value)}>
                                                                      <option value="A">Automático (A)</option>
                                                                      <option value="S">Semiautomático (S)</option>
@@ -996,7 +996,7 @@ const MatrizRiesgos = () => {
                                                                  </select>
                                                              </label>
                                                              <label className="form-col-4" style={{ margin: 0, fontSize: '0.75rem' }}>
-                                                                 Frecuencia
+                                                                 Por frecuencia
                                                                  <select className="select-ux-premium" style={{ padding: '0.25rem 0.5rem', height: 'auto', fontSize: '0.75rem' }} value={ctrl.control_frecuencia || 'PT'} onChange={(e) => handleControlChange(tIdx, cIdx, 'control_frecuencia', e.target.value)}>
                                                                      <option value="D">Diaria (D)</option>
                                                                      <option value="S">Semanal (S)</option>
