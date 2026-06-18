@@ -73,7 +73,7 @@ const MatrizRiesgos = () => {
                 getUsuarios().catch(() => []),
             ]);
             setMatriz(data.datos || []);
-            setUsuariosAdmins((users || []).filter(u => u.rol_name === 'ADMIN_SEGURIDAD' || u.rol_nombre === 'ADMIN_SEGURIDAD'));
+            setUsuariosAdmins((users || []).filter(u => u.activo !== false && (u.rol_nombre === 'Oficial de Seguridad' || u.rol_id === 8)));
         } catch (err) {
             setError(err.message || 'Error al cargar la matriz de riesgos');
         } finally {
@@ -246,7 +246,7 @@ const MatrizRiesgos = () => {
             ["   Abreviaciones válidas: Tipo (P=Preventivo, D=Detectivo, C=Correctivo); Nivel (A=Alto, S=Suficiente, M=Moderado); Frecuencia (PT=Por Transacción, D=Diario, S=Semanal, M=Mensual, A=Anual)"],
             ["5. Los campos P (Probabilidad) e I (Impacto) deben ser números enteros entre 1 y 5."],
             [""],
-            ["LISTA DE ADMINISTRADORES DE SEGURIDAD REGISTRADOS EN EL SISTEMA:"],
+            ["LISTA DE OFICIALES DE SEGURIDAD REGISTRADOS EN EL SISTEMA:"],
             ["ID", "Nombre Completo", "Correo Electrónico (Usar en la hoja Matriz)"]
         ];
 
@@ -270,7 +270,7 @@ const MatrizRiesgos = () => {
                 "I Residual (1-5)": 5,
                 "Pasos Plan de Accion (Separados por punto y coma ';')": "Auditar código de endpoints; Configurar reglas de WAF; Implementar firmas",
                 "Fecha Limite (AAAA-MM-DD)": "2026-06-15",
-                "Responsable Email (Debe ser un Administrador de Seguridad registrado)": usuariosAdmins[0]?.correo || usuariosAdmins[0]?.email || "admin_seguridad@college.edu"
+                "Responsable Email (Debe ser un Responsable de Seguridad registrado)": usuariosAdmins[0]?.correo || usuariosAdmins[0]?.email || "admin_seguridad@college.edu"
             },
             {
                 "Activo de Informacion": "",
@@ -284,7 +284,7 @@ const MatrizRiesgos = () => {
                 "I Residual (1-5)": "",
                 "Pasos Plan de Accion (Separados por punto y coma ';')": "",
                 "Fecha Limite (AAAA-MM-DD)": "",
-                "Responsable Email (Debe ser un Administrador de Seguridad registrado)": ""
+                "Responsable Email (Debe ser un Responsable de Seguridad registrado)": ""
             }
         ];
 
@@ -340,7 +340,7 @@ const MatrizRiesgos = () => {
                         agrupados[activo] = [];
                     }
 
-                    const emailResp = row["Responsable Email (Debe ser un Administrador de Seguridad registrado)"] || '';
+                    const emailResp = row["Responsable Email (Debe ser un Responsable de Seguridad registrado)"] || '';
                     const user = usuariosAdmins.find(u => String(u.correo || u.email || '').trim().toLowerCase() === String(emailResp).trim().toLowerCase());
                     
                     const pInherente = Number(row["P Inherente (1-5)"]) || 3;
@@ -446,7 +446,7 @@ const MatrizRiesgos = () => {
                 return;
             }
             if (!t.responsable_id) {
-                setError(`Debe seleccionar un responsable (Administrador de Seguridad) para la mitigación de la Amenaza #${i + 1}.`);
+                setError(`Debe seleccionar un responsable (Responsable de Seguridad) para la mitigación de la Amenaza #${i + 1}.`);
                 return;
             }
         }
@@ -812,7 +812,10 @@ const MatrizRiesgos = () => {
             {modalAbierto && (
                 <div className="riesgos-modal-overlay" onClick={() => setModalAbierto(false)}>
                     <div className="riesgos-modal matriz-modal-width anim-scale-up" onClick={(e) => e.stopPropagation()}>
-                        <h2>{editandoId ? 'Editar Activo e Identificación de Riesgos' : 'Nuevo Registro de Riesgo por Activo'}</h2>
+                        <div className="modal-header">
+                            <h2>{editandoId ? 'Editar Activo e Identificación de Riesgos' : 'Nuevo Registro de Riesgo por Activo'}</h2>
+                            <button type="button" className="close-modal" onClick={() => setModalAbierto(false)}>&times;</button>
+                        </div>
                         <p className="modal-desc">
                             Ingresa el activo afectado e identifica sus amenazas de seguridad correspondientes de forma granular. Todos los campos obligatorios (*) cuentan con validación visual.
                         </p>
@@ -1040,7 +1043,7 @@ const MatrizRiesgos = () => {
                                                 />
                                             </label>
                                             <label className="form-col-8">
-                                                Responsable (Admin. Seguridad) *
+                                                Responsable (Oficial de Seguridad) *
                                                 <select
                                                     required
                                                     className="select-ux-premium border-pulse-glow"
